@@ -1,0 +1,146 @@
+/********** Banner Section **********/
+.banner {
+    position: relative;
+    margin-top: -50px;
+    padding-top: 45px;
+    z-index: 1;
+}
+
+.banner .container {
+    position: relative;
+    z-index: 1;
+}
+
+.banner .bg-primary,
+.banner .bg-secondary {
+    box-shadow: 0 0 45px rgba(0, 0, 0, 0.08);
+}
+
+.banner .bg-primary {
+    background-color: #0DCAF0 !important;
+    border-radius: 5px 0 0 5px;
+}
+
+.banner .bg-secondary {
+    background-color: #091E3E !important;
+    border-radius: 0 5px 5px 0;
+}
+
+.banner h3 {
+    font-weight: 600;
+    font-size: 28px;
+}
+
+.banner h6 {
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.banner p {
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.banner .fs-1 {
+    font-size: 3.5rem !important;
+    color: #0DCAF0;
+}
+
+.banner .btn {
+    padding: 10px 25px;
+    border-radius: 5px;
+    font-weight: 500;
+    transition: all 0.3s;
+    margin-top: auto;
+}
+
+.banner .btn-light {
+    background-color: #ffffff;
+    color: #0DCAF0;
+    border: 2px solid #ffffff;
+}
+
+.banner .btn-light:hover {
+    background-color: transparent;
+    color: #ffffff;
+    border-color: #ffffff;
+}
+
+.banner .btn-dark {
+    background-color: #212529;
+    color: #ffffff;
+    border: 2px solid #212529;
+}
+
+.banner .btn-dark:hover {
+    background-color: #0DCAF0;
+    color: #ffffff;
+    border-color: #0DCAF0;
+}
+
+/* Animation classes */
+.fadeInLeft, .fadeInRight {
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+}
+
+.fadeInLeft {
+    transition-delay: 0.1s;
+}
+
+.fadeInRight {
+    transition-delay: 0.3s;
+}
+
+.fadeInLeft.visible, .fadeInRight.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fadeInLeft.hidden, .fadeInRight.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* Responsive Styles */
+@media (max-width: 991.98px) {
+    .banner {
+        margin-top: 0;
+        padding-top: 15px;
+    }
+
+    .banner .col-lg-5 {
+        margin-bottom: 30px;
+    }
+
+    .banner .bg-primary,
+    .banner .bg-secondary {
+        border-radius: 5px;
+    }
+    
+    .banner h3 {
+        font-size: 24px;
+    }
+    
+    .banner .fs-1 {
+        font-size: 3rem !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .banner h3 {
+        font-size: 22px;
+    }
+    
+    .banner h6, .banner p {
+        font-size: 14px;
+    }
+    
+    .banner .fs-1 {
+        font-size: 2.5rem !important;
+    }
+    
+    .banner .btn {
+        padding: 8px 20px;
+        font-size: 14px;
+    }
+}
