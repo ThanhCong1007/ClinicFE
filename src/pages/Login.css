@@ -1,0 +1,105 @@
+
+:root {
+    --primary: #06A3DA;
+    --secondary: #F57E57;
+    --light: #EEF9FF;
+    --dark: #091E3E;
+}
+
+/* Login & Registration Form Styles */
+.login-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--primary);
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.login-form {
+    width: 100%;
+    max-width: 550px;
+    border-radius: 15px;
+    background-color: #b3d6f9;
+    z-index: 5;
+    box-shadow: 25px 25px 10px #015798;
+    padding: 2rem;
+    border: 2px solid var(--dark);
+}
+
+/* Typography */
+h1, h2, .font-weight-bold {
+    font-weight: 700 !important;
+}
+
+/* Form Elements */
+input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid #ccc;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s;
+}
+
+input:focus {
+    outline: none;
+    border: 1px solid var(--dark) !important;
+    box-shadow: 0 0 0 2px rgba(9, 30, 62, 0.2) !important;
+}
+
+/* Buttons */
+button {
+    font-weight: 600;
+    transition: 0.5s;
+}
+
+button[type="button"] {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    cursor: pointer;
+}
+
+.custom-link {
+    text-decoration: none;
+    cursor: pointer;
+    color: var(--dark);
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+.custom-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+/* Button Styles */
+.btn {
+    font-weight: 600;
+    transition: .5s;
+}
+
+.btn-primary {
+    background-color: var(--dark);
+    color: #FFFFFF;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .login-form {
+        max-width: 90%;
+        box-shadow: 15px 15px 8px #015798;
+    }
+}

@@ -8,6 +8,7 @@ function Navbar() {
     const [isVisible, setIsVisible] = useState(false);
     const [isSticky, setIsSticky] = useState(false);
     const [activeLink, setActiveLink] = useState('/trang-chu');
+    const location = useLocation(); // Sử dụng hook useLocation để theo dõi URL hiện tại
 
     useEffect(() => {
         // Hiệu ứng fadeIn
@@ -15,39 +16,26 @@ function Navbar() {
             setIsVisible(true);
         }, 100);
 
-        // Xử lý sticky navbar khi scroll với throttling
-        let lastScrollTop = 0;
-        let ticking = false;
-
+        // Xử lý sticky navbar khi scroll
         const handleScroll = () => {
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    if (scrollTop > 40) {
-                        if (!isSticky) setIsSticky(true);
-                    } else {
-                        if (isSticky) setIsSticky(false);
-                    }
-                    lastScrollTop = scrollTop;
-                    ticking = false;
-                });
-
-                ticking = true;
-            }
+            setIsSticky(scrollTop > 40);
         };
 
-        // Xác định trang hiện tại dựa trên URL
-        const path = window.location.pathname;
-        setActiveLink(path);
+        // Gọi handleScroll ngay lập tức để khởi tạo trạng thái đúng
+        handleScroll();
 
+        // Theo dõi sự kiện scroll
         window.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Xác định trang hiện tại dựa trên URL
+        setActiveLink(location.pathname);
 
         return () => {
             clearTimeout(timer);
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [isSticky]);
+    }, [location.pathname]); // Thêm location.pathname vào dependencies
 
     const handleNavLinkClick = (path: SetStateAction<string>) => {
         setActiveLink(path);
@@ -65,9 +53,8 @@ function Navbar() {
                 className={`navbar navbar-expand-lg navbar-light shadow-sm px-4 px-lg-5 py-3 ${isSticky ? 'sticky-top sticky-nav' : ''}`}
                 style={fadeInStyle}
             >
-                {/* Phần còn lại của navbar giữ nguyên */}
                 <div className="container-fluid">
-                    <Link  to="/trang-chu" className="navbar-brand d-flex align-items-center">
+                    <Link to="/trang-chu" className="navbar-brand d-flex align-items-center">
                         <div className="logo-icon me-2">
                             <i className="fa fa-tooth text-primary"></i>
                         </div>
@@ -126,7 +113,6 @@ function Navbar() {
                                 </div>
                             </div>
 
-                            {/* Phần menu dropdown khác giữ nguyên */}
                             <div className="nav-item dropdown">
                                 <Link 
                                     to="#"
@@ -202,6 +188,7 @@ function Navbar() {
                             <Link 
                                 to="/lien-he" 
                                 className={`nav-item nav-link ${activeLink === '/lien-he' ? 'active' : ''}`}
+                                onClick={() => handleNavLinkClick('/lien-he')}
                             >
                                 Liên hệ
                             </Link>

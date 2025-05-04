@@ -13,6 +13,7 @@ import Footer from './components/Footer';
 import Contact from './components/Contact';
 import Pricing from './components/Pricing';
 import Header from './components/Header';
+import Login from './pages/Login';
 
 // Import các trang mới (nếu có)
 // import GioiThieu from './pages/GioiThieu';
@@ -126,7 +127,7 @@ function App() {
           {/* Routes cho các trang khác */}
           <Route path="/lien-he" element={<PlaceholderPage title="Liên hệ với chúng tôi" />} />
           <Route path="/dat-lich" element={<PlaceholderPage title="Đặt lịch hẹn" />} />
-          <Route path="/login" element={<PlaceholderPage title="Đăng nhập" />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
         
         {/* Footer */}
