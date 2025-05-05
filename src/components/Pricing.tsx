@@ -1,69 +1,97 @@
 import { useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
+import './pricing.css';
 
 function Pricing() {
-  // Mẫu dữ liệu giả cho các dịch vụ nha khoa
-  const [dichvus] = useState([
+  // Mẫu dữ liệu cho các dịch vụ nha khoa
+  const [services] = useState([
     {
       id: 1,
-      TenDv: "Làm trắng răng",
-      DonGia: "800.000đ",
-      Img: "/img/price-1.jpg",
-      MoTa: "Hỗ trợ 24/7"
+      title: "Làm trắng răng",
+      price: "800.000đ",
+      image: "/img/price-1.jpg",
+      features: [
+        { text: "Thiết bị hiện đại", active: true },
+        { text: "Bác sĩ chuyên nghiệp", active: true },
+        { text: "Hỗ trợ 24/7", active: true }
+      ]
     },
     {
       id: 2,
-      TenDv: "Niềng răng",
-      DonGia: "15.000.000đ",
-      Img: "/img/price-2.jpg",
-      MoTa: "Bao gồm tái khám"
+      title: "Niềng răng",
+      price: "15.000.000đ",
+      image: "/img/price-2.jpg",
+      features: [
+        { text: "Thiết bị hiện đại", active: true },
+        { text: "Bác sĩ chuyên nghiệp", active: true },
+        { text: "Bao gồm tái khám", active: true }
+      ]
     },
     {
       id: 3,
-      TenDv: "Nhổ răng khôn",
-      DonGia: "1.200.000đ",
-      Img: "/img/price-3.jpg",
-      MoTa: "Không đau, phục hồi nhanh"
+      title: "Nhổ răng khôn",
+      price: "1.200.000đ",
+      image: "/img/price-3.jpg",
+      features: [
+        { text: "Thiết bị hiện đại", active: true },
+        { text: "Bác sĩ chuyên nghiệp", active: true },
+        { text: "Không đau, phục hồi nhanh", active: true }
+      ]
     },
-    {
-      id: 4,
-      TenDv: "Trám răng thẩm mỹ",
-      DonGia: "450.000đ",
-      Img: "/img/price-1.jpg",
-      MoTa: "Chất liệu cao cấp"
-    }
+    // {
+    //   id: 4,
+    //   title: "Trám răng thẩm mỹ",
+    //   price: "450.000đ",
+    //   image: "/img/price-4.jpg",
+    //   features: [
+    //     { text: "Thiết bị hiện đại", active: true },
+    //     { text: "Bác sĩ chuyên nghiệp", active: true },
+    //     { text: "Chất liệu cao cấp", active: true }
+    //   ]
+    // }
   ]);
 
   return (
-    <div className="container-fluid py-5">
+    <div className="pricing-section">
       <div className="container">
-        <div className="row g-5">
-          <div className="col-lg-7">
-            <div className="section-title mb-4">
-              <h5 className="position-relative d-inline-block text-primary text-uppercase">Chi phí</h5>
-              <h1 className="display-5 mb-0">Chúng tôi cung cấp cho bạn các dịch vụ với chi phí tốt nhất</h1>
-            </div>
-            <p className="mb-4">Phòng khám nha khoa của chúng tôi cung cấp các dịch vụ chất lượng cao với giá cả phải chăng. Đội ngũ bác sĩ chuyên nghiệp và trang thiết bị hiện đại sẽ mang đến cho bạn trải nghiệm điều trị tốt nhất.</p>
+        <div className="row">
+          {/* Phần tiêu đề */}
+          <div className="col-lg-4 pricing-header">
+            <h5 className="pricing-subtitle">CHI PHÍ</h5>
+            <h1 className="pricing-title">
+              Chúng tôi cung cấp cho bạn các dịch vụ với chi phí tốt nhất
+            </h1>
+            <p className="pricing-description">
+              Phòng khám nha khoa của chúng tôi cung cấp các dịch vụ chất lượng cao với giá cả phải chăng. Đội ngũ bác sĩ chuyên nghiệp và trang thiết bị hiện đại sẽ mang đến cho bạn trải nghiệm điều trị tốt nhất.
+            </p>
           </div>
-        </div>
-        
-        <div className="row g-5 mb-5">
-          <div className="col-lg-12">
-            <div className="row g-5">
-              {dichvus.map((dichvu) => (
-                <div key={dichvu.id} className="col-md-3 price-item">
-                  <div className="position-relative">
-                    <img className="img-fluid rounded-top" src={dichvu.Img} alt={dichvu.TenDv} />
-                    <div className="d-flex align-items-center justify-content-center bg-light rounded pt-2 px-3 position-absolute top-100 start-50 translate-middle" style={{zIndex: 2}}>
-                      <h2 className="text-primary m-0">{dichvu.DonGia}</h2>
+          
+          {/* Phần hiển thị dịch vụ */}
+          <div className="col-lg-8">
+            <div className="services-grid">
+              {services.map((service) => (
+                <div key={service.id} className="service-card">
+                  <div className="service-image-container">
+                    <img className="service-image" src={service.image} alt={service.title} />
+                    <div className="service-price">
+                      <span>{service.price}</span>
                     </div>
                   </div>
-                  <div className="position-relative text-center bg-light border-bottom border-primary py-5 p-4">
-                    <h4>{dichvu.TenDv}</h4>
-                    <hr className="text-primary w-50 mx-auto mt-0" />
-                    <div className="d-flex justify-content-between mb-3"><span>Thiết bị hiện đại</span><i className="fa fa-check text-primary pt-1"></i></div>
-                    <div className="d-flex justify-content-between mb-3"><span>Bác sĩ chuyên nghiệp</span><i className="fa fa-check text-primary pt-1"></i></div>
-                    <div className="d-flex justify-content-between mb-2"><span>{dichvu.MoTa}</span><i className="fa fa-check text-primary pt-1"></i></div>
-                    <a href="appointment.html" className="btn btn-primary py-2 px-4 position-absolute top-100 start-50 translate-middle">Đặt hẹn</a>
+                  
+                  <div className="service-content">
+                    <h3 className="service-title">{service.title}</h3>
+                    <div className="service-divider"></div>
+                    
+                    <div className="service-features">
+                      {service.features.map((feature, index) => (
+                        <div key={index} className="service-feature">
+                          <span className="feature-text">{feature.text}</span>
+                          {feature.active && <span className="feature-check">✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <a href="/dat-lich" className="service-button">Đặt hẹn</a>
                   </div>
                 </div>
               ))}
