@@ -35,9 +35,6 @@ import ChatWidget from './components/ChatWidget';
 function HomePage() {
   return (
     <>
-      {/* <ThongTinPhongKham /> */}      
-      {/* <PricingTable /> */}
-
       <Carousel />
       <Banner />
       <About />

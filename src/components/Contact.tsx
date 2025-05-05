@@ -1,9 +1,17 @@
+import { motion } from "framer-motion";
+
 function Contact() {
     return (
         <div className="container-fluid py-5">
             <div className="container">
                 <div className="row g-5">
-                    <div className="col-xl-4 col-lg-6 wow slideInUp" data-wow-delay="0.1s">
+                    <motion.div 
+                        className="col-xl-4 col-lg-6"
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        viewport={{ once: true }}
+                    >
                         <div className="bg-light rounded h-100 p-5">
                             <div className="section-title">
                                 <h5 className="position-relative d-inline-block text-primary text-uppercase">Liên hệ</h5>
@@ -31,9 +39,15 @@ function Contact() {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="col-xl-4 col-lg-6 wow slideInUp" data-wow-delay="0.3s">
+                    <motion.div 
+                        className="col-xl-4 col-lg-6"
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        viewport={{ once: true }}
+                    >
                         <form>
                             <div className="row g-3">
                                 <div className="col-12">
@@ -53,9 +67,15 @@ function Contact() {
                                 </div>
                             </div>
                         </form>
-                    </div>
+                    </motion.div>
 
-                    <div className="col-xl-4 col-lg-12 wow slideInUp" data-wow-delay="0.6s">
+                    <motion.div 
+                        className="col-xl-4 col-lg-12"
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.6 }}
+                        viewport={{ once: true }}
+                    >
                         <iframe
                             className="position-relative rounded w-100 h-100"
                             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d5267.37475352634!2d106.67162552475928!3d10.741666663592778!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752fab4fac6831%3A0x3321e11a642186fd!2zQuG7h25oIHZp4buHbiBRdeG6rW4gOA!5e1!3m2!1svi!2s!4v1734069565522!5m2!1svi!2s"
@@ -65,7 +85,7 @@ function Contact() {
                             aria-hidden="false"
                             tabIndex={0}
                         ></iframe>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </div>

@@ -1,121 +1,95 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 
-const AboutSection = () => {
-  return (
-    <div className="container-fluid py-3">
-      <div className="container">
-        {/* Vision Section - Full Width */}
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="card shadow-sm border-0 p-4">
-              <div className="row">
-                <div className="col-lg-8">
-                  <h5 className="position-relative d-inline-block text-primary text-uppercase">GIỚI THIỆU</h5>
-                  <h1 className="display-5 mb-3 text-dark">Tầm nhìn</h1>
-                  <p className="mb-3" style={{ fontSize: 18 }}>
-                    "Trở thành sự lựa chọn hàng đầu về niềm tin, uy tín, chất lượng của bệnh nhân khi trồng răng Implant và dịch vụ nha khoa tại Việt Nam."
-                  </p>
-                </div>
-                <div className="col-lg-4">
-                  <div className="d-flex justify-content-center align-items-center h-100">
-                    <motion.img 
-                      src="/img/about-banner-1.svg" 
-                      alt="Vision" 
-                      className="w-100 rounded"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5 }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mission Section - Full Width */}
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="card shadow-sm border-0 p-4">
-              <div className="row">
-                <div className="col-lg-8">
-                  <h1 className="display-5 mb-3 text-dark">Sứ mệnh</h1>
-                  <p className="mb-3" style={{ fontSize: 18 }}>
-                    "Phòng khám Công Cường không chỉ mang đến cho khách hàng sự đảm bảo về sức khỏe răng hàm mặt, 
-                    luôn ưu tiên trải nghiệm và sự tín nhiệm của khách hàng lên hàng đầu. Chúng tôi hướng đến sự gắn kết lâu dài 
-                    và sự hài lòng tuyệt đối cho từng khách hàng, qua đó để góp phần tạo kiến tạo nên những trái tim hạnh phúc trọn vẹn cho cộng đồng."
-                  </p>
-                </div>
-                <div className="col-lg-4">
-                  <div className="d-flex justify-content-center align-items-center h-100">
+function Contact() {
+    return (
+        <div className="container-fluid py-5">
+            <div className="container">
+                <div className="row g-5">
                     <motion.div 
-                      className="rounded p-4 bg-primary text-white text-center"
-                      style={{ width: '100%' }}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5 }}
+                        className="col-xl-4 col-lg-6"
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        viewport={{ once: true }}
                     >
-                      <div className="rounded-circle bg-warning mx-auto mb-3 d-flex justify-content-center align-items-center" 
-                           style={{ width: 120, height: 120, fontSize: 18, fontWeight: 'bold' }}>
-                        BỆNH NHÂN
-                      </div>
-                      <div className="d-flex justify-content-between">
-                        <div className="px-3">CHẤT LƯỢNG</div>
-                        <div className="px-3">TẬN TÂM</div>
-                        <div className="px-3">UY TÍN</div>
-                      </div>
+                        <div className="bg-light rounded h-100 p-5">
+                            <div className="section-title">
+                                <h5 className="position-relative d-inline-block text-primary text-uppercase">Liên hệ</h5>
+                                <h1 className="display-6 mb-4">Hãy liên hệ với chúng tôi qua</h1>
+                            </div>
+                            <div className="d-flex align-items-center mb-2">
+                                <i className="bi bi-geo-alt fs-1 text-primary me-3"></i>
+                                <div className="text-start">
+                                    <h5 className="mb-0">Phòng khám</h5>
+                                    <span>123 Cao lỗ, TP.HCM</span>
+                                </div>
+                            </div>
+                            <div className="d-flex align-items-center mb-2">
+                                <i className="bi bi-envelope-open fs-1 text-primary me-3"></i>
+                                <div className="text-start">
+                                    <h5 className="mb-0">Email</h5>
+                                    <span>ncc9173@gmail.com</span>
+                                </div>
+                            </div>
+                            <div className="d-flex align-items-center">
+                                <i className="bi bi-phone-vibrate fs-1 text-primary me-3"></i>
+                                <div className="text-start">
+                                    <h5 className="mb-0">Gọi cho chúng tôi</h5>
+                                    <span>0842326539</span>
+                                </div>
+                            </div>
+                        </div>
                     </motion.div>
-                  </div>
+
+                    <motion.div 
+                        className="col-xl-4 col-lg-6"
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                        viewport={{ once: true }}
+                    >
+                        <form>
+                            <div className="row g-3">
+                                <div className="col-12">
+                                    <input type="text" className="form-control border-0 bg-light px-4" placeholder="Your Name" style={{ height: "55px" }} />
+                                </div>
+                                <div className="col-12">
+                                    <input type="email" className="form-control border-0 bg-light px-4" placeholder="Your Email" style={{ height: "55px" }} />
+                                </div>
+                                <div className="col-12">
+                                    <input type="text" className="form-control border-0 bg-light px-4" placeholder="Subject" style={{ height: "55px" }} />
+                                </div>
+                                <div className="col-12">
+                                    <textarea className="form-control border-0 bg-light px-4 py-3" rows={5} placeholder="Message"></textarea>
+                                </div>
+                                <div className="col-12">
+                                    <button className="btn btn-primary w-100 py-3" type="submit">Gửi tin nhắn</button>
+                                </div>
+                            </div>
+                        </form>
+                    </motion.div>
+
+                    <motion.div 
+                        className="col-xl-4 col-lg-12"
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.6 }}
+                        viewport={{ once: true }}
+                    >
+                        <iframe
+                            className="position-relative rounded w-100 h-100"
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d5267.37475352634!2d106.67162552475928!3d10.741666663592778!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752fab4fac6831%3A0x3321e11a642186fd!2zQuG7h25oIHZp4buHbiBRdeG6rW4gOA!5e1!3m2!1svi!2s!4v1734069565522!5m2!1svi!2s"
+                            frameBorder="0"
+                            style={{ minHeight: "400px", border: 0 }}
+                            allowFullScreen
+                            aria-hidden="false"
+                            tabIndex={0}
+                        ></iframe>
+                    </motion.div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
+    );
+}
 
-        {/* Story Section - Full Width */}
-        <div className="row">
-          <div className="col-12">
-            <div className="card shadow-sm border-0 p-4">
-              <h1 className="display-5 mb-4 text-dark">Câu chuyện của Công Cường</h1>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                <p className="mb-3" style={{ fontSize: 18 }}>
-                  "Với niềm đam mê và sự nhiệt huyết dành cho lĩnh vực Nha khoa, ngay từ khi còn theo học tại ĐH Y Dược TPHCM, 
-                  Tiến sĩ – Bác sĩ Nguyễn Văn Công Cường đã thể hiện xuất sắc trong quá trình học tập và dành được học bổng nghiên cứu sinh tại Đại Học Aix- Marseille, nước Pháp."
-                </p>
-                
-                <p className="mb-3" style={{ fontSize: 18 }}>
-                  "Trong hơn 10 năm tu nghiệp tại Pháp và được tiếp cận với những công nghệ hiện đại nhất, 
-                  Bác sĩ Nguyễn Văn Công Cường cảm thấy lo ngại trước những kỹ thuật nha khoa đã quá cũ và không bắt kịp sự tiến bộ 
-                  của nền Nha khoa thế giới tại nước ta. Đồng thời, tại Việt Nam cũng thiếu đi những địa chỉ nha khoa uy tín và các phương án điều trị thích hợp dành cho người dân."
-                </p>
-                
-                <p className="mb-3" style={{ fontSize: 18 }}>
-                  "Trở thành 1 trong những Tiến Sĩ Y Khoa trẻ nhất Việt Nam sau khi bảo vệ thành công luận án tiến sĩ tại Pháp, 
-                  với rất nhiều cơ hội để thành công tại nước ngoài. Tuy nhiên, bằng tình yêu quê hương, nhiệt huyết và mong muốn đóng góp phát triển cho ngành Nha khoa tại nước nhà, 
-                  đặc biệt là trong lĩnh vực Cấy ghép Implant, Bác sĩ Công Cường đã quyết định từ bỏ tất cả để quay về Việt Nam và lập nghiệp."
-                </p>
-                
-                <p className="mb-3" style={{ fontSize: 18 }}>
-                  "Với những trăn trở và mong muốn đó, Bác sĩ Công Cường đã thành lập và phát triển nên Phòng khám Công Cường vào năm 2017. 
-                  Sau hơn 5 năm đi vào hoạt động, với sự nỗ lực không ngừng của Tiến sĩ – Bác sĩ Nguyễn Văn Công Cường cùng với đội ngũ cộng sự Bác sĩ, phụ tá, nhân viên tại Phòng khám Công Cường
-                  đã thực hiện thành công hơn 10.000 ca Implant, qua đó kiến tạo nụ cười hạnh phúc cho hàng ngàn bệnh nhân. Đưa Công Cường trở thành một địa chỉ nha khoa uy tín – chất lượng tại TP.HCM, 
-                  là lựa chọn hàng đầu của các bệnh nhân trong và ngoài nước."
-                </p>
-              </motion.div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default AboutSection;
+export default Contact;
