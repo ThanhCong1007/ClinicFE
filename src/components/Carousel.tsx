@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
 import './Carousel.css'; // Import custom CSS for carousel
 function Carousel() {
     // State to manage active slide

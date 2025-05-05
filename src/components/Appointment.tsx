@@ -1,5 +1,4 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-
+import './Appointment.css';
 function Appointment() {
     // Dữ liệu dịch vụ trực tiếp
     const dichvus = [

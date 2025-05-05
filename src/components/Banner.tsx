@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import './Banner.css'; // Import CSS cho Banner
 
 function Banner() {

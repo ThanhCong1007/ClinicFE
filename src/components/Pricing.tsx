@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
 import './pricing.css';
 
 function Pricing() {

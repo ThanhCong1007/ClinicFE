@@ -14,10 +14,12 @@ import Contact from './components/Contact';
 import Pricing from './components/Pricing';
 import Header from './components/Header';
 import Login from './pages/Login';
-
+import Team from './components/Team';
+import PricingTable from './pages/PricingTable';
 // Import các trang mới (nếu có)
-// import GioiThieu from './pages/GioiThieu';
-// import ThongTinPhongKham from './pages/ThongTinPhongKham';
+import GioiThieu from './pages/GioiThieu';
+import ThongTinPhongKham from './pages/ThongTinPhongKham';
+import ChatWidget from './components/ChatWidget';
 // import BacSi from './pages/BacSi';
 // import BocRangSu from './pages/BocRangSu';
 // import BangGiaBocRangSu from './pages/BangGiaBocRangSu';
@@ -33,11 +35,15 @@ import Login from './pages/Login';
 function HomePage() {
   return (
     <>
+      {/* <ThongTinPhongKham /> */}      
+      {/* <PricingTable /> */}
+
       <Carousel />
       <Banner />
       <About />
       <Contact />
       <Pricing />
+      <Team />
       <Appointment />
       <div className="container py-5">
         <h2 className="text-center mb-4">Phòng khám nha khoa Công Cường</h2>
@@ -102,34 +108,33 @@ function App() {
             <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}></div>
           </div>
         )}
-        
+
         <Navbar />
-        
         <Routes>
           {/* Route chính */}
           <Route path="/trang-chu" element={<HomePage />} />
           <Route path="/" element={<Navigate to="/trang-chu" replace />} />
-          
+
           {/* Routes cho phần Giới thiệu */}
-          <Route path="/gioi-thieu/thong-tin-phong-kham" element={<PlaceholderPage title="Thông tin phòng khám" />} />
+          <Route path="/gioi-thieu/thong-tin-phong-kham" element={<ThongTinPhongKham />} />
           <Route path="/gioi-thieu/bac-si" element={<PlaceholderPage title="Đội ngũ bác sĩ" />} />
-          
+
           {/* Routes cho phần Bọc răng sứ */}
           <Route path="/dich-vu/boc-rang-su" element={<PlaceholderPage title="Bọc răng sứ thẩm mỹ" />} />
-          <Route path="/dich-vu/bang-gia-boc-rang-su" element={<PlaceholderPage title="Bảng giá bọc răng sứ" />} />
+          <Route path="/dich-vu/bang-gia-boc-rang-su" element={<PricingTable  />} />
           <Route path="/dich-vu/dan-su-venner" element={<PlaceholderPage title="Dán sứ Venner" />} />
-          
+
           {/* Routes cho phần Dịch vụ khác */}
           <Route path="/dich-vu/nieng-rang-tham-my" element={<PlaceholderPage title="Niềng răng thẩm mỹ" />} />
           <Route path="/dich-vu/tram-rang-tham-my" element={<PlaceholderPage title="Trám răng thẩm mỹ" />} />
           <Route path="/dich-vu/cao-voi-rang" element={<PlaceholderPage title="Cạo vôi răng" />} />
-          
+
           {/* Routes cho các trang khác */}
           <Route path="/lien-he" element={<PlaceholderPage title="Liên hệ với chúng tôi" />} />
           <Route path="/dat-lich" element={<PlaceholderPage title="Đặt lịch hẹn" />} />
           <Route path="/login" element={<Login />} />
         </Routes>
-        
+
         {/* Footer */}
         <Footer />
 
@@ -169,7 +174,10 @@ function App() {
           </div>
         </div>
       </div>
+      <ChatWidget />
+
     </Router>
+
   );
 }
 

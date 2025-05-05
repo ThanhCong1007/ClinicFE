@@ -1,5 +1,4 @@
-import 'bootstrap/dist/css/bootstrap.min.css'; // import CSS
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // import JS (dropdown, modal...)
+
 function Header() {
     return (
         <div className="container-fluid bg-light ps-5 pe-0 d-none d-lg-block">

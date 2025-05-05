@@ -1,0 +1,240 @@
+/* Main Colors */
+:root {
+    --primary: #06A3DA;
+    --secondary: #F57E57;
+    --light: #EEF9FF;
+    --dark: #091E3E;
+    --dark-blue: rgb(0, 88, 153);
+  }
+  
+  /* Typography */
+  h1, h2, .font-weight-bold {
+    font-weight: 700 !important;
+  }
+  
+  h3, h4, .font-weight-semi-bold {
+    font-weight: 600 !important;
+  }
+  
+  h5, h6, .font-weight-medium {
+    font-weight: 500 !important;
+  }
+  
+  /* Button Styles */
+  .btn {
+    font-weight: 600;
+    transition: .5s;
+  }
+  
+  .btn-primary, .btn-secondary {
+    color: #FFFFFF;
+  }
+  
+  .btn-primary:hover {
+    background: var(--secondary);
+    border-color: var(--secondary);
+  }
+  
+  .btn-dark:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  
+  /* Section Title Styles */
+  .section-title h4 {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .section-title h5::before {
+    position: absolute;
+    content: "";
+    width: 45px;
+    height: 3px;
+    right: -55px;
+    bottom: 11px;
+    background: var(--primary);
+  }
+  
+  .section-title h5::after {
+    position: absolute;
+    content: "";
+    width: 15px;
+    height: 3px;
+    right: -75px;
+    bottom: 11px;
+    background: var(--secondary);
+  }
+  
+  /* Text Colors */
+  .text-primary {
+    color: var(--primary) !important;
+  }
+  
+  .text-dark-blue {
+    color: var(--dark-blue);
+  }
+  
+  /* Price Table Specific Styles */
+  .price-title {
+    display: flex;
+    align-items: center;
+  }
+  
+  .price-price {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  
+  .pic-box {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+  }
+  
+  .payment-step {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  
+  /* Form Controls */
+  .form-control:focus {
+    outline: none;
+    border: 1px solid var(--dark);
+    box-shadow: none;
+  }
+  
+  /* Contact Form Styles */
+  input[type="checkbox"] {
+    cursor: pointer;
+  }
+  
+  label {
+    cursor: pointer;
+  }
+  
+  /* Animation */
+  .wow {
+    visibility: hidden;
+  }
+  
+  .fadeInUp {
+    animation-name: fadeInUp;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 40px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 991.98px) {
+    .px-5 {
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+    
+    .ps-5 {
+      padding-left: 1rem !important;
+    }
+  }
+  
+  @media (max-width: 767.98px) {
+    .col-lg-5, .col-lg-7, .col-lg-12 {
+      padding: 0.5rem !important;
+    }
+    
+    .payment-step {
+      margin-left: 0 !important;
+    }
+  }
+  
+  /* New Price Cards Styles */
+  .price-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 3rem 0;
+  }
+  
+  .price-container {
+    display: flex;
+    height: auto;
+    width: 75%;
+  }
+  
+  .price-row {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 40px;
+  }
+  
+  .price-item {
+    z-index: 1;
+    min-width: 300px;
+    height: 500px;
+    border-radius: 25px;
+    padding-bottom: 10px;
+    font-size: 20px;
+    color: black;
+    border: 2px solid var(--dark);
+    box-shadow: 15px 15px rgb(211, 211, 211);
+    transition: transform 0.3s ease;
+  }
+  
+  .price-item:hover {
+    transform: translateY(-10px);
+  }
+  
+  .price-header {
+    width: 100%;
+    height: 15%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+    background-color: var(--dark);
+    scale: 1.01;
+  }
+  
+  .price-body {
+    width: 100%;
+    height: 70%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  .price-footer {
+    width: 100%;
+    height: 15%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .image-border {
+    border: 2px solid var(--dark);
+    border-radius: 100px;
+  }
+  
+  .mar-top {
+    margin-top: 50px;
+  }

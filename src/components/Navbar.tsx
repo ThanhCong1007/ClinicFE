@@ -1,20 +1,18 @@
 import { useState, useEffect, SetStateAction } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './Navbar.css';
 
 function Navbar() {
     const [isVisible, setIsVisible] = useState(false);
     const [isSticky, setIsSticky] = useState(false);
     const [activeLink, setActiveLink] = useState('/trang-chu');
-    const location = useLocation(); // Sử dụng hook useLocation để theo dõi URL hiện tại
+    const location = useLocation();
 
     useEffect(() => {
-        // Hiệu ứng fadeIn
+        // Hiệu ứng fadeInUp (tương tự như wow.js)
         const timer = setTimeout(() => {
             setIsVisible(true);
-        }, 100);
+        }, 100); // Tương đương với data-wow-delay="0.1s"
 
         // Xử lý sticky navbar khi scroll
         const handleScroll = () => {
@@ -35,182 +33,160 @@ function Navbar() {
             clearTimeout(timer);
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [location.pathname]); // Thêm location.pathname vào dependencies
+    }, [location.pathname]);
 
     const handleNavLinkClick = (path: SetStateAction<string>) => {
         setActiveLink(path);
     };
 
-    const fadeInStyle = {
+    // Hiệu ứng fadeInUp tương tự wow.js
+    const fadeInUpStyle = {
         opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-        transition: 'opacity 0.6s ease-out, transform 0.6s ease-out'
+        transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
+        transition: 'opacity 0.8s ease-out, transform 0.8s ease-out'
     };
 
     return (
         <>
             <nav
-                className={`navbar navbar-expand-lg navbar-light shadow-sm px-4 px-lg-5 py-3 ${isSticky ? 'sticky-top sticky-nav' : ''}`}
-                style={fadeInStyle}
+                className={`navbar navbar-expand-lg bg-white navbar-light shadow-sm px-5 py-3 py-lg-0 ${isSticky ? 'sticky-top sticky-nav' : ''}`}
+                style={fadeInUpStyle}
             >
-                <div className="container-fluid">
-                    <Link to="/trang-chu" className="navbar-brand d-flex align-items-center">
-                        <div className="logo-icon me-2">
-                            <i className="fa fa-tooth text-primary"></i>
-                        </div>
-                        <h1 className="m-0 brand-text">
-                            <span className="text-primary">Phòng khám</span> Công Cường
-                        </h1>
-                    </Link>
-
-                    <button
-                        className="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#navbarCollapse"
-                        aria-controls="navbarCollapse"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation"
-                    >
-                        <span className="navbar-toggler-icon"></span>
-                    </button>
-
-                    <div className="collapse navbar-collapse" id="navbarCollapse">
-                        <div className="navbar-nav mx-auto py-0">
+                <Link to="/trang-chu" className="navbar-brand p-0">
+                    <h1 className="m-0 text-primary"><i className="fa fa-tooth me-2"></i>Phòng khám Công Cường</h1>
+                </Link>
+                
+                <button
+                    className="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarCollapse"
+                >
+                    <span className="navbar-toggler-icon"></span>
+                </button>
+                
+                <div className="collapse navbar-collapse" id="navbarCollapse">
+                    <div className="navbar-nav ms-auto py-0">
+                        <Link 
+                            to="/trang-chu"
+                            className={`nav-item nav-link ${activeLink === '/trang-chu' ? 'active' : ''}`}
+                            onClick={() => handleNavLinkClick('/trang-chu')}
+                        >
+                            Trang chủ
+                        </Link>
+                        
+                        <div className="nav-item dropdown">
                             <Link 
-                                to="/trang-chu"
-                                className={`nav-item nav-link ${activeLink === '/trang-chu' ? 'active' : ''}`}
-                                onClick={() => handleNavLinkClick('/trang-chu')}
+                                to="#"
+                                className={`nav-link dropdown-toggle ${activeLink.includes('/gioi-thieu') ? 'active' : ''}`}
+                                data-bs-toggle="dropdown"
                             >
-                                Trang chủ
+                                Giới thiệu
                             </Link>
-
-                            <div className="nav-item dropdown">
+                            <div className="dropdown-menu m-0">
                                 <Link 
-                                    to="#"
-                                    className={`nav-link dropdown-toggle ${activeLink.includes('/gioi-thieu') ? 'active' : ''}`}
-                                    data-bs-toggle="dropdown"
+                                    to="/gioi-thieu/thong-tin-phong-kham"
+                                    className="dropdown-item"
+                                    onClick={() => handleNavLinkClick('/gioi-thieu/thong-tin-phong-kham')}
                                 >
-                                    Giới thiệu
+                                    Thông tin phòng khám
                                 </Link>
-                                <div className="dropdown-menu m-0 border-0 rounded-0 dropdown-animate">
-                                    <Link 
-                                        to="/gioi-thieu/thong-tin-phong-kham"
-                                        className="dropdown-item"
-                                        onClick={() => handleNavLinkClick('/gioi-thieu/thong-tin-phong-kham')}
-                                    >
-                                        <i className="fas fa-info-circle me-2 text-primary"></i>
-                                        Thông tin phòng khám
-                                    </Link>
-                                    <Link 
-                                        to="/gioi-thieu/bac-si"
-                                        className="dropdown-item"
-                                        onClick={() => handleNavLinkClick('/gioi-thieu/bac-si')}
-                                    >
-                                        <i className="fas fa-user-md me-2 text-primary"></i>
-                                        Đội ngũ bác sĩ
-                                    </Link>
-                                </div>
-                            </div>
-
-                            <div className="nav-item dropdown">
                                 <Link 
-                                    to="#"
-                                    className={`nav-link dropdown-toggle ${activeLink.includes('/dich-vu/boc-rang-su') ? 'active' : ''}`}
-                                    data-bs-toggle="dropdown"
+                                    to="/gioi-thieu/bac-si"
+                                    className="dropdown-item"
+                                    onClick={() => handleNavLinkClick('/gioi-thieu/bac-si')}
                                 >
-                                    Bọc răng sứ
+                                    Đội ngũ bác sĩ
                                 </Link>
-                                <div className="dropdown-menu m-0 border-0 rounded-0 dropdown-animate">
-                                    <Link 
-                                        to="/dich-vu/boc-rang-su"
-                                        className="dropdown-item"
-                                        onClick={() => handleNavLinkClick('/dich-vu/boc-rang-su')}
-                                    >
-                                        <i className="fas fa-teeth me-2 text-primary"></i>
-                                        Bọc răng sứ thẩm mỹ
-                                    </Link>
-                                    <Link 
-                                        to="/dich-vu/bang-gia-boc-rang-su"
-                                        className="dropdown-item"
-                                        onClick={() => handleNavLinkClick('/dich-vu/bang-gia-boc-rang-su')}
-                                    >
-                                        <i className="fas fa-tags me-2 text-primary"></i>
-                                        Bảng giá bọc răng sứ
-                                    </Link>
-                                    <Link 
-                                        to="/dich-vu/dan-su-venner"
-                                        className="dropdown-item"
-                                        onClick={() => handleNavLinkClick('/dich-vu/dan-su-venner')}
-                                    >
-                                        <i className="fas fa-magic me-2 text-primary"></i>
-                                        Dán sứ Venner
-                                    </Link>
-                                </div>
                             </div>
-
-                            <div className="nav-item dropdown">
-                                <Link 
-                                    to="#"
-                                    className={`nav-link dropdown-toggle ${activeLink.includes('/dich-vu') && !activeLink.includes('/dich-vu/boc-rang-su') ? 'active' : ''}`}
-                                    data-bs-toggle="dropdown"
-                                >
-                                    Dịch vụ khác
-                                </Link>
-                                <div className="dropdown-menu m-0 border-0 rounded-0 dropdown-animate">
-                                    <Link 
-                                        to="/dich-vu/nieng-rang-tham-my"
-                                        className="dropdown-item"
-                                        onClick={() => handleNavLinkClick('/dich-vu/nieng-rang-tham-my')}
-                                    >
-                                        <i className="fas fa-smile me-2 text-primary"></i>
-                                        Niềng răng thẩm mỹ
-                                    </Link>
-                                    <Link 
-                                        to="/dich-vu/tram-rang-tham-my"
-                                        className="dropdown-item"
-                                        onClick={() => handleNavLinkClick('/dich-vu/tram-rang-tham-my')}
-                                    >
-                                        <i className="fas fa-fill-drip me-2 text-primary"></i>
-                                        Trám răng thẩm mỹ
-                                    </Link>
-                                    <Link 
-                                        to="/dich-vu/cao-voi-rang"
-                                        className="dropdown-item"
-                                        onClick={() => handleNavLinkClick('/dich-vu/cao-voi-rang')}
-                                    >
-                                        <i className="fas fa-brush me-2 text-primary"></i>
-                                        Cạo vôi răng
-                                    </Link>
-                                </div>
-                            </div>
-
+                        </div>
+                        
+                        <div className="nav-item dropdown">
                             <Link 
-                                to="/lien-he" 
-                                className={`nav-item nav-link ${activeLink === '/lien-he' ? 'active' : ''}`}
-                                onClick={() => handleNavLinkClick('/lien-he')}
+                                to="#"
+                                className={`nav-link dropdown-toggle ${activeLink.includes('/dich-vu/boc-rang-su') ? 'active' : ''}`}
+                                data-bs-toggle="dropdown"
                             >
-                                Liên hệ
+                                Bọc răng sứ
                             </Link>
+                            <div className="dropdown-menu m-0">
+                                <Link 
+                                    to="/dich-vu/boc-rang-su"
+                                    className="dropdown-item"
+                                    onClick={() => handleNavLinkClick('/dich-vu/boc-rang-su')}
+                                >
+                                    Bọc răng sứ thẩm mỹ
+                                </Link>
+                                <Link 
+                                    to="/dich-vu/bang-gia-boc-rang-su"
+                                    className="dropdown-item"
+                                    onClick={() => handleNavLinkClick('/dich-vu/bang-gia-boc-rang-su')}
+                                >
+                                    Bảng giá bọc răng sứ
+                                </Link>
+                                <Link 
+                                    to="/dich-vu/dan-su-venner"
+                                    className="dropdown-item"
+                                    onClick={() => handleNavLinkClick('/dich-vu/dan-su-venner')}
+                                >
+                                    Dán sứ Venner
+                                </Link>
+                            </div>
                         </div>
-
-                        <div className="navbar-action d-flex align-items-center">
-                            <button type="button" className="btn-search me-3" data-bs-toggle="modal" data-bs-target="#searchModal">
-                                <i className="fa fa-search"></i>
-                            </button>
-
-                            <Link to="/dat-lich" className="btn btn-primary py-2 px-4 nav-btn">
-                                <i className="far fa-calendar-alt me-2"></i>Đặt hẹn
-                            </Link>
-
-                            <Link
-                                to="/login"
-                                className="btn btn-secondary py-2 px-4 ms-3 nav-btn"
+                        
+                        <div className="nav-item dropdown">
+                            <Link 
+                                to="#"
+                                className={`nav-link dropdown-toggle ${activeLink.includes('/dich-vu') && !activeLink.includes('/dich-vu/boc-rang-su') ? 'active' : ''}`}
+                                data-bs-toggle="dropdown"
                             >
-                                <i className="fas fa-user me-2"></i>Đăng nhập
+                                Dịch vụ khác
                             </Link>
+                            <div className="dropdown-menu m-0">
+                                <Link 
+                                    to="/dich-vu/nieng-rang-tham-my"
+                                    className="dropdown-item"
+                                    onClick={() => handleNavLinkClick('/dich-vu/nieng-rang-tham-my')}
+                                >
+                                    Niềng răng thẩm mỹ
+                                </Link>
+                                <Link 
+                                    to="/dich-vu/tram-rang-tham-my"
+                                    className="dropdown-item"
+                                    onClick={() => handleNavLinkClick('/dich-vu/tram-rang-tham-my')}
+                                >
+                                    Trám răng thẩm mỹ
+                                </Link>
+                                <Link 
+                                    to="/dich-vu/cao-voi-rang"
+                                    className="dropdown-item"
+                                    onClick={() => handleNavLinkClick('/dich-vu/cao-voi-rang')}
+                                >
+                                    Cạo vôi răng
+                                </Link>
+                            </div>
                         </div>
+                        
+                        <Link 
+                            to="/lien-he" 
+                            className={`nav-item nav-link ${activeLink === '/lien-he' ? 'active' : ''}`}
+                            onClick={() => handleNavLinkClick('/lien-he')}
+                        >
+                            Liên hệ
+                        </Link>
                     </div>
+                    
+                    <button type="button" className="btn text-dark" data-bs-toggle="modal" data-bs-target="#searchModal">
+                        <i className="fa fa-search"></i>
+                    </button>
+                    
+                    <Link to="/dat-lich" className="btn btn-primary py-2 px-4 ms-3">
+                        Đặt hẹn
+                    </Link>
+                    
+                    <Link to="/dang-nhap" className="btn btn-secondary py-2 px-4 ms-3">
+                        Đăng nhập
+                    </Link>
                 </div>
             </nav>
 

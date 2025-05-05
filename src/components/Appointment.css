@@ -1,0 +1,82 @@
+.appointment-section {
+  /* background: linear-gradient(120deg, #06A3DA 60%, #EEF9FF 100%); */
+  background: none;
+  padding: 60px 0;
+}
+
+.appointment-form-custom {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  padding: 40px 32px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  transition: box-shadow 0.3s;
+}
+.appointment-form-custom:hover {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+}
+
+.appointment-form-custom h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #06A3DA;
+  margin-bottom: 1.5rem;
+}
+
+.appointment-form-custom .form-control,
+.appointment-form-custom .form-select {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: none;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+.appointment-form-custom .form-control:focus,
+.appointment-form-custom .form-select:focus {
+  border-color: #06A3DA;
+  box-shadow: 0 0 0 2px #06a3da22;
+}
+
+.appointment-form-custom textarea.form-control {
+  min-height: 80px;
+}
+
+.appointment-form-custom button {
+  background: #06A3DA;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+}
+.appointment-form-custom button:hover {
+  background: #057bb5;
+}
+
+@media (max-width: 991px) {
+  .appointment-section {
+    padding: 32px 0;
+  }
+  .appointment-form-custom {
+    padding: 24px 10px;
+  }
+}
+
+/* Hiệu ứng cho phần giới thiệu */
+.appointment-intro {
+  color: #fff;
+  padding: 32px 0 32px 16px;
+}
+.appointment-intro h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  color: #fff;
+  text-shadow: 0 2px 8px #0001;
+}
+.appointment-intro p {
+  font-size: 1.1rem;
+  color: #eaf6fb;
+  line-height: 1.7;
+} 
