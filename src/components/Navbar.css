@@ -165,6 +165,29 @@ body {
     transform: translateY(0);
 }
 
+/* CSS để menu dropdown tự động hiển thị khi hover */
+.navbar .nav-item.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+/* Đảm bảo dropdown menu hiển thị đúng vị trí */
+.navbar .dropdown-menu {
+    margin-top: 0;
+}
+
+/* Thêm hiệu ứng transition cho dropdown */
+.navbar .dropdown-menu {
+    transition: all 0.3s;
+    opacity: 0;
+    visibility: hidden;
+    display: block;
+}
+
+.navbar .nav-item.dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+}
+
 .dropdown-animate {
     animation: growDown 0.3s ease-in-out forwards;
     transform-origin: top center;
@@ -174,9 +197,11 @@ body {
     0% {
         transform: scaleY(0);
     }
+
     80% {
         transform: scaleY(1.05);
     }
+
     100% {
         transform: scaleY(1);
     }
@@ -239,7 +264,8 @@ body {
     padding: 2px 0 !important;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px); /* Safari */
+    -webkit-backdrop-filter: blur(10px);
+    /* Safari */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     /* Sử dụng GPU acceleration */
     transform: translateZ(0);
@@ -253,6 +279,7 @@ body {
         transform: translateY(-10px);
         opacity: 0.8;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -295,7 +322,7 @@ body {
         padding: 12px 0;
         font-size: 14px;
     }
-    
+
     .brand-text {
         font-size: 15px;
     }
@@ -307,21 +334,21 @@ body {
         padding: 12px 15px;
         border-radius: 5px;
     }
-    
+
     .navbar-light .navbar-nav .nav-link::before {
         display: none;
     }
-    
+
     .navbar-light .navbar-nav .nav-link:hover,
     .navbar-light .navbar-nav .nav-link.active {
         color: #FFFFFF;
         background: #0DCAF0;
     }
-    
+
     .navbar-nav {
         margin: 15px 0;
     }
-    
+
     .dropdown-menu {
         margin-top: 0 !important;
         margin-bottom: 15px;
@@ -330,13 +357,13 @@ body {
         border-radius: 5px;
         background-color: #F8F9FA;
     }
-    
+
     .navbar-action {
         width: 100%;
         justify-content: space-between;
         margin-top: 15px;
     }
-    
+
     .nav-btn {
         flex: 1;
     }
@@ -346,32 +373,32 @@ body {
     .brand-text {
         font-size: 16px;
     }
-    
+
     .logo-icon {
         width: 35px;
         height: 35px;
     }
-    
+
     .logo-icon i {
         font-size: 18px;
     }
-    
+
     .navbar-light .navbar-nav .nav-link {
         font-size: 14px;
     }
-    
+
     .navbar-action {
         flex-direction: column;
         align-items: stretch;
     }
-    
-    .btn.btn-primary, 
+
+    .btn.btn-primary,
     .btn.btn-secondary {
         padding: 8px 15px;
         font-size: 14px;
         margin: 5px 0;
     }
-    
+
     .btn-search {
         position: absolute;
         top: 15px;
@@ -379,7 +406,7 @@ body {
         width: 35px;
         height: 35px;
     }
-    
+
     .navbar-action .btn-search {
         display: none;
     }

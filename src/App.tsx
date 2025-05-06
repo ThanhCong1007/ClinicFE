@@ -15,10 +15,14 @@ import Pricing from './components/Pricing';
 import Header from './components/Header';
 import Login from './pages/Login';
 import Team from './components/Team';
-import PricingTable from './pages/PricingTable';
+import PricingTable from './pages/BocRangSu/PricingTable';
+import CosmeticPorcelainTeeth from './pages/BocRangSu/CosmeticPorcelainTeeth';
+
+
+
 // Import các trang mới (nếu có)
 import GioiThieu from './pages/GioiThieu';
-import ThongTinPhongKham from './pages/ThongTinPhongKham';
+import ThongTinPhongKham from './pages/GioiThieu/ThongTinPhongKham';
 import ChatWidget from './components/ChatWidget';
 // import BacSi from './pages/BacSi';
 // import BocRangSu from './pages/BocRangSu';
@@ -117,7 +121,7 @@ function App() {
           <Route path="/gioi-thieu/bac-si" element={<PlaceholderPage title="Đội ngũ bác sĩ" />} />
 
           {/* Routes cho phần Bọc răng sứ */}
-          <Route path="/dich-vu/boc-rang-su" element={<PlaceholderPage title="Bọc răng sứ thẩm mỹ" />} />
+          <Route path="/dich-vu/boc-rang-su" element={<CosmeticPorcelainTeeth />} />
           <Route path="/dich-vu/bang-gia-boc-rang-su" element={<PricingTable  />} />
           <Route path="/dich-vu/dan-su-venner" element={<PlaceholderPage title="Dán sứ Venner" />} />
 

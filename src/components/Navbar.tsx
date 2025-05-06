@@ -53,7 +53,7 @@ function Navbar() {
                 style={fadeInUpStyle}
             >
                 <Link to="/trang-chu" className="navbar-brand p-0">
-                    <h1 className="m-0 text-primary"><i className="fa fa-tooth me-2"></i>Phòng khám Công Cường</h1>
+                    <h1 className="m-0 text-primary"><i className="fa fa-tooth me-2"></i>Nha khoa I-DENT</h1>
                 </Link>
                 
                 <button
