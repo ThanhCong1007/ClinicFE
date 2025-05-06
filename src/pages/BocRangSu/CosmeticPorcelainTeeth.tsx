@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import Appointment from "../../components/Appointment";
+import { priceData, PriceItemType, indicationsData } from "./data";
 
 function CosmeticPorcelainTeeth() {
   // Animation variants
@@ -13,88 +14,8 @@ function CosmeticPorcelainTeeth() {
     visible: { scale: 1, opacity: 1, transition: { duration: 0.6 } }
   };
 
-  // Price data
-  const priceData = [
-    {
-      type: "Răng sứ kim loại",
-      name: "Ceramco 3 - Mỹ",
-      warranty: "Bảo hành 3 năm",
-      price: "1.000.000 VND",
-      image: "/img/gia-boc-rang-su-1.png"
-    },
-    {
-      type: "Răng sứ kim loại",
-      name: "Chrom-Cobalt - Mỹ",
-      warranty: "Bảo hành 5 năm",
-      price: "3.500.000 VND",
-      image: "/img/gia-boc-rang-su-2.png"
-    },
-    {
-      type: "Răng sứ toàn sứ Đức",
-      name: "Bio Esthetic",
-      warranty: "Bảo hành 10 năm",
-      price: "4.500.000 VND",
-      image: "/img/gia-boc-rang-su-3.png"
-    },
-    {
-      type: "Răng sứ toàn sứ Đức",
-      name: "Multilayer DDBio",
-      warranty: "Bảo hành 10 năm",
-      price: "5.500.000 VND",
-      image: "/img/gia-boc-rang-su-4.png"
-    },
-    {
-      type: "Răng sứ toàn sứ Đức",
-      name: "Multilayer Cercon HT",
-      warranty: "Bảo hành 10 năm",
-      price: "6.500.000 VND",
-      image: "/img/gia-boc-rang-su-5.png"
-    },
-    {
-      type: "Răng sứ toàn sứ Đức",
-      name: "Lava Plus",
-      warranty: "Bảo hành 15 năm",
-      price: "8.000.000 VND",
-      image: "/img/gia-boc-rang-su-6.png"
-    },
-    {
-      type: "Răng sứ toàn sứ Đức",
-      name: "Nacera 9 Max",
-      warranty: "Bảo hành 15 năm",
-      price: "9.000.000 VND",
-      image: "/img/gia-boc-rang-su-7.png"
-    },
-    {
-      type: "Răng sứ toàn sứ Đức",
-      name: "Lava Esthetic",
-      warranty: "Bảo hành 20 năm",
-      price: "1.400.000 VND",
-      image: "/img/gia-boc-rang-su-8.png"
-    }
-  ];
-
-  // Indications data
-  const indicationsData = [
-    {
-      image: "/img/boc-rang-su-3.png",
-      text: "Răng bị sâu, sứt mẻ, gãy vỡ, viêm tủy, mòn men răng"
-    },
-    {
-      image: "/img/boc-rang-su-5.png",
-      text: "Răng thưa hở, răng mọc lệch lạc, khấp khểnh, răng hô, móm"
-    },
-    {
-      image: "/img/boc-rang-su-6.png",
-      text: "Răng bị xỉn màu, nhiễm kháng sinh tetracylin, ngả vàng, không thể tẩy trắng được"
-    },
-    {
-      image: "/img/boc-rang-su-7.png",
-      text: "Răng hư, có hình dạng to, nhỏ không đồng đều"
-    }
-  ];
-
   // Price item component
-  const PriceItem = ({ item }: { item: any }) => (
+  const PriceItem = ({ item }: { item: PriceItemType }) => (
     <motion.div
       className="price-item"
       initial="hidden"

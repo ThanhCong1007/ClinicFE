@@ -1,43 +1,9 @@
 import { useState } from 'react';
 import './PricingTable.css';
 import Appointment from '../../components/Appointment';
+import { removableTeethPrices,fixedTeethPrices,coreOptions } from './data';
 
 function PricingTable() {
-	// Tạo data cho các phần lặp lại
-	const fixedTeethPrices = [
-		{ name: "Răng sứ kim loại (Ceramco 3 - Mỹ)", price: "1.000.000", warranty: "3 năm" },
-		{ name: "Răng sứ kim loại (Chrom-Cobalt - Mỹ)", price: "3.500.000", warranty: "5 năm" },
-		{ name: "Răng sứ toàn sứ Đức (Bio Esthetic)", price: "4.500.000", warranty: "10 năm" },
-		{ name: "Răng sứ toàn sứ Đức (Multilayer DDBio)", price: "5.500.000", warranty: "10 năm" },
-		{ name: "Răng sứ toàn sứ Đức (Multilayer Cercon HT)", price: "6.500.000", warranty: "10 năm" },
-		{ name: "Răng sứ toàn sứ Đức (Lava Plus)", price: "8.000.000", warranty: "15 năm" },
-		{ name: "Răng sứ toàn sứ Đức (Nacera 9 Max)", price: "9.000.000", warranty: "15 năm" },
-		{ name: "Răng sứ toàn sứ Đức (Lava Esthetic)", price: "1.400.000", warranty: "20 năm" },
-		{ name: "Veneer Emax CAD (Ivoclar – Đức)", price: "6.000.000", warranty: "5 năm" },
-		{ name: "Veneer Emax Press (Ivoclar – Đức)", price: "8.000.000", warranty: "5 năm" },
-		{ name: "Veneer Lisi Press (GC – Mỹ)", price: "10.000.000", warranty: "5 năm" },
-		{ name: "Veneer Lisi Press Ultra Thin (GC – Mỹ)", price: "12.000.000", warranty: "5 năm" },
-		{ name: "Thẩm mỹ răng sứ toàn hàm", price: "Giảm 30% cho cho tất cả loại răng toàn sứ", warranty: "" },
-	];
-
-	const removableTeethPrices = [
-		{ name: "Răng nhựa Việt Nam", price: "300.000", warranty: "" },
-		{ name: "Răng nhựa Justi (Mỹ)", price: "600.000", warranty: "" },
-		{ name: "Răng Composite (Nhật)", price: "800.000", warranty: "" },
-		{ name: "Răng nhựa Vita (Đức)", price: "1.000.000", warranty: "" },
-		{ name: "Răng sứ tháo lắp", price: "1.000.000", warranty: "" },
-		{ name: "Hàm khung", price: "1.500.000", warranty: "(Không kể răng)", isJaw: true },
-		{ name: "Hàm Bisoft", price: "4.000.000", warranty: "(Không kể răng)", isJaw: true },
-		{ name: "Hàm khung liên kết", price: "10.000.000", warranty: "(Kể cả răng)", isJaw: true },
-	];
-
-	const coreOptions = [
-		{ name: "Trám tái tạo cùi", price: "300.000", warranty: "" },
-		{ name: "Cùi kim loại/ Chốt kim loại", price: "300.000", warranty: "" },
-		{ name: "Chốt sợi", price: "1.000.000", warranty: "" },
-		{ name: "Cùi sứ Zirconia", price: "2.000.000", warranty: "" },
-	];
-
 	// Component cho hàng giá
 	const PriceRow = ({ item, unit = "VND/Răng" }: { item: any, unit?: string }) => {
 		const priceUnit = item.isJaw ? "VND/Hàm" : unit;
