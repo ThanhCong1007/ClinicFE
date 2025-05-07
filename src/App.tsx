@@ -8,16 +8,16 @@ import Search from './components/Search';
 import Carousel from './components/Carousel';
 import Banner from './components/Banner';
 import About from './components/About';
-import Appointment from './components/Appointment';
-import Footer from './components/Footer';
+import Appointment from './layouts/Appointment';
+import Footer from './layouts/Footer';
 import Contact from './components/Contact';
 import Pricing from './components/Pricing';
-import Header from './components/Header';
+import Header from './layouts/Header';
 import Login from './pages/Login';
 import Team from './components/Team';
 import PricingTable from './pages/BocRangSu/PricingTable';
 import CosmeticPorcelainTeeth from './pages/BocRangSu/CosmeticPorcelainTeeth';
-
+import LienHe from './pages/LienHe/LienHe';
 
 
 // Import các trang mới (nếu có)
@@ -47,8 +47,8 @@ function HomePage() {
       <Team />
       <Appointment />
       <div className="container py-5">
-        <h2 className="text-center mb-4">Phòng khám nha khoa Công Cường</h2>
         <p className="text-center mb-5">
+          <h2 className="text-center mb-4">Phòng khám Nha khoa I-DENT </h2>
           Chúng tôi cung cấp các dịch vụ nha khoa chất lượng cao với đội ngũ bác sĩ chuyên nghiệp
         </p>
       </div>
@@ -122,7 +122,7 @@ function App() {
 
           {/* Routes cho phần Bọc răng sứ */}
           <Route path="/dich-vu/boc-rang-su" element={<CosmeticPorcelainTeeth />} />
-          <Route path="/dich-vu/bang-gia-boc-rang-su" element={<PricingTable  />} />
+          <Route path="/dich-vu/bang-gia-boc-rang-su" element={<PricingTable />} />
           <Route path="/dich-vu/dan-su-venner" element={<PlaceholderPage title="Dán sứ Venner" />} />
 
           {/* Routes cho phần Dịch vụ khác */}
@@ -131,7 +131,7 @@ function App() {
           <Route path="/dich-vu/cao-voi-rang" element={<PlaceholderPage title="Cạo vôi răng" />} />
 
           {/* Routes cho các trang khác */}
-          <Route path="/lien-he" element={<PlaceholderPage title="Liên hệ với chúng tôi" />} />
+          <Route path="/lien-he" element={<LienHe />} />
           <Route path="/dat-lich" element={<PlaceholderPage title="Đặt lịch hẹn" />} />
           <Route path="/login" element={<Login />} />
         </Routes>
@@ -175,7 +175,7 @@ function App() {
           </div>
         </div>
       </div>
-      <ChatWidget />
+      {/* <ChatWidget /> */}
 
     </Router>
 

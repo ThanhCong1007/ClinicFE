@@ -39,6 +39,25 @@ function Navbar() {
         setActiveLink(path);
     };
 
+    // Kiểm tra URL thuộc về menu "Bọc răng sứ"
+    const isBocRangSuActive = () => {
+        const bocRangSuPaths = ['/dich-vu/boc-rang-su', '/dich-vu/bang-gia-boc-rang-su', '/dich-vu/dan-su-venner'];
+        return bocRangSuPaths.some(path => location.pathname.includes(path));
+    };
+
+    // Kiểm tra URL thuộc về menu "Dịch vụ khác"
+    const isOtherServiceActive = () => {
+        if (isBocRangSuActive()) return false; // Đảm bảo không active cả hai menu cùng lúc
+        
+        const otherServicePaths = [
+            '/dich-vu/nieng-rang-tham-my',
+            '/dich-vu/tram-rang-tham-my',
+            '/dich-vu/cao-voi-rang'
+        ];
+        return otherServicePaths.some(path => location.pathname.includes(path)) || 
+               (location.pathname.includes('/dich-vu') && !isBocRangSuActive());
+    };
+
     // Hiệu ứng fadeInUp tương tự wow.js
     const fadeInUpStyle = {
         opacity: isVisible ? 1 : 0,
@@ -104,7 +123,7 @@ function Navbar() {
                         <div className="nav-item dropdown">
                             <Link 
                                 to="#"
-                                className={`nav-link dropdown-toggle ${activeLink.includes('/dich-vu/boc-rang-su') ? 'active' : ''}`}
+                                className={`nav-link dropdown-toggle ${isBocRangSuActive() ? 'active' : ''}`}
                                 data-bs-toggle="dropdown"
                             >
                                 Bọc răng sứ
@@ -137,7 +156,7 @@ function Navbar() {
                         <div className="nav-item dropdown">
                             <Link 
                                 to="#"
-                                className={`nav-link dropdown-toggle ${activeLink.includes('/dich-vu') && !activeLink.includes('/dich-vu/boc-rang-su') ? 'active' : ''}`}
+                                className={`nav-link dropdown-toggle ${isOtherServiceActive() ? 'active' : ''}`}
                                 data-bs-toggle="dropdown"
                             >
                                 Dịch vụ khác

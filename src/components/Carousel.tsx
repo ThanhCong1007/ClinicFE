@@ -72,82 +72,9 @@ function Carousel() {
                         </div>
                     </div>
                 </div>
-
-                <button 
-                    className="carousel-control-prev" 
-                    type="button" 
-                    onClick={prevSlide}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span className="visually-hidden">Previous</span>
-                </button>
-                <button 
-                    className="carousel-control-next" 
-                    type="button" 
-                    onClick={nextSlide}
-                    style={{ cursor: 'pointer' }}
-                >
-                    <span className="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span className="visually-hidden">Next</span>
-                </button>
             </div>
             
-            {/* Simple back to top button */}
-            <BackToTop />
         </div>
-    );
-}
-
-// Back to top button component
-function BackToTop() {
-    const [isVisible, setIsVisible] = useState(false);
-    
-    useEffect(() => {
-        // Show button when page is scrolled down
-        const toggleVisibility = () => {
-            if (window.pageYOffset > 100) {
-                setIsVisible(true);
-            } else {
-                setIsVisible(false);
-            }
-        };
-        
-        window.addEventListener('scroll', toggleVisibility);
-        
-        return () => window.removeEventListener('scroll', toggleVisibility);
-    }, []);
-    
-    const scrollToTop = () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    };
-    
-    return (
-        <>
-            {isVisible && (
-                <button 
-                    onClick={scrollToTop} 
-                    className="btn btn-primary back-to-top"
-                    style={{
-                        position: 'fixed',
-                        right: '30px',
-                        bottom: '30px',
-                        zIndex: 99,
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <i className="bi bi-arrow-up"></i>
-                </button>
-            )}
-        </>
     );
 }
 

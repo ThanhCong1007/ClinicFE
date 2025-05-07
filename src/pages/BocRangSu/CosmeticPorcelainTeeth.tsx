@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import Appointment from "../../components/Appointment";
+import Appointment from "../../layouts/Appointment";
 import { priceData, PriceItemType, indicationsData } from "./data";
 
 function CosmeticPorcelainTeeth() {

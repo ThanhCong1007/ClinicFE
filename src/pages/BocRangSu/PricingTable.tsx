@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './PricingTable.css';
-import Appointment from '../../components/Appointment';
+import Appointment from '../../layouts/Appointment';
 import { removableTeethPrices,fixedTeethPrices,coreOptions } from './data';
 
 function PricingTable() {
