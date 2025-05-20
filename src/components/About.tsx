@@ -15,7 +15,7 @@ function About() {
                     <div className="col-lg-7">
                         <div className="section-title mb-4">
                             <h5 className="position-relative d-inline-block text-primary text-uppercase">Giới thiệu</h5>
-                            <h1 className="display-5 mb-0">Phòng khám Công Cường là lựa chọn phù hợp nhất cho sức khỏe răng miệng của bạn</h1>
+                            <h1 className="display-5 mb-0">Nha khoa I-DENT là lựa chọn phù hợp nhất cho sức khỏe răng miệng của bạn</h1>
                         </div>
                         <h4 className="text-body fst-italic mb-4">Hãy để chúng tôi loại bỏ nổi đau của bạn và mang đi một cách nhẹ nhàng nhất </h4>
                         <p className="mb-4">Với hơn 5 năm hoạt động, phòng khám đã phục vụ hơn 1500 khách hàng,

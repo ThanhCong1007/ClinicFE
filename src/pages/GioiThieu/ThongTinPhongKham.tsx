@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import './ThongTinPhongKham.css';
+import Appointment from '../../layouts/Appointment';
 
 const ThongTinPhongKham: React.FC = () => {
     return (
@@ -64,7 +65,7 @@ const ThongTinPhongKham: React.FC = () => {
                                     <div className="section-title mt-2">
                                         <h1 className="display-5 mb-3">Sứ mệnh</h1>
                                         <p className="mb-3" style={{ fontSize: 18 }}>
-                                            "Phòng khám Công Cường không chỉ mang đến cho khách hàng sự đảm bảo về sức khỏe răng hàm mặt,
+                                            "Nha khoa I-DENT không chỉ mang đến cho khách hàng sự đảm bảo về sức khỏe răng hàm mặt,
                                             luôn ưu tiên trải nghiệm và sự tín nhiệm của khách hàng lên hàng đầu. Chúng tôi hướng đến sự gắn kết lâu dài
                                             và sự hài lòng tuyệt đối cho từng khách hàng, qua đó để góp phần tạo kiến tạo nên những trái tim hạnh phúc trọn vẹn cho cộng đồng."
                                         </p>
@@ -90,7 +91,7 @@ const ThongTinPhongKham: React.FC = () => {
             </motion.div>
             {/* First Section End */}
 
-            {/* Second Section: Câu chuyện của Công Cường */}
+            {/* Second Section: Câu chuyện của Nha khoa I-DENT */}
             <motion.div
                 className="container-fluid py-5 "
                 initial={{ opacity: 0, y: 50 }}
@@ -100,7 +101,7 @@ const ThongTinPhongKham: React.FC = () => {
             >
                 <div className="container">
                     <div className="row">
-                        <div className="col-lg-12"><h1 className="display-5 mb-4">Câu chuyện của Công Cường</h1>
+                        <div className="col-lg-12"><h1 className="display-5 mb-4">Câu chuyện của Nha khoa I-DENT</h1>
                             <p className="mb-3" style={{ fontSize: 18 }}>
                                 "Với niềm đam mê và sự nhiệt huyết dành cho lĩnh vực Nha khoa, ngay từ khi còn theo học tại ĐH Y Dược TPHCM,
                                 Tiến sĩ – Bác sĩ Nguyễn Văn Công Cường đã thể hiện xuất sắc trong quá trình học tập và dành được học bổng nghiên cứu sinh tại Đại Học Aix- Marseille, nước Pháp."
@@ -130,60 +131,8 @@ const ThongTinPhongKham: React.FC = () => {
             </motion.div>
             {/* Second Section End */}
 
-            {/* Appointment Start */}
-            <motion.div
-                className="container-fluid bg-primary bg-appointment my-5"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-            >
-                <div className="container">
-                    <div className="row gx-5">
-                        <div className="col-lg-6 py-4">
-                            <div className="py-5">
-                                <h1 className="display-5 text-white mb-4">Cung cấp thông tin để nhận tư vấn ngay</h1>
-                                <p className="text-white mb-0">Đội ngũ nhân viên sẽ liên hệ với bạn trong thời gian sớm nhất sau khi tiếp nhận thông tin</p>
-                            </div>
-                        </div>
-                        <div className="col-lg-6">
-                            <motion.div
-                                className="appointment-form h-100 d-flex flex-column justify-content-center text-center px-5"
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: 0.6 }}
-                            >
-                                <form>
-                                    <div className="row g-3">
-                                        <div className="col-12">
-                                            <input
-                                                type="text"
-                                                className="form-control bg-light border-0 mt-3"
-                                                placeholder="Họ và tên"
-                                                style={{ height: 55 }}
-                                            />
-                                        </div>
-                                        <div className="col-12">
-                                            <input
-                                                type="text"
-                                                className="form-control bg-light border-0"
-                                                placeholder="Số điện thoại"
-                                                style={{ height: 55 }}
-                                            />
-                                        </div>
-                                        <div className="col-12">
-                                            <button className="btn btn-dark w-100 py-3 mt-4" type="submit">
-                                                Nhận tư vấn
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </motion.div>
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
+            <Appointment />
+           
             {/* Appointment End */}
         </>
     );

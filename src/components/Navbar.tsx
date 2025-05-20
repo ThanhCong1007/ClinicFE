@@ -203,7 +203,7 @@ function Navbar() {
                         Đặt hẹn
                     </Link>
                     
-                    <Link to="/dang-nhap" className="btn btn-secondary py-2 px-4 ms-3">
+                    <Link to="/login" className="btn btn-secondary py-2 px-4 ms-3">
                         Đăng nhập
                     </Link>
                 </div>

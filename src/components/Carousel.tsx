@@ -39,7 +39,7 @@ function Carousel() {
                                     Hãy giữ cho răng của bạn được khỏe mạnh
                                 </h5>
                                 <h1 className="display-1 text-white mb-md-4 animated zoomIn">
-                                    Phòng khám Công Cường cung cấp các dịch vụ chăm sóc răng miệng tốt nhất
+                                    Nha khoa I-DENT cung cấp các dịch vụ chăm sóc răng miệng tốt nhất
                                 </h1>
                                 <a href="#" className="btn btn-primary py-md-3 px-md-5 me-5 animated slideInLeft">
                                     Chi tiết thêm

@@ -116,7 +116,7 @@ function CosmeticPorcelainTeeth() {
                     cũ, mang lại một nụ cười trắng sáng, hàm răng mới đều đẹp tự nhiên, giúp người làm răng sứ
                     tự tin hơn trong giao tiếp, cuộc sống hằng ngày. Vậy thực chất bọc răng sứ là gì? Bọc răng
                     sứ có tốt như quảng cáo không? Chi phí (giá) bọc răng sứ bao nhiêu? Hãy cùng tìm hiểu với
-                    Phòng khám Công Cường.
+                    Nha khoa I-DENT.
                   </p>
                 </div>
               </div>
@@ -218,7 +218,7 @@ function CosmeticPorcelainTeeth() {
             <div className="col-lg-12">
               <div className="section-title text-center">
                 <h4 className="position-relative d-inline-block text-dark-blue text-uppercase display-7">
-                  CÁC DÁNG RĂNG SỨ ĐƯỢC LỰA CHỌN NHIỀU TẠI PHÒNG KHÁM CÔNG CƯỜNG
+                  CÁC DÁNG RĂNG SỨ ĐƯỢC LỰA CHỌN NHIỀU TẠI Nha khoa I-DENT
                 </h4>
               </div>
             </div>
@@ -261,7 +261,7 @@ function CosmeticPorcelainTeeth() {
                   <p style={{ fontSize: "18px" }}>
                     Làm răng sứ thẩm mỹ giá bao nhiêu là thông tin luôn thu hút
                     sự chú ý của nhiều người. Dưới đây là bảng giá mới nhất của các loại răng sứ tại
-                    phòng khám Công Cường bạn có thể tham khảo.
+                    Nha khoa I-DENT bạn có thể tham khảo.
                   </p>
                 </div>
               </div>
@@ -304,7 +304,7 @@ function CosmeticPorcelainTeeth() {
                     <p style={{ fontSize: "18px" }}>
                       Bảng giá trên đây là giá trọn gói cho 1 răng sứ, bao gồm chi
                       phí thăm khám, tư vấn và chụp phim CT, cam kết không phát sinh thêm bất kỳ chi phí
-                      nào khác trong quá trình điều trị. Tại phòng khám Công Cường, 100% răng sứ cao cấp
+                      nào khác trong quá trình điều trị. Tại Nha khoa I-DENT, 100% răng sứ cao cấp
                       chính hãng được nhập khẩu trực tiếp từ Đức và Hoa Kỳ để đảm bảo kết quả tốt nhất cho
                       khách hàng. Ngoài ra, khách hàng còn được hỗ trợ bọc răng sứ trả góp với lãi suất
                       0%.

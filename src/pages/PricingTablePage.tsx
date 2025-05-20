@@ -29,8 +29,8 @@ function PricingTablePage() {
           <div className="row g-5 mb-2 px-5">
             <div className="col-lg-12 px-5">
               <TextContentSection 
-                title="1. Bảng giá bọc răng sứ mới nhất tại Phòng khám Công Cường"
-                content="Giá bọc răng sứ tại phòng khám Công Cường dao động từ 1.000.000 – 14.000.000 VNĐ/1 cái. Mức giá trên là giá trọn gói, đã bao gồm chi phí khám, tư vấn và chụp phim CT, không phát sinh thêm bất kỳ chi phí nào khác."
+                title="1. Bảng giá bọc răng sứ mới nhất tại Nha khoa I-DENT"
+                content="Giá bọc răng sứ tại Nha khoa I-DENT dao động từ 1.000.000 – 14.000.000 VNĐ/1 cái. Mức giá trên là giá trọn gói, đã bao gồm chi phí khám, tư vấn và chụp phim CT, không phát sinh thêm bất kỳ chi phí nào khác."
               />
             </div>
           </div>
