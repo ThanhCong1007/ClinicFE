@@ -2,11 +2,21 @@ import { useState, useEffect, SetStateAction } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Navbar.css';
 
+interface User {
+    id: number;
+    fullName: string;
+    email: string;
+    avatar: string;
+}
+
 function Navbar() {
     const [isVisible, setIsVisible] = useState(false);
     const [isSticky, setIsSticky] = useState(false);
     const [activeLink, setActiveLink] = useState('/trang-chu');
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
     const location = useLocation();
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Hiệu ứng fadeInUp (tương tự như wow.js)
@@ -20,8 +30,30 @@ function Navbar() {
             setIsSticky(scrollTop > 40);
         };
 
+        // Kiểm tra người dùng đã đăng nhập chưa
+        const checkUserLoggedIn = () => {
+            const token = localStorage.getItem('token');
+            const userData = localStorage.getItem('user');
+            
+            if (token && userData) {
+                setIsLoggedIn(true);
+                try {
+                    setUser(JSON.parse(userData));
+                } catch (error) {
+                    console.error('Lỗi khi parse dữ liệu người dùng:', error);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    setIsLoggedIn(false);
+                }
+            } else {
+                setIsLoggedIn(false);
+                setUser(null);
+            }
+        };
+
         // Gọi handleScroll ngay lập tức để khởi tạo trạng thái đúng
         handleScroll();
+        checkUserLoggedIn();
 
         // Theo dõi sự kiện scroll
         window.addEventListener('scroll', handleScroll, { passive: true });
@@ -58,11 +90,40 @@ function Navbar() {
                (location.pathname.includes('/dich-vu') && !isBocRangSuActive());
     };
 
+    // Xử lý đăng xuất
+    const handleLogout = () => {
+        // Xóa token và thông tin người dùng khỏi localStorage
+        localStorage.clear();
+        setIsLoggedIn(false);
+        setUser(null);
+        window.location.href = '/login'; 
+    };
+
     // Hiệu ứng fadeInUp tương tự wow.js
     const fadeInUpStyle = {
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
         transition: 'opacity 0.8s ease-out, transform 0.8s ease-out'
+    };
+
+    // CSS cho avatar
+    const avatarStyle = {
+        width: '40px',
+        height: '40px',
+        borderRadius: '50%',
+        objectFit: 'cover' as const,
+        cursor: 'pointer'
+    };
+    
+    // CSS cho dropdown menu
+    const dropdownMenuStyle = {
+        width: '220px',
+        right: '0',
+        left: 'auto',
+        position: 'absolute' as const,
+        transform: 'translate3d(10%, 38px, 0px)',
+        willChange: 'transform',
+        top: '0'
     };
 
     return (
@@ -203,9 +264,40 @@ function Navbar() {
                         Đặt hẹn
                     </Link>
                     
-                    <Link to="/login" className="btn btn-secondary py-2 px-4 ms-3">
-                        Đăng nhập
-                    </Link>
+                    {isLoggedIn && user ? (
+                        <div className="dropdown ms-3 position-relative">
+                            <img 
+                                src={user.avatar || "/img/default-avatar.jpg"} 
+                                alt="Avatar" 
+                                style={avatarStyle}
+                                className="dropdown-toggle"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            />
+                            <ul className="dropdown-menu" style={dropdownMenuStyle}>
+                                <li>
+                                    <Link to="/thong-tin-tai-khoan" className="dropdown-item">
+                                        <i className="fa fa-user me-2"></i>Thông tin tài khoản
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/lich-su-dat-hen" className="dropdown-item">
+                                        <i className="fa fa-calendar me-2"></i>Lịch sử đặt hẹn
+                                    </Link>
+                                </li>
+                                <li><hr className="dropdown-divider" /></li>
+                                <li>
+                                    <button onClick={handleLogout} className="dropdown-item text-danger">
+                                        <i className="fa fa-sign-out-alt me-2"></i>Đăng xuất
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    ) : (
+                        <Link to="/login" className="btn btn-secondary py-2 px-4 ms-3">
+                            Đăng nhập
+                        </Link>
+                    )}
                 </div>
             </nav>
 

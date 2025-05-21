@@ -132,7 +132,7 @@ function Appointment() {
   };
   
   try {
-    const response = await axios.post('http://localhost:8080/api/appointments/register',
+    const response = await axios.post('/api/appointments/register',
       appointmentData,
       {
         headers: {

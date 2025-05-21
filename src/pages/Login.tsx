@@ -31,7 +31,7 @@ export default function Login() {
     };
 
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/login", loginData, {
+      const response = await axios.post("/api/auth/login", loginData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -106,7 +106,7 @@ export default function Login() {
 
     try {
       console.log("Dữ liệu gửi đi:", data);
-      const response = await axios.post("http://localhost:8080/api/auth/register", data, {
+      const response = await axios.post("/api/auth/register", data, {
         headers: {
           'Content-Type': 'application/json'
         }
