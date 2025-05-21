@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import React from 'react';
 import axios from 'axios';
@@ -7,12 +7,21 @@ import './Login.css';
 export default function Login() {
   const [isSignIn, setIsSignIn] = useState(true); // true for login, false for signup
   const navigate = useNavigate();
+  const [redirectPath, setRedirectPath] = useState('/');
+
+  // Get the redirect path on component mount
+  useEffect(() => {
+    const savedRedirectPath = localStorage.getItem('redirectAfterLogin');
+    if (savedRedirectPath) {
+      setRedirectPath(savedRedirectPath);
+    }
+  }, []);
 
   const toggleForm = () => {
     setIsSignIn(!isSignIn);
   };
 
-  const handleLogin = async (e: any) => {
+  const handleLogin = async (e:any) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
@@ -38,10 +47,23 @@ export default function Login() {
         roles: response.data.roles
       }));
 
-      // Đăng nhập thành công, hiển thị thông báo và chuyển hướng
+      // Set a flag to indicate that we redirected from login
+      localStorage.setItem('redirectedFromLogin', 'true');
+
+      // Đăng nhập thành công, hiển thị thông báo
       alert('Đăng nhập thành công!');
-      navigate('/'); // Chuyển đến trang chính
-    } catch (error: any) {
+      
+      // Check if there's a redirect path saved and redirect to it
+      const redirectTo = localStorage.getItem('redirectAfterLogin') || '/';
+      
+      // Clear the redirect path from localStorage
+      if (redirectTo !== '/') {
+        localStorage.removeItem('redirectAfterLogin');
+      }
+      
+      // Navigate to the specified path
+      navigate(redirectTo); 
+    } catch (error:any) {
       console.error('Lỗi đăng nhập:', error);
       
       // Hiển thị thông báo lỗi trong cửa sổ popup
@@ -53,15 +75,13 @@ export default function Login() {
     }
   };
 
-  interface RegisterEvent extends React.FormEvent<HTMLFormElement> { }
-
-  const handleRegister = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleRegister = async (e:any) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
     // Kiểm tra xác nhận mật khẩu
-    const matKhau = formData.get("matKhau") as string;
-    const xacNhanMatKhau = formData.get("xacNhanMatKhau") as string;
+    const matKhau = formData.get("matKhau");
+    const xacNhanMatKhau = formData.get("xacNhanMatKhau");
     
     if (matKhau !== xacNhanMatKhau) {
       alert("Mật khẩu xác nhận không khớp với mật khẩu!");
@@ -69,7 +89,7 @@ export default function Login() {
     }
     
     // Kiểm tra độ dài mật khẩu
-    if (matKhau.length < 6) {
+    if (!matKhau || typeof matKhau !== 'string' || matKhau.length < 6) {
       alert("Mật khẩu phải có ít nhất 6 ký tự!");
       return;
     }
@@ -95,7 +115,7 @@ export default function Login() {
       alert(response.data.message || "Đăng ký thành công!");
       // Chuyển về form đăng nhập sau khi đăng ký thành công
       setIsSignIn(true);
-    } catch (error: any) {
+    } catch (error:any) {
       console.error("Chi tiết lỗi đăng ký:", error);
       
       if (error.response) {
@@ -107,7 +127,7 @@ export default function Login() {
             alert(`Đăng ký thất bại: ${error.response.data.message}`);
           } else if (error.response.data.errors && error.response.data.errors.length > 0) {
             // Hiển thị lỗi validation chi tiết nếu có
-            const errorMessages = error.response.data.errors.map((err: any) => err.defaultMessage).join('\n');
+            const errorMessages = error.response.data.errors.map((err:any) => err.defaultMessage).join('\n');
             alert(`Đăng ký thất bại:\n${errorMessages}`);
           } else {
             alert(`Đăng ký thất bại. Mã lỗi: ${error.response.status}`);
@@ -132,6 +152,14 @@ export default function Login() {
             <div className="login-form p-5" style={{ border: '2px solid rgb(9, 30, 62)' }}>
               <div className="row-gx-5">
                 <h1 className="m-0 text-primary"><i className="fa fa-tooth me-2 mb-3"></i>Đăng nhập</h1>
+                
+                {/* Hiển thị thông báo khi đến từ trang đặt lịch */}
+                {redirectPath !== '/' && (
+                  <div className="alert alert-info mt-3" role="alert">
+                    Vui lòng đăng nhập để tiếp tục đặt lịch khám
+                  </div>
+                )}
+                
                 <div className="col-lg-12">
                   <form onSubmit={handleLogin}>
                     <input

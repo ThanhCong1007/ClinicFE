@@ -1,36 +1,179 @@
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './Appointment.css';
 
 function Appointment() {
+  const navigate = useNavigate();
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    maDichVu: '',
+    maBacSi: '',
+    hoTen: '',
+    email: '',
+    ngayKham: '',
+    gioKham: '',
+    ghiChu: ''
+  });
+
   // Dữ liệu dịch vụ trực tiếp
   const dichvus = [
-    { MaDv: "DV01", TenDv: "Tẩy trắng răng" },
-    { MaDv: "DV02", TenDv: "Niềng răng" },
-    { MaDv: "DV03", TenDv: "Nhổ răng khôn" },
-    { MaDv: "DV04", TenDv: "Trám răng" }
+    { MaDv: "1", TenDv: "Tẩy trắng răng" },
+    { MaDv: "2", TenDv: "Niềng răng" },
+    { MaDv: "3", TenDv: "Nhổ răng khôn" },
+    { MaDv: "4", TenDv: "Trám răng" }
   ];
 
   // Dữ liệu bác sĩ trực tiếp
   const doctors = [
-    { MaBs: "BS01", HoTen: "BS. Nguyễn Văn A" },
-    { MaBs: "BS02", HoTen: "BS. Trần Thị B" },
-    { MaBs: "BS03", HoTen: "BS. Lê Văn C" }
+    { MaBs: "1", HoTen: "BS. Nguyễn Văn A" },
+    { MaBs: "2", HoTen: "BS. Trần Thị B" },
+    { MaBs: "3", HoTen: "BS. Lê Văn C" }
   ];
 
   // Dữ liệu giờ làm việc trực tiếp
   const glvlist = [
-    { MaGio: "G01", KhungGio: "08:00 - 09:00" },
-    { MaGio: "G02", KhungGio: "09:00 - 10:00" },
-    { MaGio: "G03", KhungGio: "10:00 - 11:00" },
-    { MaGio: "G04", KhungGio: "14:00 - 15:00" },
-    { MaGio: "G05", KhungGio: "15:00 - 16:00" },
-    { MaGio: "G06", KhungGio: "16:00 - 17:00" }
+    { MaGio: "G01", KhungGio: "08:00 - 09:00", GioBatDau: "08:00:00", GioKetThuc: "09:00:00" },
+    { MaGio: "G02", KhungGio: "09:00 - 10:00", GioBatDau: "09:00:00", GioKetThuc: "10:00:00" },
+    { MaGio: "G03", KhungGio: "10:00 - 11:00", GioBatDau: "10:00:00", GioKetThuc: "11:00:00" },
+    { MaGio: "G04", KhungGio: "14:00 - 15:00", GioBatDau: "14:00:00", GioKetThuc: "15:00:00" },
+    { MaGio: "G05", KhungGio: "15:00 - 16:00", GioBatDau: "15:00:00", GioKetThuc: "16:00:00" },
+    { MaGio: "G06", KhungGio: "16:00 - 17:00", GioBatDau: "16:00:00", GioKetThuc: "17:00:00" }
   ];
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    alert("Đặt lịch khám thành công!");
+  // Kiểm tra người dùng đã đăng nhập chưa
+  const isAuthenticated = () => {
+    return localStorage.getItem('token') !== null;
   };
+
+  // Lấy thông tin người dùng từ localStorage
+  const getUserData = () => {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  };
+
+  // Lấy mã bệnh nhân từ localStorage
+  const getMaBenhNhan = () => {
+    const userData = getUserData();
+    return userData?.id || '1'; // Default để test
+  };
+
+  // Load form data from localStorage on component mount
+  useEffect(() => {
+    const savedFormData = localStorage.getItem('appointmentFormData');
+    if (savedFormData) {
+      setFormData(JSON.parse(savedFormData));
+    }
+    
+    // Nếu đã chuyển hướng từ login trở lại, và đã đăng nhập thành công
+    const redirected = localStorage.getItem('redirectedFromLogin');
+    if (redirected === 'true' && isAuthenticated()) {
+      // Xóa flag chuyển hướng
+      localStorage.removeItem('redirectedFromLogin');
+      
+      // Tự động điền một số thông tin từ user data nếu có
+      const userData = getUserData();
+      if (userData) {
+        setFormData(prevData => ({
+          ...prevData,
+          hoTen: userData.hoTen || prevData.hoTen,
+          email: userData.email || prevData.email
+        }));
+      }
+    }
+  }, []);
+
+  // Handle input changes
+  const handleChange = (e:any) => {
+    const { name, value } = e.target;
+    const updatedFormData = { ...formData, [name]: value };
+    setFormData(updatedFormData);
+    
+    // Save to localStorage with each change
+    localStorage.setItem('appointmentFormData', JSON.stringify(updatedFormData));
+  };
+
+  const handleSubmit = async (e:any) => {
+  e.preventDefault();
+  
+  // Check if user is authenticated
+  if (!isAuthenticated()) {
+    // Show notification to user
+    alert("Vui lòng đăng nhập để đặt lịch khám!");
+    
+    // Save form data to localStorage before redirecting
+    localStorage.setItem('appointmentFormData', JSON.stringify(formData));
+    localStorage.setItem('redirectAfterLogin', '/appointment');
+    localStorage.setItem('redirectedFromLogin', 'true');
+    
+    // Redirect to login page after a short delay so the alert is visible
+    setTimeout(() => {
+      navigate('/login');
+    }, 500);
+    return;
+  }
+  
+  // Continue with the rest of your submit logic for authenticated users...
+  // Find selected time slot
+  const selectedTimeSlot = glvlist.find(g => g.MaGio === formData.gioKham);
+  
+  // Prepare data for API
+  const appointmentData = {
+    maBenhNhan: parseInt(getMaBenhNhan()),
+    maBacSi: parseInt(formData.maBacSi),
+    maDichVu: parseInt(formData.maDichVu),
+    ngayHen: formData.ngayKham,
+    gioBatDau: selectedTimeSlot?.GioBatDau || "08:00:00",
+    gioKetThuc: selectedTimeSlot?.GioKetThuc || "09:00:00",
+    maTrangThai: 1, // Default status
+    ghiChu: formData.ghiChu
+  };
+  
+  try {
+    const response = await axios.post('http://localhost:8080/api/appointments/register',
+      appointmentData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      }
+    );
+    
+    // Success! Clear saved form data
+    localStorage.removeItem('appointmentFormData');
+    alert("Đặt lịch khám thành công!");
+    
+  } catch (error:any) {
+    console.error("Error registering appointment:", error);
+    
+    // Kiểm tra nếu lỗi 401 (Unauthorized)
+    if (error.response && error.response.status === 401) {
+      // Token expired or invalid, show notification first
+      alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục!");
+      
+      // Save form data before redirecting
+      localStorage.setItem('appointmentFormData', JSON.stringify(formData));
+      localStorage.setItem('redirectAfterLogin', '/appointment');
+      localStorage.setItem('redirectedFromLogin', 'true');
+      
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        navigate('/login');
+      }, 500);
+      return;
+    }
+    
+    // Các lỗi khác
+    if (error.response && error.response.data && error.response.data.message) {
+      alert("Đã xảy ra lỗi: " + error.response.data.message);
+    } else {
+      alert("Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau!");
+    }
+  }
+};
 
   // Framer Motion variants
   const containerVariants = {
@@ -111,9 +254,14 @@ function Appointment() {
                     animate="visible"
                     transition={{ delay: 0.1 }}
                   >
-                    <select className="form-select bg-light border-0"
-                      style={{height: "55px"}}>
-                      <option selected>Lựa chọn dịch vụ</option>
+                    <select 
+                      className="form-select bg-light border-0"
+                      style={{height: "55px"}}
+                      name="maDichVu"
+                      value={formData.maDichVu}
+                      onChange={handleChange}
+                    >
+                      <option value="">Lựa chọn dịch vụ</option>
                       {dichvus.map((dichvu) => (
                         <option key={dichvu.MaDv} value={dichvu.MaDv}>
                           {dichvu.TenDv}
@@ -128,9 +276,14 @@ function Appointment() {
                     animate="visible"
                     transition={{ delay: 0.2 }}
                   >
-                    <select className="form-select bg-light border-0"
-                      style={{height: "55px"}}>
-                      <option selected>Chọn Bác sĩ</option>
+                    <select 
+                      className="form-select bg-light border-0"
+                      style={{height: "55px"}}
+                      name="maBacSi"
+                      value={formData.maBacSi}
+                      onChange={handleChange}
+                    >
+                      <option value="">Chọn Bác sĩ</option>
                       {doctors.map((doctor) => (
                         <option key={doctor.MaBs} value={doctor.MaBs}>
                           {doctor.HoTen}
@@ -145,8 +298,15 @@ function Appointment() {
                     animate="visible"
                     transition={{ delay: 0.3 }}
                   >
-                    <input type="text" className="form-control bg-light border-0"
-                      placeholder="Họ và tên" style={{height: "55px"}} />
+                    <input 
+                      type="text" 
+                      className="form-control bg-light border-0"
+                      placeholder="Họ và tên" 
+                      style={{height: "55px"}} 
+                      name="hoTen"
+                      value={formData.hoTen}
+                      onChange={handleChange}
+                    />
                   </motion.div>
                   <motion.div 
                     className="col-12 col-sm-6"
@@ -155,8 +315,15 @@ function Appointment() {
                     animate="visible"
                     transition={{ delay: 0.4 }}
                   >
-                    <input type="email" className="form-control bg-light border-0"
-                      placeholder="Email" style={{height: "55px"}} />
+                    <input 
+                      type="email" 
+                      className="form-control bg-light border-0"
+                      placeholder="Email" 
+                      style={{height: "55px"}} 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                    />
                   </motion.div>
                   <motion.div 
                     className="col-12 col-sm-6"
@@ -166,11 +333,15 @@ function Appointment() {
                     transition={{ delay: 0.5 }}
                   >
                     <div className="date" id="date1" data-target-input="nearest">
-                      <input type="text"
-                        className="form-control bg-light border-0 datetimepicker-input"
+                      <input 
+                        type="date"
+                        className="form-control bg-light border-0"
                         placeholder="Ngày khám"
-                        data-target="#date1" data-toggle="datetimepicker"
-                        style={{height: "55px"}} />
+                        style={{height: "55px"}} 
+                        name="ngayKham"
+                        value={formData.ngayKham}
+                        onChange={handleChange}
+                      />
                     </div>
                   </motion.div>
                   <motion.div 
@@ -180,9 +351,14 @@ function Appointment() {
                     animate="visible"
                     transition={{ delay: 0.6 }}
                   >
-                    <select className="form-select bg-light border-0"
-                      style={{height: "55px"}}>
-                      <option selected>Chọn khung giờ</option>
+                    <select 
+                      className="form-select bg-light border-0"
+                      style={{height: "55px"}}
+                      name="gioKham"
+                      value={formData.gioKham}
+                      onChange={handleChange}
+                    >
+                      <option value="">Chọn khung giờ</option>
                       {glvlist.map((giolamviec) => (
                         <option key={giolamviec.MaGio} value={giolamviec.MaGio}>
                           {giolamviec.KhungGio}
@@ -197,8 +373,13 @@ function Appointment() {
                     animate="visible"
                     transition={{ delay: 0.7 }}
                   >
-                    <textarea className="form-control bg-light border-0"
-                      placeholder="Ghi chú"></textarea>
+                    <textarea 
+                      className="form-control bg-light border-0"
+                      placeholder="Ghi chú"
+                      name="ghiChu"
+                      value={formData.ghiChu}
+                      onChange={handleChange}
+                    ></textarea>
                   </motion.div>
                   <motion.div 
                     className="col-12"
@@ -209,7 +390,9 @@ function Appointment() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <button className="btn btn-dark w-100 py-3" type="submit">Nhận tư vấn</button>
+                    <button className="btn btn-dark w-100 py-3" type="submit">
+                      {isAuthenticated() ? "Đặt lịch khám" : "Đăng nhập để đặt lịch"}
+                    </button>
                   </motion.div>
                 </div>
               </form>
