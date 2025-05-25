@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Profiler, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
@@ -18,12 +18,14 @@ import Team from './components/Team';
 import PricingTable from './pages/BocRangSu/PricingTable';
 import CosmeticPorcelainTeeth from './pages/BocRangSu/CosmeticPorcelainTeeth';
 import LienHe from './pages/LienHe/LienHe';
+// import 'tailwindcss/tailwind.css'; 
 
 
 // Import các trang mới (nếu có)
 import GioiThieu from './pages/GioiThieu';
 import ThongTinPhongKham from './pages/GioiThieu/ThongTinPhongKham';
 import ChatWidget from './components/ChatWidget';
+import UserProfile from './pages/Profile';
 // import BacSi from './pages/BacSi';
 // import BocRangSu from './pages/BocRangSu';
 // import BangGiaBocRangSu from './pages/BangGiaBocRangSu';
@@ -113,6 +115,7 @@ function App() {
         <Navbar />
         <Routes>
           {/* Route chính */}
+
           <Route path="/trang-chu" element={<HomePage />} />
           <Route path="/" element={<Navigate to="/trang-chu" replace />} />
 
@@ -134,6 +137,7 @@ function App() {
           <Route path="/lien-he" element={<LienHe />} />
           <Route path="/dat-lich" element={<PlaceholderPage title="Đặt lịch hẹn" />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/thong-tin-ca-nhan" element={<UserProfile />} />
         </Routes>
 
         {/* Footer */}
