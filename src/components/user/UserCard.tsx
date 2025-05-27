@@ -1,5 +1,5 @@
 import { User } from 'lucide-react';
-import { UserInfo } from '../types';
+import { UserInfo } from '../../types';
 
 interface UserCardProps {
   userInfo: UserInfo;

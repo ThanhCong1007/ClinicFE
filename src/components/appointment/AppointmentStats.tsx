@@ -1,4 +1,4 @@
-import { Appointment } from '../types';
+import { Appointment } from '../../types';
 
 interface AppointmentStatsProps {
   appointments: Appointment[];

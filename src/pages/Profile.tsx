@@ -1,10 +1,12 @@
 // Main UserProfile component
 import { useState } from 'react';
 import { UserInfo, Appointment } from '../types';
-import { UserCard } from '../components/UserCard';
-import { Navigation } from '../components/Navigation';
-import { ProfileSection } from '../components/ProfileSection';
-import { AppointmentsSection } from '../components/AppointmentsSection';
+
+// Components - đã chuyển vào các thư mục con tương ứng
+import {UserCard} from '../components/user/UserCard';
+import {Navigation} from '../components/layout/Navigation';
+import {ProfileSection} from '../components/user/ProfileSection';
+import {AppointmentsSection} from '../components/appointment/AppointmentsSection';
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('profile');

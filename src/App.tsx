@@ -1,41 +1,40 @@
 import { Profiler, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import Navbar from './components/Navbar';
-import Search from './components/Search';
-import Carousel from './components/Carousel';
-import Banner from './components/Banner';
-import About from './components/About';
+
+// Component layout
+import Navbar from './components/layout/Navbar';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
+
+// Widgets
+import Search from './components/widgets/Search';
+import Carousel from './components/widgets/Carousel';
+import Banner from './components/widgets/Banner';
+import ChatWidget from './components/widgets/ChatWidget';
+
+// Features
+import About from './features/about/About';
+import Team from './features/about/Team';
+import Contact from './features/contact/Contact';
+import Pricing from './features/pricing/Pricing';
+import Login from './features/auth/Login';
+
+// Layout/section
 import Appointment from './layouts/Appointment';
-import Footer from './layouts/Footer';
-import Contact from './components/Contact';
-import Pricing from './components/Pricing';
-import Header from './layouts/Header';
-import Login from './pages/Login';
-import Team from './components/Team';
-import PricingTable from './pages/BocRangSu/PricingTable';
-import CosmeticPorcelainTeeth from './pages/BocRangSu/CosmeticPorcelainTeeth';
-import LienHe from './pages/LienHe/LienHe';
-// import 'tailwindcss/tailwind.css'; 
 
-
-// Import các trang mới (nếu có)
+// Pages
+import UserProfile from './pages/Profile';
 import GioiThieu from './pages/GioiThieu';
 import ThongTinPhongKham from './pages/GioiThieu/ThongTinPhongKham';
-import ChatWidget from './components/ChatWidget';
-import UserProfile from './pages/Profile';
-// import BacSi from './pages/BacSi';
-// import BocRangSu from './pages/BocRangSu';
-// import BangGiaBocRangSu from './pages/BangGiaBocRangSu';
-// import DanSuVenner from './pages/DanSuVenner';
-// import NiengRangThamMy from './pages/NiengRangThamMy';
-// import TramRangThamMy from './pages/TramRangThamMy';
-// import CaoVoiRang from './pages/CaoVoiRang';
-// import LienHe from './pages/LienHe';
-// import DatLich from './pages/DatLich';
-// import Login from './pages/Login';
+import LienHe from './pages/LienHe/LienHe';
+import PricingTable from './pages/BocRangSu/PricingTable';
+import CosmeticPorcelainTeeth from './pages/BocRangSu/CosmeticPorcelainTeeth';
+
+// import 'tailwindcss/tailwind.css';
 
 // Component tạm thời cho trang chủ và các trang chưa có
 function HomePage() {

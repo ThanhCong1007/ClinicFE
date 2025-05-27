@@ -1,5 +1,5 @@
 import { Calendar } from 'lucide-react';
-import { Appointment } from '../types';
+import { Appointment } from '../../types';
 import { AppointmentStats } from './AppointmentStats';
 import { AppointmentCard } from './AppointmentCard';
 

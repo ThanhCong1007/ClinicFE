@@ -1,5 +1,5 @@
 import { Calendar, Clock, MapPin, Eye, Edit, Trash2 } from 'lucide-react';
-import { Appointment } from '../types';
+import { Appointment } from '../../types';
 
 interface AppointmentCardProps {
   appointment: Appointment;

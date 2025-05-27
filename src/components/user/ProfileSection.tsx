@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Edit, User, Phone, Mail, MapPin, Calendar, FileText } from 'lucide-react';
-import { UserInfo } from '../types';
+import { UserInfo } from '../../types';
 import { ProfileField } from './ProfileField';
 
 interface ProfileSectionProps {
