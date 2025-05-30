@@ -1,4 +1,4 @@
-import Contact from "../../components/Contact";
+import Contact from "../../features/contact/Contact";
 import Appointment from "../../layouts/Appointment";
 
 function LienHe() {
