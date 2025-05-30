@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, User, Clock, Edit, Trash2, Eye, Phone, Mail, MapPin, Heart, FileText, Bell, Settings, LogOut } from 'lucide-react';
 import { getUserProfile, updateUserProfile, getPatientAppointments, cancelAppointment } from '../services/userService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 // Define types
@@ -48,6 +48,7 @@ const UserProfile = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   const navigate = useNavigate();
+  const location = useLocation(); // Get the current location object
 
   // Function to fetch appointments
   const fetchAppointments = async (patientId: number) => {
@@ -64,6 +65,11 @@ const UserProfile = () => {
   };
 
   useEffect(() => {
+    // Check for state passed from navigation
+    if (location.state && location.state.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);

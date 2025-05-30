@@ -281,7 +281,7 @@ function Navbar() {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/lich-su-dat-hen" className="dropdown-item">
+                                    <Link to="/thong-tin-tai-khoan" state={{ activeTab: 'appointments' }} className="dropdown-item">
                                         <i className="fa fa-calendar me-2"></i>Lịch sử đặt hẹn
                                     </Link>
                                 </li>
