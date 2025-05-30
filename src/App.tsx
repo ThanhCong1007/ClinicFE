@@ -33,6 +33,7 @@ import ThongTinPhongKham from './pages/GioiThieu/ThongTinPhongKham';
 import LienHe from './pages/LienHe/LienHe';
 import PricingTable from './pages/BocRangSu/PricingTable';
 import CosmeticPorcelainTeeth from './pages/BocRangSu/CosmeticPorcelainTeeth';
+import NotFound from './features/404';
 
 // import 'tailwindcss/tailwind.css';
 
@@ -137,6 +138,7 @@ function App() {
           <Route path="/dat-lich" element={<PlaceholderPage title="Đặt lịch hẹn" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/thong-tin-tai-khoan" element={<UserProfile />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
 
         {/* Footer */}

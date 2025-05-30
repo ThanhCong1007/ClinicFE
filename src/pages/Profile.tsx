@@ -3,6 +3,7 @@ import { Calendar, User, Clock, Edit, Trash2, Eye, Phone, Mail, MapPin, Heart, F
 import { getUserProfile, updateUserProfile, getPatientAppointments, cancelAppointment } from '../services/userService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { useSpring, animated } from '@react-spring/web';
 
 // Define types
 interface UserInfo {
@@ -50,6 +51,13 @@ const UserProfile = () => {
   const navigate = useNavigate();
   const location = useLocation(); // Get the current location object
 
+  // Animation for the main content
+  const springProps = useSpring({
+    opacity: loading ? 0 : 1,
+    transform: loading ? 'translateY(50px)' : 'translateY(0px)',
+    config: { tension: 180, friction: 12 }, // Config for a subtle bounce
+  });
+
   // Function to fetch appointments
   const fetchAppointments = async (patientId: number) => {
     try {
@@ -95,15 +103,25 @@ const UserProfile = () => {
   }, []);
 
   const handleUpdateProfile = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token || !userInfo) return;
+    if (window.confirm('Bạn có chắc chắn muốn lưu thay đổi thông tin cá nhân không?')) {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token || !userInfo) return;
 
-      await updateUserProfile(token, userInfo);
-      setIsEditingProfile(false);
-      // Show success message or handle success case
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update profile');
+        await updateUserProfile(token, userInfo);
+        setIsEditingProfile(false);
+        // Show success message or handle success case
+        alert('Cập nhật thông tin cá nhân thành công!');
+      } catch (err) {
+        // Check if the error is an Axios error with a response
+        if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
+          // Display the specific error message from the API
+          alert(`Lỗi cập nhật thông tin: ${err.response.data.message}`);
+        } else {
+          // Display a generic error message for other errors
+          setError(err instanceof Error ? err.message : 'Failed to update profile');
+        }
+      }
     }
   };
 
@@ -216,7 +234,7 @@ const UserProfile = () => {
             </div>
 
             {/* Main Content */}
-            <div className="col-lg-9">
+            <animated.div className="col-lg-9" style={springProps}>
               {activeTab === 'profile' && (
                 <div className="card shadow-sm">
                   <div className="card-body">
@@ -548,7 +566,7 @@ const UserProfile = () => {
                   )}
                 </div>
               )}
-            </div>
+            </animated.div>
           </div>
         </div>
       </div>
