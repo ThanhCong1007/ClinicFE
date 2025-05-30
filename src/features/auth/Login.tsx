@@ -9,13 +9,20 @@ export default function Login() {
   const navigate = useNavigate();
   const [redirectPath, setRedirectPath] = useState('/');
 
-  // Get the redirect path on component mount
+  // Check login status and redirect if already logged in
   useEffect(() => {
-    const savedRedirectPath = localStorage.getItem('redirectAfterLogin');
-    if (savedRedirectPath) {
-      setRedirectPath(savedRedirectPath);
+    const token = localStorage.getItem('token');
+    if (token) {
+      // User is already logged in, redirect to homepage
+      navigate('/');
+    } else {
+      // User is not logged in, get the redirect path if any
+      const savedRedirectPath = localStorage.getItem('redirectAfterLogin');
+      if (savedRedirectPath) {
+        setRedirectPath(savedRedirectPath);
+      }
     }
-  }, []);
+  }, [navigate]); // Add navigate to the dependency array
 
   const toggleForm = () => {
     setIsSignIn(!isSignIn);
