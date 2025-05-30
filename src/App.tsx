@@ -136,7 +136,7 @@ function App() {
           <Route path="/lien-he" element={<LienHe />} />
           <Route path="/dat-lich" element={<PlaceholderPage title="Đặt lịch hẹn" />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/thong-tin-ca-nhan" element={<UserProfile />} />
+          <Route path="/thong-tin-tai-khoan" element={<UserProfile />} />
         </Routes>
 
         {/* Footer */}
