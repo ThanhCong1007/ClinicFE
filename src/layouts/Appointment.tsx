@@ -4,6 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Appointment.css';
 
+// Type definitions
+interface Doctor {
+  maBacSi: number;
+  hoTen: string;
+}
+
+interface TimeSlot {
+  gioBatDau: string;
+  gioKetThuc: string;
+  daDat: boolean;
+  trangThai: string;
+}
+
 function Appointment() {
   const navigate = useNavigate();
   
@@ -18,6 +31,12 @@ function Appointment() {
     ghiChu: ''
   });
 
+  // State for doctors and available time slots
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   // Dữ liệu dịch vụ trực tiếp
   const dichvus = [
     { MaDv: "1", TenDv: "Tẩy trắng răng" },
@@ -26,22 +45,42 @@ function Appointment() {
     { MaDv: "4", TenDv: "Trám răng" }
   ];
 
-  // Dữ liệu bác sĩ trực tiếp
-  const doctors = [
-    { MaBs: "1", HoTen: "BS. Nguyễn Văn A" },
-    { MaBs: "2", HoTen: "BS. Trần Thị B" },
-    { MaBs: "3", HoTen: "BS. Lê Văn C" }
-  ];
+  // Fetch doctors on component mount
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/public/bac-si');
+        setDoctors(response.data);
+      } catch (error) {
+        console.error('Error fetching doctors:', error);
+        setError('Không thể tải danh sách bác sĩ. Vui lòng thử lại sau.');
+      }
+    };
 
-  // Dữ liệu giờ làm việc trực tiếp
-  const glvlist = [
-    { MaGio: "G01", KhungGio: "08:00 - 09:00", GioBatDau: "08:00:00", GioKetThuc: "09:00:00" },
-    { MaGio: "G02", KhungGio: "09:00 - 10:00", GioBatDau: "09:00:00", GioKetThuc: "10:00:00" },
-    { MaGio: "G03", KhungGio: "10:00 - 11:00", GioBatDau: "10:00:00", GioKetThuc: "11:00:00" },
-    { MaGio: "G04", KhungGio: "14:00 - 15:00", GioBatDau: "14:00:00", GioKetThuc: "15:00:00" },
-    { MaGio: "G05", KhungGio: "15:00 - 16:00", GioBatDau: "15:00:00", GioKetThuc: "16:00:00" },
-    { MaGio: "G06", KhungGio: "16:00 - 17:00", GioBatDau: "16:00:00", GioKetThuc: "17:00:00" }
-  ];
+    fetchDoctors();
+  }, []);
+
+  // Fetch available time slots when doctor and date are selected
+  useEffect(() => {
+    const fetchAvailableSlots = async () => {
+      if (formData.maBacSi && formData.ngayKham) {
+        try {
+          setLoading(true);
+          const response = await axios.get(
+            `http://localhost:8080/api/public/bac-si/${formData.maBacSi}/lich-trong?ngayHen=${formData.ngayKham}`
+          );
+          setAvailableSlots(response.data);
+        } catch (error) {
+          console.error('Error fetching available slots:', error);
+          setError('Không thể tải khung giờ trống. Vui lòng thử lại sau.');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchAvailableSlots();
+  }, [formData.maBacSi, formData.ngayKham]);
 
   // Kiểm tra người dùng đã đăng nhập chưa
   const isAuthenticated = () => {
@@ -89,9 +128,13 @@ function Appointment() {
   const handleChange = (e:any) => {
     const { name, value } = e.target;
     const updatedFormData = { ...formData, [name]: value };
-    setFormData(updatedFormData);
     
-    // Save to localStorage with each change
+    // Reset gioKham when doctor or date changes
+    if (name === 'maBacSi' || name === 'ngayKham') {
+      updatedFormData.gioKham = '';
+    }
+    
+    setFormData(updatedFormData);
     localStorage.setItem('appointmentFormData', JSON.stringify(updatedFormData));
   };
 
@@ -123,7 +166,7 @@ function Appointment() {
     }
 
     // Find selected time slot
-    const selectedTimeSlot = glvlist.find(g => g.MaGio === formData.gioKham);
+    const selectedTimeSlot = availableSlots.find(g => g.gioBatDau === formData.gioKham);
     
     // Prepare data for API
     const appointmentData = {
@@ -131,8 +174,8 @@ function Appointment() {
       maBacSi: parseInt(formData.maBacSi),
       maDichVu: parseInt(formData.maDichVu),
       ngayHen: formData.ngayKham,
-      gioBatDau: selectedTimeSlot?.GioBatDau || "08:00:00",
-      gioKetThuc: selectedTimeSlot?.GioKetThuc || "09:00:00",
+      gioBatDau: selectedTimeSlot?.gioBatDau || "08:00:00",
+      gioKetThuc: selectedTimeSlot?.gioKetThuc || "09:00:00",
       maTrangThai: 1, // Default status
       ghiChu: formData.ghiChu
     };
@@ -251,6 +294,7 @@ function Appointment() {
               animate="visible"
             >
               <h1 className="text-white mb-4">Cung cấp thông tin để nhận tư vấn</h1>
+              {error && <div className="alert alert-danger">{error}</div>}
               <form onSubmit={handleSubmit}>
                 <div className="row g-3">
                   <motion.div 
@@ -291,8 +335,8 @@ function Appointment() {
                     >
                       <option value="">Chọn Bác sĩ</option>
                       {doctors.map((doctor) => (
-                        <option key={doctor.MaBs} value={doctor.MaBs}>
-                          {doctor.HoTen}
+                        <option key={doctor.maBacSi} value={doctor.maBacSi}>
+                          {doctor.hoTen}
                         </option>
                       ))}
                     </select>
@@ -363,14 +407,19 @@ function Appointment() {
                       name="gioKham"
                       value={formData.gioKham}
                       onChange={handleChange}
+                      disabled={loading || !formData.maBacSi || !formData.ngayKham}
                     >
                       <option value="">Chọn khung giờ</option>
-                      {glvlist.map((giolamviec) => (
-                        <option key={giolamviec.MaGio} value={giolamviec.MaGio}>
-                          {giolamviec.KhungGio}
+                      {availableSlots.map((slot) => (
+                        <option 
+                          key={`${slot.gioBatDau}-${slot.gioKetThuc}`} 
+                          value={`${slot.gioBatDau}-${slot.gioKetThuc}`}
+                        >
+                          {slot.gioBatDau} - {slot.gioKetThuc}
                         </option>
                       ))}
                     </select>
+                    {loading && <div className="text-white mt-2">Đang tải khung giờ...</div>}
                   </motion.div>
                   <motion.div 
                     className="col-12"
@@ -396,7 +445,11 @@ function Appointment() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <button className="btn btn-dark w-100 py-3" type="submit">
+                    <button 
+                      className="btn btn-dark w-100 py-3" 
+                      type="submit"
+                      disabled={loading}
+                    >
                       {isAuthenticated() ? "Đặt lịch khám" : "Đăng nhập để đặt lịch"}
                     </button>
                   </motion.div>

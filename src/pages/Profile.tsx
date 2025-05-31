@@ -35,7 +35,7 @@ interface Appointment {
   maTrangThai: number;
   tenTrangThai: string;
   ghiChu?: string;
-  lyDoHuy?: string;
+  lydo?: string | null;
   thoiGian: number;
 }
 
@@ -126,12 +126,15 @@ const UserProfile = () => {
   };
 
   const handleCancelAppointment = async (appointment: Appointment) => {
+    const reason = window.prompt('Vui lòng nhập lý do hủy lịch hẹn:');
+    if (reason === null) return; // User clicked Cancel
+    
     if (window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này không?')) {
       try {
         const token = localStorage.getItem('token');
         if (!token || !userInfo) return;
 
-        await cancelAppointment(token, appointment);
+        await cancelAppointment(token, { ...appointment, lydo: reason });
         // Refresh appointments after successful cancellation
         if (userInfo.maBenhNhan) {
           fetchAppointments(userInfo.maBenhNhan);
@@ -487,6 +490,11 @@ const UserProfile = () => {
                                       <strong>Ghi chú:</strong> {appointment.ghiChu}
                                     </p>
                                   )}
+                                  {appointment.maTrangThai === 3 && appointment.lydo && (
+                                    <p className="text-danger mb-0 mt-2">
+                                      <strong>Lý do hủy:</strong> {appointment.lydo}
+                                    </p>
+                                  )}
                                 </div>
                                 <div className="d-flex">
                                   <button className="btn btn-outline-primary btn-sm me-2">
@@ -546,9 +554,9 @@ const UserProfile = () => {
                                       <strong>Ghi chú:</strong> {appointment.ghiChu}
                                     </p>
                                   )}
-                                  {appointment.maTrangThai === 3 && appointment.lyDoHuy && (
-                                    <p className="text-danger mb-0">
-                                      <strong>Lý do hủy:</strong> {appointment.lyDoHuy}
+                                  {appointment.maTrangThai === 5 && appointment.lydo && (
+                                    <p className="text-danger mb-0 mt-2">
+                                      <strong>Lý do hủy:</strong> {appointment.lydo}
                                     </p>
                                   )}
                                 </div>
