@@ -49,10 +49,11 @@ function HomePage() {
       <Team />
       <Appointment />
       <div className="container py-5">
-        <p className="text-center mb-5">
-          <h2 className="text-center mb-4">Phòng khám Nha khoa I-DENT </h2>
+      <h2 className="text-center mb-4">Phòng khám Nha khoa I-DENT 
+        <p className="text-center mb-2">
           Chúng tôi cung cấp các dịch vụ nha khoa chất lượng cao với đội ngũ bác sĩ chuyên nghiệp
         </p>
+        </h2> 
       </div>
     </>
   );

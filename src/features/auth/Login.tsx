@@ -38,21 +38,45 @@ export default function Login() {
     };
 
     try {
+      // Bước 1: Đăng nhập để lấy token
       const response = await axios.post("/api/auth/login", loginData, {
         headers: {
           'Content-Type': 'application/json'
         }
       });
 
-      // Lưu thông tin đăng nhập vào localStorage
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify({
-        id: response.data.id,
-        tenDangNhap: response.data.tenDangNhap,
-        email: response.data.email,
-        hoTen: response.data.hoTen,
-        roles: response.data.roles
-      }));
+      // Lưu token vào localStorage
+      const token = response.data.token;
+      localStorage.setItem('token', token);
+
+      // Bước 2: Lấy thông tin profile người dùng
+      try {
+        const profileResponse = await axios.get("/api/user/profile", {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        // Kiểm tra và lưu profile
+        if (profileResponse.data) {
+          console.log('Profile data:', profileResponse.data); // Debug log
+          // Lưu toàn bộ thông tin profile vào localStorage
+          localStorage.setItem('user', JSON.stringify(profileResponse.data));
+          
+          // Lưu thêm các thông tin quan trọng riêng lẻ để dễ truy cập
+          localStorage.setItem('maNguoiDung', profileResponse.data.maNguoiDung);
+          localStorage.setItem('maBenhNhan', profileResponse.data.maBenhNhan);
+          localStorage.setItem('maBacSi', profileResponse.data.maBacSi);
+          localStorage.setItem('tenDangNhap', profileResponse.data.tenDangNhap);
+          localStorage.setItem('hoTen', profileResponse.data.hoTen);
+        } else {
+          console.error('No profile data received');
+          throw new Error('Không nhận được thông tin profile');
+        }
+      } catch (profileError) {
+        console.error('Error fetching profile:', profileError);
+        throw new Error('Không thể lấy thông tin profile');
+      }
 
       // Set a flag to indicate that we redirected from login
       localStorage.setItem('redirectedFromLogin', 'true');

@@ -96,84 +96,90 @@ function Appointment() {
   };
 
   const handleSubmit = async (e:any) => {
-  e.preventDefault();
-  
-  // Check if user is authenticated
-  if (!isAuthenticated()) {
-    // Show notification to user
-    alert("Vui lòng đăng nhập để đặt lịch khám!");
+    e.preventDefault();
     
-    // Save form data to localStorage before redirecting
-    localStorage.setItem('appointmentFormData', JSON.stringify(formData));
-    localStorage.setItem('redirectAfterLogin', '/appointment');
-    localStorage.setItem('redirectedFromLogin', 'true');
-    
-    // Redirect to login page after a short delay so the alert is visible
-    setTimeout(() => {
-      navigate('/login');
-    }, 500);
-    return;
-  }
-  
-  // Continue with the rest of your submit logic for authenticated users...
-  // Find selected time slot
-  const selectedTimeSlot = glvlist.find(g => g.MaGio === formData.gioKham);
-  
-  // Prepare data for API
-  const appointmentData = {
-    maBenhNhan: parseInt(getMaBenhNhan()),
-    maBacSi: parseInt(formData.maBacSi),
-    maDichVu: parseInt(formData.maDichVu),
-    ngayHen: formData.ngayKham,
-    gioBatDau: selectedTimeSlot?.GioBatDau || "08:00:00",
-    gioKetThuc: selectedTimeSlot?.GioKetThuc || "09:00:00",
-    maTrangThai: 1, // Default status
-    ghiChu: formData.ghiChu
-  };
-  
-  try {
-    const response = await axios.post('/api/appointments/register',
-      appointmentData,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
-    
-    // Success! Clear saved form data
-    localStorage.removeItem('appointmentFormData');
-    alert("Đặt lịch khám thành công!");
-    
-  } catch (error:any) {
-    console.error("Error registering appointment:", error);
-    
-    // Kiểm tra nếu lỗi 401 (Unauthorized)
-    if (error.response && error.response.status === 401) {
-      // Token expired or invalid, show notification first
-      alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục!");
+    // Check if user is authenticated
+    if (!isAuthenticated()) {
+      // Show notification to user
+      alert("Vui lòng đăng nhập để đặt lịch khám!");
       
-      // Save form data before redirecting
+      // Save form data to localStorage before redirecting
       localStorage.setItem('appointmentFormData', JSON.stringify(formData));
       localStorage.setItem('redirectAfterLogin', '/appointment');
       localStorage.setItem('redirectedFromLogin', 'true');
       
-      // Redirect to login page after a short delay
+      // Redirect to login page after a short delay so the alert is visible
       setTimeout(() => {
         navigate('/login');
       }, 500);
       return;
     }
-    
-    // Các lỗi khác
-    if (error.response && error.response.data && error.response.data.message) {
-      alert("Đã xảy ra lỗi: " + error.response.data.message);
-    } else {
-      alert("Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau!");
+
+    // Get user data and check for maBenhNhan
+    const userData = getUserData();
+    if (!userData || !userData.maBenhNhan) {
+      alert("Không tìm thấy thông tin bệnh nhân. Vui lòng liên hệ quản trị viên!");
+      return;
     }
-  }
-};
+
+    // Find selected time slot
+    const selectedTimeSlot = glvlist.find(g => g.MaGio === formData.gioKham);
+    
+    // Prepare data for API
+    const appointmentData = {
+      maBenhNhan: userData.maBenhNhan, // Sử dụng maBenhNhan từ userData
+      maBacSi: parseInt(formData.maBacSi),
+      maDichVu: parseInt(formData.maDichVu),
+      ngayHen: formData.ngayKham,
+      gioBatDau: selectedTimeSlot?.GioBatDau || "08:00:00",
+      gioKetThuc: selectedTimeSlot?.GioKetThuc || "09:00:00",
+      maTrangThai: 1, // Default status
+      ghiChu: formData.ghiChu
+    };
+    
+    try {
+      const response = await axios.post('http://localhost:8080/api/appointments/register',
+        appointmentData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      
+      // Success! Clear saved form data
+      localStorage.removeItem('appointmentFormData');
+      alert("Đặt lịch khám thành công!");
+      
+    } catch (error:any) {
+      console.error("Error registering appointment:", error);
+      
+      // Kiểm tra nếu lỗi 401 (Unauthorized)
+      if (error.response && error.response.status === 401) {
+        // Token expired or invalid, show notification first
+        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục!");
+        
+        // Save form data before redirecting
+        localStorage.setItem('appointmentFormData', JSON.stringify(formData));
+        localStorage.setItem('redirectAfterLogin', '/appointment');
+        localStorage.setItem('redirectedFromLogin', 'true');
+        
+        // Redirect to login page after a short delay
+        setTimeout(() => {
+          navigate('/login');
+        }, 500);
+        return;
+      }
+      
+      // Các lỗi khác
+      if (error.response && error.response.data && error.response.data.message) {
+        alert("Đã xảy ra lỗi: " + error.response.data.message);
+      } else {
+        alert("Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau!");
+      }
+    }
+  };
 
   // Framer Motion variants
   const containerVariants = {
