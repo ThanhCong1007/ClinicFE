@@ -56,4 +56,33 @@ export const cancelAppointment = async (token: string, appointment: any) => {
   } catch (error) {
     throw error;
   }
+};
+
+// Get available time slots for a doctor on a specific date
+export const getAvailableTimeSlots = async (token: string, doctorId: number, date: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/public/bac-si/${doctorId}/lich-trong?ngayHen=${date}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Update appointment
+export const updateAppointment = async (token: string, appointmentId: number, appointmentData: any) => {
+  try {
+    const response = await axios.put(`${API_URL}/appointments/${appointmentId}`, appointmentData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 }; 
