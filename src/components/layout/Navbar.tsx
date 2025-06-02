@@ -18,11 +18,14 @@ function Navbar() {
     const location = useLocation();
     const navigate = useNavigate();
 
+    // Kiểm tra xem có đang ở dashboard không
+    const isDashboard = location.pathname.startsWith('/dashboard');
+
     useEffect(() => {
         // Hiệu ứng fadeInUp (tương tự như wow.js)
         const timer = setTimeout(() => {
             setIsVisible(true);
-        }, 100); // Tương đương với data-wow-delay="0.1s"
+        }, 100);
 
         // Xử lý sticky navbar khi scroll
         const handleScroll = () => {
@@ -51,14 +54,9 @@ function Navbar() {
             }
         };
 
-        // Gọi handleScroll ngay lập tức để khởi tạo trạng thái đúng
         handleScroll();
         checkUserLoggedIn();
-
-        // Theo dõi sự kiện scroll
         window.addEventListener('scroll', handleScroll, { passive: true });
-
-        // Xác định trang hiện tại dựa trên URL
         setActiveLink(location.pathname);
 
         return () => {
@@ -79,7 +77,7 @@ function Navbar() {
 
     // Kiểm tra URL thuộc về menu "Dịch vụ khác"
     const isOtherServiceActive = () => {
-        if (isBocRangSuActive()) return false; // Đảm bảo không active cả hai menu cùng lúc
+        if (isBocRangSuActive()) return false;
         
         const otherServicePaths = [
             '/dich-vu/nieng-rang-tham-my',
@@ -92,14 +90,13 @@ function Navbar() {
 
     // Xử lý đăng xuất
     const handleLogout = () => {
-        // Xóa token và thông tin người dùng khỏi localStorage
         localStorage.clear();
         setIsLoggedIn(false);
         setUser(null);
         window.location.href = '/login'; 
     };
 
-    // Hiệu ứng fadeInUp tương tự wow.js
+    // Hiệu ứng fadeInUp
     const fadeInUpStyle = {
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
@@ -126,6 +123,77 @@ function Navbar() {
         top: '0'
     };
 
+    // Render Navbar cho Dashboard
+    if (isDashboard) {
+        return (
+            <nav
+                className={`navbar navbar-expand-lg bg-white navbar-light shadow-sm px-5 py-3 py-lg-0 ${isSticky ? 'sticky-top sticky-nav' : ''}`}
+                style={fadeInUpStyle}
+            >
+                <Link to="/dashboard" className="navbar-brand p-0">
+                    <h1 className="m-0 text-primary">
+                        <i className="fa fa-tooth me-2"></i>
+                        Nha khoa I-DENT
+                    </h1>
+                </Link>
+                
+                <button
+                    className="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarCollapse"
+                >
+                    <span className="navbar-toggler-icon"></span>
+                </button>
+                
+                <div className="collapse navbar-collapse" id="navbarCollapse">
+                    <div className="navbar-nav ms-auto py-0">
+                        <Link 
+                            to="/dashboard"
+                            className={`nav-item nav-link ${activeLink === '/dashboard' ? 'active' : ''}`}
+                            onClick={() => handleNavLinkClick('/dashboard')}
+                        >
+                            <i className="fas fa-home me-1"></i>
+                            Trang Chủ
+                        </Link>
+                        <Link 
+                            to="/dashboard/appointments"
+                            className={`nav-item nav-link ${activeLink === '/dashboard/appointments' ? 'active' : ''}`}
+                            onClick={() => handleNavLinkClick('/dashboard/appointments')}
+                        >
+                            <i className="fas fa-calendar-check me-1"></i>
+                            Lịch Hẹn
+                        </Link>
+                        <Link 
+                            to="/dashboard/patients"
+                            className={`nav-item nav-link ${activeLink === '/dashboard/patients' ? 'active' : ''}`}
+                            onClick={() => handleNavLinkClick('/dashboard/patients')}
+                        >
+                            <i className="fas fa-users me-1"></i>
+                            Bệnh Nhân
+                        </Link>
+                        <Link 
+                            to="/dashboard/medical-records"
+                            className={`nav-item nav-link ${activeLink === '/dashboard/medical-records' ? 'active' : ''}`}
+                            onClick={() => handleNavLinkClick('/dashboard/medical-records')}
+                        >
+                            <i className="fas fa-file-medical me-1"></i>
+                            Hồ Sơ
+                        </Link>
+                        <button 
+                            onClick={handleLogout}
+                            className="nav-item nav-link"
+                        >
+                            <i className="fas fa-sign-out-alt me-1"></i>
+                            Đăng Xuất
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        );
+    }
+
+    // Render Navbar cho trang chính
     return (
         <>
             <nav

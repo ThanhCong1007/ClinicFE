@@ -1,0 +1,28 @@
+# Dependencies cần cài đặt
+
+## Thư viện chính
+npm install react react-dom react-router-dom react-bootstrap bootstrap @popperjs/core animejs
+
+## Type Declarations (dev dependencies)
+npm install --save-dev @types/react @types/react-dom @types/react-router-dom @types/react-bootstrap @types/animejs
+
+## Giải thích các thư viện
+
+### Thư viện chính:
+- react: Thư viện React core
+- react-dom: Thư viện để render React trong môi trường web
+- react-router-dom: Thư viện routing cho React
+- react-bootstrap: Components React dựa trên Bootstrap
+- bootstrap: CSS framework Bootstrap
+- @popperjs/core: Dependency của Bootstrap cho tooltips và popovers
+- animejs: Thư viện animation
+
+### Type Declarations (dev dependencies):
+- @types/react: Type definitions cho React
+- @types/react-dom: Type definitions cho React DOM
+- @types/react-router-dom: Type definitions cho React Router
+- @types/react-bootstrap: Type definitions cho React Bootstrap
+- @types/animejs: Type definitions cho Anime.js
+
+## Lưu ý
+Sau khi cài đặt các thư viện này, các lỗi linter liên quan đến việc không tìm thấy module và type declarations sẽ được giải quyết. 

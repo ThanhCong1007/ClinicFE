@@ -1,0 +1,192 @@
+/* Prescriptions specific styles */
+.prescriptions-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+/* Prescription form */
+.prescription-form {
+  background: var(--white);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-section h3 {
+  color: var(--primary-color);
+  font-size: var(--font-size-md);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.medication-list {
+  margin-top: var(--spacing-md);
+}
+
+.medication-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--light-gray);
+  border-radius: var(--border-radius-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.medication-details {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.medication-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.add-medication-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--accent-color);
+  color: var(--white);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.add-medication-btn:hover {
+  background: var(--primary-color);
+}
+
+.add-medication-btn i {
+  margin-right: var(--spacing-sm);
+}
+
+/* Recent prescriptions */
+.recent-prescriptions {
+  background: var(--white);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.prescription-item {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid #eee;
+  transition: background-color var(--transition-fast);
+}
+
+.prescription-item:hover {
+  background-color: var(--light-gray);
+}
+
+.prescription-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.prescription-date {
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.prescription-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.prescription-medications {
+  margin-top: var(--spacing-sm);
+}
+
+.medication-tag {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--light-gray);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  margin-right: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Common medications */
+.common-medications {
+  margin-top: var(--spacing-lg);
+  grid-column: 1 / -1;
+}
+
+.medication-card {
+  background: var(--white);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+
+.medication-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.medication-name {
+  font-weight: 500;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.medication-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+  margin-bottom: var(--spacing-sm);
+}
+
+.medication-usage {
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+  padding: var(--spacing-sm);
+  background: var(--light-gray);
+  border-radius: var(--border-radius-sm);
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .prescriptions-container {
+    grid-template-columns: 1fr;
+  }
+
+  .medication-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .medication-item {
+    grid-template-columns: 1fr;
+  }
+
+  .medication-actions {
+    justify-content: flex-end;
+  }
+
+  .prescription-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .prescription-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+} 

@@ -721,134 +721,134 @@ const UserProfile = () => {
 
                   {!showAppointmentDetail ? (
                     <>
-                      {/* Upcoming Appointments */}
-                      {upcomingAppointments.length > 0 && (
-                        <div className="card shadow-sm mb-4">
-                          <div className="card-body">
-                            <h4 className="card-title mb-4">Lịch khám sắp tới</h4>
-                            {upcomingAppointments.map((appointment) => (
-                              <div key={appointment.maLichHen} className="card mb-3 border">
-                                <div className="card-body">
-                                  <div className="d-flex justify-content-between align-items-start">
-                                    <div className="flex-grow-1">
-                                      <div className="d-flex align-items-center mb-2">
-                                        <h5 className="mb-0 me-3">{appointment.tenBacSi}</h5>
-                                        <span className={getStatusBadge(appointment.tenTrangThai)}>
-                                          {appointment.tenTrangThai}
-                                        </span>
-                                      </div>
-                                      <p className="text-muted mb-2">{appointment.tenDichVu}</p>
-                                      <div className="row g-3 text-muted small mb-2">
-                                        <div className="col-md-4 d-flex align-items-center">
-                                          <Calendar size={16} className="me-2" />
-                                          {formatDate(appointment.ngayHen)}
-                                        </div>
-                                        <div className="col-md-4 d-flex align-items-center">
-                                          <Clock size={16} className="me-2" />
-                                          {appointment.gioBatDau} - {appointment.gioKetThuc}
-                                        </div>
-                                        <div className="col-md-4 d-flex align-items-center">
-                                          <MapPin size={16} className="me-2" />
-                                          Phòng khám
-                                        </div>
-                                      </div>
-                                      {appointment.ghiChu && (
-                                        <p className="text-primary mb-0">
-                                          <strong>Ghi chú:</strong> {appointment.ghiChu}
-                                        </p>
-                                      )}
+                  {/* Upcoming Appointments */}
+                  {upcomingAppointments.length > 0 && (
+                    <div className="card shadow-sm mb-4">
+                      <div className="card-body">
+                        <h4 className="card-title mb-4">Lịch khám sắp tới</h4>
+                        {upcomingAppointments.map((appointment) => (
+                          <div key={appointment.maLichHen} className="card mb-3 border">
+                            <div className="card-body">
+                              <div className="d-flex justify-content-between align-items-start">
+                                <div className="flex-grow-1">
+                                  <div className="d-flex align-items-center mb-2">
+                                    <h5 className="mb-0 me-3">{appointment.tenBacSi}</h5>
+                                    <span className={getStatusBadge(appointment.tenTrangThai)}>
+                                      {appointment.tenTrangThai}
+                                    </span>
+                                  </div>
+                                  <p className="text-muted mb-2">{appointment.tenDichVu}</p>
+                                  <div className="row g-3 text-muted small mb-2">
+                                    <div className="col-md-4 d-flex align-items-center">
+                                      <Calendar size={16} className="me-2" />
+                                      {formatDate(appointment.ngayHen)}
+                                    </div>
+                                    <div className="col-md-4 d-flex align-items-center">
+                                      <Clock size={16} className="me-2" />
+                                      {appointment.gioBatDau} - {appointment.gioKetThuc}
+                                    </div>
+                                    <div className="col-md-4 d-flex align-items-center">
+                                      <MapPin size={16} className="me-2" />
+                                      Phòng khám
+                                    </div>
+                                  </div>
+                                  {appointment.ghiChu && (
+                                    <p className="text-primary mb-0">
+                                      <strong>Ghi chú:</strong> {appointment.ghiChu}
+                                    </p>
+                                  )}
                                       {appointment.maTrangThai === 5 && appointment.lydo && (
                                         <p className="text-danger mb-0 mt-2">
                                           <strong>Lý do hủy:</strong> {appointment.lydo}
                                         </p>
                                       )}
-                                    </div>
-                                    <div className="d-flex">
+                                </div>
+                                <div className="d-flex">
                                       <button 
                                         className="btn btn-outline-primary btn-sm me-2"
                                         onClick={() => fetchAppointmentDetail(appointment.maLichHen)}
                                       >
-                                        <Eye size={16} />
-                                      </button>
+                                    <Eye size={16} />
+                                  </button>
                                       {appointment.maTrangThai === 1 && (
                                         <button 
                                           className="btn btn-outline-success btn-sm me-2"
                                           onClick={() => handleEditClick(appointment)}
                                         >
-                                          <Edit size={16} />
-                                        </button>
+                                    <Edit size={16} />
+                                  </button>
                                       )}
-                                      <button
-                                        className="btn btn-outline-danger btn-sm"
-                                        onClick={() => handleCancelAppointment(appointment)}
-                                      >
-                                        <Trash2 size={16} />
-                                      </button>
-                                    </div>
-                                  </div>
+                                  <button
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() => handleCancelAppointment(appointment)}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
                                 </div>
                               </div>
-                            ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-                      {/* Past Appointments */}
-                      {pastAppointments.length > 0 && (
-                        <div className="card shadow-sm">
-                          <div className="card-body">
-                            <h4 className="card-title mb-4">Lịch sử khám bệnh</h4>
-                            {pastAppointments.map((appointment) => (
-                              <div key={appointment.maLichHen} className="card mb-3 border opacity-75">
-                                <div className="card-body">
-                                  <div className="d-flex justify-content-between align-items-start">
-                                    <div className="flex-grow-1">
-                                      <div className="d-flex align-items-center mb-2">
-                                        <h5 className="mb-0 me-3">{appointment.tenBacSi}</h5>
-                                        <span className={getStatusBadge(appointment.tenTrangThai)}>
-                                          {appointment.tenTrangThai}
-                                        </span>
-                                      </div>
-                                      <p className="text-muted mb-2">{appointment.tenDichVu}</p>
-                                      <div className="row g-3 text-muted small mb-2">
-                                        <div className="col-md-4 d-flex align-items-center">
-                                          <Calendar size={16} className="me-2" />
-                                          {formatDate(appointment.ngayHen)}
-                                        </div>
-                                        <div className="col-md-4 d-flex align-items-center">
-                                          <Clock size={16} className="me-2" />
-                                          {appointment.gioBatDau} - {appointment.gioKetThuc}
-                                        </div>
-                                        <div className="col-md-4 d-flex align-items-center">
-                                          <MapPin size={16} className="me-2" />
-                                          Phòng khám
-                                        </div>
-                                      </div>
-                                      {appointment.ghiChu && (
-                                        <p className="mb-0">
-                                          <strong>Ghi chú:</strong> {appointment.ghiChu}
-                                        </p>
-                                      )}
+                  {/* Past Appointments */}
+                  {pastAppointments.length > 0 && (
+                    <div className="card shadow-sm">
+                      <div className="card-body">
+                        <h4 className="card-title mb-4">Lịch sử khám bệnh</h4>
+                        {pastAppointments.map((appointment) => (
+                          <div key={appointment.maLichHen} className="card mb-3 border opacity-75">
+                            <div className="card-body">
+                              <div className="d-flex justify-content-between align-items-start">
+                                <div className="flex-grow-1">
+                                  <div className="d-flex align-items-center mb-2">
+                                    <h5 className="mb-0 me-3">{appointment.tenBacSi}</h5>
+                                    <span className={getStatusBadge(appointment.tenTrangThai)}>
+                                      {appointment.tenTrangThai}
+                                    </span>
+                                  </div>
+                                  <p className="text-muted mb-2">{appointment.tenDichVu}</p>
+                                  <div className="row g-3 text-muted small mb-2">
+                                    <div className="col-md-4 d-flex align-items-center">
+                                      <Calendar size={16} className="me-2" />
+                                      {formatDate(appointment.ngayHen)}
+                                    </div>
+                                    <div className="col-md-4 d-flex align-items-center">
+                                      <Clock size={16} className="me-2" />
+                                      {appointment.gioBatDau} - {appointment.gioKetThuc}
+                                    </div>
+                                    <div className="col-md-4 d-flex align-items-center">
+                                      <MapPin size={16} className="me-2" />
+                                      Phòng khám
+                                    </div>
+                                  </div>
+                                  {appointment.ghiChu && (
+                                    <p className="mb-0">
+                                      <strong>Ghi chú:</strong> {appointment.ghiChu}
+                                    </p>
+                                  )}
                                       {appointment.maTrangThai === 5 && appointment.lydo && (
                                         <p className="text-danger mb-0 mt-2">
-                                          <strong>Lý do hủy:</strong> {appointment.lydo}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <div>
+                                      <strong>Lý do hủy:</strong> {appointment.lydo}
+                                    </p>
+                                  )}
+                                </div>
+                                <div>
                                       <button 
                                         className="btn btn-outline-primary btn-sm"
                                         onClick={() => fetchAppointmentDetail(appointment.maLichHen)}
                                       >
-                                        <Eye size={16} />
-                                      </button>
-                                    </div>
-                                  </div>
+                                    <Eye size={16} />
+                                  </button>
                                 </div>
                               </div>
-                            ))}
+                            </div>
                           </div>
-                        </div>
+                        ))}
+                      </div>
+                    </div>
                       )}
                     </>
                   ) : (

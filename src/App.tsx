@@ -35,6 +35,9 @@ import PricingTable from './pages/BocRangSu/PricingTable';
 import CosmeticPorcelainTeeth from './pages/BocRangSu/CosmeticPorcelainTeeth';
 import NotFound from './features/404';
 
+// Dashboard components
+import DashboardLayout from './dashboard/DashboardLayout';
+
 // import 'tailwindcss/tailwind.css';
 
 // Component tạm thời cho trang chủ và các trang chưa có
@@ -116,9 +119,11 @@ function App() {
         <Navbar />
         <Routes>
           {/* Route chính */}
-
           <Route path="/trang-chu" element={<HomePage />} />
           <Route path="/" element={<Navigate to="/trang-chu" replace />} />
+
+          {/* Dashboard routes */}
+          <Route path="/dashboard/*" element={<DashboardLayout />} />
 
           {/* Routes cho phần Giới thiệu */}
           <Route path="/gioi-thieu/thong-tin-phong-kham" element={<ThongTinPhongKham />} />

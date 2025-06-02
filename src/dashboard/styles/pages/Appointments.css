@@ -1,0 +1,140 @@
+/* Appointments specific styles */
+.appointments-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+/* Appointments list */
+.appointments-list {
+  background: var(--white);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.appointments-header {
+  padding: var(--spacing-md);
+  background: var(--primary-color);
+  color: var(--white);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appointments-header h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+}
+
+.appointment-item {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid #eee;
+  transition: background-color var(--transition-fast);
+}
+
+.appointment-item:hover {
+  background-color: var(--light-gray);
+}
+
+.appointment-time {
+  font-weight: 500;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.appointment-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-sm);
+}
+
+.appointment-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* New appointment form */
+.new-appointment-form {
+  background: var(--white);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-section h3 {
+  color: var(--primary-color);
+  font-size: var(--font-size-md);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.status-badge i {
+  margin-right: var(--spacing-xs);
+}
+
+.status-badge.confirmed {
+  background-color: var(--success);
+  color: var(--white);
+}
+
+.status-badge.pending {
+  background-color: var(--warning);
+  color: var(--text-color);
+}
+
+.status-badge.cancelled {
+  background-color: var(--danger);
+  color: var(--white);
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .appointments-container {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .appointment-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .appointment-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+} 

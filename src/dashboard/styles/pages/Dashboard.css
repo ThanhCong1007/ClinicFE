@@ -1,0 +1,140 @@
+/* Dashboard specific styles */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.stat-card {
+  background: var(--white);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  transition: transform var(--transition-fast);
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card h3 {
+  color: var(--text-color);
+  font-size: var(--font-size-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.stat-card .number {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+/* Today's appointments */
+.today-appointments {
+  margin-bottom: var(--spacing-xl);
+}
+
+.appointment-status {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.appointment-status.confirmed {
+  background-color: var(--success);
+  color: var(--white);
+}
+
+.appointment-status.pending {
+  background-color: var(--warning);
+  color: var(--text-color);
+}
+
+/* Recent patients */
+.recent-patients {
+  margin-top: var(--spacing-xl);
+}
+
+.patient-card {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--white);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-sm);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.patient-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.patient-info {
+  flex: 1;
+}
+
+.patient-name {
+  font-weight: 500;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-xs);
+}
+
+.patient-details {
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+}
+
+/* Quick actions */
+.quick-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.quick-action-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--accent-color);
+  color: var(--white);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.quick-action-btn:hover {
+  background: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+.quick-action-btn i {
+  margin-right: var(--spacing-sm);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .quick-actions {
+    flex-direction: column;
+  }
+
+  .quick-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+} 
