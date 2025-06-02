@@ -1,5 +1,5 @@
 import { Profiler, useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
@@ -72,6 +72,53 @@ function PlaceholderPage({ title }: { title: string }) {
   );
 }
 
+// Protected Route Component
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuthorization = () => {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const user = JSON.parse(userData);
+        if (user.tenVaiTro !== 'BACSI') {
+          alert('Bạn không có quyền truy cập vào trang này!');
+          navigate('/');
+          return;
+        }
+        setIsAuthorized(true);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        navigate('/login');
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthorization();
+  }, [navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return isAuthorized ? <>{children}</> : null;
+}
+
 function App() {
   const [loading, setLoading] = useState(true);
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -123,7 +170,11 @@ function App() {
           <Route path="/" element={<Navigate to="/trang-chu" replace />} />
 
           {/* Dashboard routes */}
-          <Route path="/dashboard/*" element={<DashboardLayout />} />
+          <Route path="/dashboard/*" element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          } />
 
           {/* Routes cho phần Giới thiệu */}
           <Route path="/gioi-thieu/thong-tin-phong-kham" element={<ThongTinPhongKham />} />

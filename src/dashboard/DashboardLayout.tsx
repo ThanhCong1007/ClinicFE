@@ -1,19 +1,19 @@
 import { Routes, Route } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Appointments from './pages/Appointments';
-import PatientRecords from './pages/PatientRecords';
-import Layout from './components/Layout';
+import Patients from './pages/Patients';
+import Examination from './pages/Examination';
 
-function DashboardLayout() {
+export default function DashboardLayout() {
   return (
-    <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="appointments" element={<Appointments />} />
-        <Route path="patients" element={<PatientRecords />} />
-      </Route>
-    </Routes>
+    <div className="flex-grow-1">
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/appointments" element={<Appointments />} />
+        <Route path="/patients" element={<Patients />} />
+        <Route path="/examination" element={<Examination />} />
+        <Route path="/examination/:maLichHen" element={<Examination />} />
+      </Routes>
+    </div>
   );
-}
-
-export default DashboardLayout; 
+} 
