@@ -122,7 +122,7 @@ const UserProfile = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await axios.get(`http://localhost:8080/api/appointments/${maLichHen}`, {
+      const response = await axios.get(`/api/appointments/${maLichHen}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -139,7 +139,7 @@ const UserProfile = () => {
   // Function to fetch doctors
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/public/bac-si');
+      const response = await axios.get('/api/public/bac-si');
       setDoctors(response.data);
     } catch (error) {
       console.error('Error fetching doctors:', error);
