@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Button } from 'react-bootstrap';
-import { getDoctorAppointments } from '../services/medicalService';
 import { format } from 'date-fns';
 
 interface Appointment {
@@ -21,6 +20,44 @@ interface Appointment {
   coBenhAn: boolean;
 }
 
+// Mock data
+const mockAppointments: Appointment[] = [
+  {
+    maLichHen: 1,
+    maBenhNhan: 1,
+    tenBenhNhan: "Nguyễn Văn A",
+    soDienThoaiBenhNhan: "0123456789",
+    maBacSi: 1,
+    tenBacSi: "Bác sĩ A",
+    maDichVu: 1,
+    tenDichVu: "Khám tổng quát",
+    ngayHen: format(new Date(), 'yyyy-MM-dd'),
+    gioBatDau: "09:00",
+    gioKetThuc: "09:30",
+    maTrangThai: 2,
+    tenTrangThai: "Đã xác nhận",
+    ghiChuLichHen: "Đau đầu, sốt",
+    coBenhAn: false
+  },
+  {
+    maLichHen: 2,
+    maBenhNhan: 2,
+    tenBenhNhan: "Trần Thị B",
+    soDienThoaiBenhNhan: "0987654321",
+    maBacSi: 1,
+    tenBacSi: "Bác sĩ A",
+    maDichVu: 2,
+    tenDichVu: "Khám răng",
+    ngayHen: format(new Date(), 'yyyy-MM-dd'),
+    gioBatDau: "10:00",
+    gioKetThuc: "10:30",
+    maTrangThai: 1,
+    tenTrangThai: "Chờ xác nhận",
+    ghiChuLichHen: "Đau răng",
+    coBenhAn: false
+  }
+];
+
 const Dashboard = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,25 +72,20 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        const maBacSi = userData.maBacSi;
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        if (!maBacSi) {
-          throw new Error('Không tìm thấy thông tin bác sĩ');
-        }
-
-        const data = await getDoctorAppointments(maBacSi);
-        setAppointments(data);
+        setAppointments(mockAppointments);
         
         // Calculate statistics
         const today = format(new Date(), 'yyyy-MM-dd');
-        const todayAppointments = data.filter((app: Appointment) => app.ngayHen === today);
-        const uniquePatients = new Set(data.map((app: Appointment) => app.maBenhNhan));
-        const pendingExams = data.filter((app: Appointment) => !app.coBenhAn && (app.maTrangThai === 1 || app.maTrangThai === 2));
+        const todayAppointments = mockAppointments.filter(app => app.ngayHen === today);
+        const uniquePatients = new Set(mockAppointments.map(app => app.maBenhNhan));
+        const pendingExams = mockAppointments.filter(app => !app.coBenhAn && (app.maTrangThai === 1 || app.maTrangThai === 2));
         
         // Get new patients (first appointment today)
-        const newPatients = todayAppointments.filter((app: Appointment) => {
-          const previousAppointments = data.filter((a: Appointment) => 
+        const newPatients = todayAppointments.filter(app => {
+          const previousAppointments = mockAppointments.filter(a => 
             a.maBenhNhan === app.maBenhNhan && a.ngayHen < today
           );
           return previousAppointments.length === 0;

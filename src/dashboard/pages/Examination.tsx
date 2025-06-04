@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Card, Table } from 'react-bootstrap';
-import { getAppointmentDetails, createMedicalExam } from '../services/medicalService';
 import { format } from 'date-fns';
 import { Typeahead } from 'react-bootstrap-typeahead';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
-import { searchDrugsRxNav } from '../services/rxnavService';
 import Highlighter from 'react-highlight-words';
+import { getAppointmentDetails, createMedicalExam, searchDrugsRxNav } from './Appointments';
 
 interface Appointment {
   maLichHen: number;
@@ -23,6 +22,7 @@ interface Appointment {
   maTrangThai: number;
   tenTrangThai: string;
   ghiChuLichHen: string | null;
+  coBenhAn: boolean;
 }
 
 interface Prescription {
@@ -87,13 +87,32 @@ export default function Examination() {
             gioKetThuc: format(new Date(new Date().getTime() + 30 * 60000), 'HH:mm'),
             maTrangThai: 2,
             tenTrangThai: '',
-            ghiChuLichHen: ''
+            ghiChuLichHen: '',
+            coBenhAn: false
           });
           setLoading(false);
           return;
         }
         const data = await getAppointmentDetails(parseInt(maLichHen));
-        setAppointment(data);
+        if (data) {
+          setAppointment({
+            maLichHen: data.maLichHen,
+            maBenhNhan: data.maBenhNhan,
+            tenBenhNhan: data.tenBenhNhan,
+            soDienThoaiBenhNhan: data.soDienThoaiBenhNhan,
+            maBacSi: data.maBacSi,
+            tenBacSi: data.tenBacSi,
+            maDichVu: data.maDichVu,
+            tenDichVu: data.tenDichVu,
+            ngayHen: data.ngayHen,
+            gioBatDau: data.gioBatDau,
+            gioKetThuc: data.gioKetThuc,
+            maTrangThai: data.maTrangThai,
+            tenTrangThai: data.tenTrangThai,
+            ghiChuLichHen: data.ghiChuLichHen,
+            coBenhAn: data.coBenhAn
+          });
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
       } finally {

@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { getDoctorAppointments, createMedicalExam } from '../services/medicalService';
 import { Container, Row, Col, Form, Button, Card, Table, Modal } from 'react-bootstrap';
 import { format } from 'date-fns';
 import { Typeahead } from 'react-bootstrap-typeahead';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
-import { searchDrugsRxNav } from '../services/rxnavService';
 import Highlighter from 'react-highlight-words';
 import { useNavigate } from 'react-router-dom';
 
@@ -37,6 +35,70 @@ interface Prescription {
   tongTien: number;
   dotDungThuoc: string;
 }
+
+// Mock data
+const mockAppointments: Appointment[] = [
+  {
+    maLichHen: 1,
+    maBenhNhan: 1,
+    tenBenhNhan: "Nguyễn Văn A",
+    soDienThoaiBenhNhan: "0123456789",
+    maBacSi: 1,
+    tenBacSi: "Bác sĩ A",
+    maDichVu: 1,
+    tenDichVu: "Khám tổng quát",
+    ngayHen: format(new Date(), 'yyyy-MM-dd'),
+    gioBatDau: "09:00",
+    gioKetThuc: "09:30",
+    maTrangThai: 2,
+    tenTrangThai: "Đã xác nhận",
+    ghiChuLichHen: "Đau đầu, sốt",
+    coBenhAn: false
+  }
+];
+
+// Mock functions
+export const getDoctorAppointments = async (maBacSi: number) => {
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockAppointments;
+};
+
+export const getAppointmentDetails = async (maLichHen: number) => {
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return mockAppointments.find(app => app.maLichHen === maLichHen);
+};
+
+export const getPatientMedicalRecords = async (maBenhNhan: number) => {
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return [
+    {
+      maBenhAn: 1,
+      ngayTao: new Date().toISOString(),
+      maLichHen: 1,
+      maBacSi: 1,
+      tenBacSi: "Bác sĩ A",
+      maBenhNhan: maBenhNhan,
+      tenBenhNhan: "Nguyễn Văn A",
+      soDienThoai: "0123456789",
+      lyDoKham: "Đau đầu",
+      chanDoan: "Cảm cúm",
+      ghiChuDieuTri: "Nghỉ ngơi, uống thuốc",
+      ngayTaiKham: null
+    }
+  ];
+};
+
+export const createMedicalExam = async (examData: any) => {
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return true;
+};
+
+export const searchDrugsRxNav = async (text: string) => {
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return [
+    { rxcui: "123", name: "Paracetamol", synonym: "Acetaminophen", doseFormName: "viên" }
+  ];
+};
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);

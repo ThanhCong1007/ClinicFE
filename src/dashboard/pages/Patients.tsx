@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getDoctorAppointments, getPatientMedicalRecords } from '../services/medicalService';
+import { getDoctorAppointments, getPatientMedicalRecords } from './Appointments';
 
 interface MedicalRecord {
   maBenhAn: number;

@@ -22,6 +22,7 @@ import Team from './features/about/Team';
 import Contact from './features/contact/Contact';
 import Pricing from './features/pricing/Pricing';
 import Login from './features/auth/Login';
+import Register from './features/auth/Register';
 
 // Layout/section
 import Appointment from './layouts/Appointment';
@@ -198,8 +199,8 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
 
-        {/* Footer */}
-        <Footer />
+        {/* Only show Footer for non-dashboard routes */}
+        {!window.location.pathname.includes('/dashboard') && <Footer />}
 
         {/* Back to Top Button */}
         {showBackToTop && (

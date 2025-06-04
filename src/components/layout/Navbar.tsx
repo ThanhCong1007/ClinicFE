@@ -7,6 +7,7 @@ interface User {
     fullName: string;
     email: string;
     avatar: string;
+    tenVaiTro: string;
 }
 
 function Navbar() {
@@ -328,7 +329,7 @@ function Navbar() {
                         <i className="fa fa-search"></i>
                     </button>
                     
-                    <Link to="/dat-lich" className="btn btn-primary py-2 px-4 ms-3">
+                    <Link to="/lien-he" className="btn btn-primary py-2 px-4 ms-3">
                         Đặt hẹn
                     </Link>
                     
@@ -348,6 +349,13 @@ function Navbar() {
                                         <i className="fa fa-user me-2"></i>Thông tin tài khoản
                                     </Link>
                                 </li>
+                                {user.tenVaiTro === "BACSI" && (
+                                    <li>
+                                        <Link to="/dashboard" className="dropdown-item">
+                                            <i className="fa fa-stethoscope me-2"></i>Khám bệnh
+                                        </Link>
+                                    </li>
+                                )}
                                 <li>
                                     <Link to="/thong-tin-tai-khoan" state={{ activeTab: 'appointments' }} className="dropdown-item">
                                         <i className="fa fa-calendar me-2"></i>Lịch sử đặt hẹn
