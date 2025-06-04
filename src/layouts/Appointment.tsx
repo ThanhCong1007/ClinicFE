@@ -49,7 +49,7 @@ function Appointment() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/public/bac-si');
+        const response = await axios.get('/api/public/bac-si');
         setDoctors(response.data);
       } catch (error) {
         console.error('Error fetching doctors:', error);
@@ -67,7 +67,7 @@ function Appointment() {
         try {
           setLoading(true);
           const response = await axios.get(
-            `http://localhost:8080/api/public/bac-si/${formData.maBacSi}/lich-trong?ngayHen=${formData.ngayKham}`
+            `/api/public/bac-si/${formData.maBacSi}/lich-trong?ngayHen=${formData.ngayKham}`
           );
           setAvailableSlots(response.data);
         } catch (error) {
@@ -166,7 +166,7 @@ function Appointment() {
     }
 
     // Find selected time slot
-    const selectedTimeSlot = availableSlots.find(g => g.gioBatDau === formData.gioKham);
+    const selectedTimeSlot = availableSlots.find(slot => slot.gioBatDau === formData.gioKham);
     
     // Prepare data for API
     const appointmentData = {
@@ -174,14 +174,14 @@ function Appointment() {
       maBacSi: parseInt(formData.maBacSi),
       maDichVu: parseInt(formData.maDichVu),
       ngayHen: formData.ngayKham,
-      gioBatDau: selectedTimeSlot?.gioBatDau || "08:00:00",
-      gioKetThuc: selectedTimeSlot?.gioKetThuc || "09:00:00",
+      gioBatDau: selectedTimeSlot?.gioBatDau || "",
+      gioKetThuc: selectedTimeSlot?.gioKetThuc || "",
       maTrangThai: 1, // Default status
       ghiChu: formData.ghiChu
     };
     
     try {
-      const response = await axios.post('http://localhost:8080/api/appointments/register',
+      const response = await axios.post('/api/appointments/register',
         appointmentData,
         {
           headers: {
@@ -413,7 +413,7 @@ function Appointment() {
                       {availableSlots.map((slot) => (
                         <option 
                           key={`${slot.gioBatDau}-${slot.gioKetThuc}`} 
-                          value={`${slot.gioBatDau}-${slot.gioKetThuc}`}
+                          value={slot.gioBatDau}
                         >
                           {slot.gioBatDau} - {slot.gioKetThuc}
                         </option>

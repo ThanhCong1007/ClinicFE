@@ -1,16 +1,13 @@
-import axios from 'axios';
+import { mockAppointments, mockMedicalRecords } from './mockData';
 
 const API_URL = '/api/tham-kham';
 
 // Create medical examination record
 export const createMedicalExam = async (data: any) => {
   try {
-    const response = await axios.post(`${API_URL}/tham-kham`, data, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    return response.data;
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return { success: true, message: 'Tạo bệnh án thành công', data };
   } catch (error) {
     throw error;
   }
@@ -19,12 +16,9 @@ export const createMedicalExam = async (data: any) => {
 // Get doctor's appointments and medical records
 export const getDoctorAppointments = async (maBacSi: number) => {
   try {
-    const response = await axios.get(`${API_URL}/bac-si/${maBacSi}/lich-hen-benh-an`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    return response.data;
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockAppointments;
   } catch (error) {
     throw error;
   }
@@ -33,12 +27,9 @@ export const getDoctorAppointments = async (maBacSi: number) => {
 // Get appointment details
 export const getAppointmentDetails = async (maLichHen: number) => {
   try {
-    const response = await axios.get(`${API_URL}/lich-hen/${maLichHen}/chi-tiet`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    return response.data;
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockAppointments.find(app => app.maLichHen === maLichHen);
   } catch (error) {
     throw error;
   }
@@ -47,12 +38,9 @@ export const getAppointmentDetails = async (maLichHen: number) => {
 // Get patient's medical records
 export const getPatientMedicalRecords = async (maBenhNhan: number) => {
   try {
-    const response = await axios.get(`${API_URL}/benh-nhan/${maBenhNhan}/benh-an`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    return response.data;
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockMedicalRecords.filter(record => record.maBenhNhan === maBenhNhan);
   } catch (error) {
     throw error;
   }
