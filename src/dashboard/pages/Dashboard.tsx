@@ -295,14 +295,16 @@ const Dashboard = () => {
 
 function getStatusBadgeClass(maTrangThai: number): string {
   switch (maTrangThai) {
-    case 1: // Chờ xác nhận
-      return 'bg-warning';
+    case 1: // Đã đặt
+      return 'bg-primary';
     case 2: // Đã xác nhận
-      return 'bg-info';
-    case 3: // Đã hủy
-      return 'bg-danger';
+      return 'bg-success';
+    case 3: // Đang thực hiện
+      return 'bg-warning';
     case 4: // Hoàn thành
       return 'bg-success';
+    case 5: // Đã hủy
+      return 'bg-danger';
     default:
       return 'bg-secondary';
   }
