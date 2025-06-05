@@ -5,6 +5,7 @@ import { Typeahead } from 'react-bootstrap-typeahead';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import Highlighter from 'react-highlight-words';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface Appointment {
   maLichHen: number;
@@ -21,6 +22,14 @@ interface Appointment {
   maTrangThai: number;
   tenTrangThai: string;
   ghiChuLichHen: string | null;
+  lyDoHen: string | null;
+  thoiGian: number;
+  maBenhAn: number | null;
+  lyDoKham: string | null;
+  chanDoan: string | null;
+  ghiChuDieuTri: string | null;
+  ngayTaiKham: string | null;
+  ngayTaoBenhAn: string | null;
   coBenhAn: boolean;
 }
 
@@ -36,68 +45,82 @@ interface Prescription {
   dotDungThuoc: string;
 }
 
-// Mock data
-const mockAppointments: Appointment[] = [
-  {
-    maLichHen: 1,
-    maBenhNhan: 1,
-    tenBenhNhan: "Nguyễn Văn A",
-    soDienThoaiBenhNhan: "0123456789",
-    maBacSi: 1,
-    tenBacSi: "Bác sĩ A",
-    maDichVu: 1,
-    tenDichVu: "Khám tổng quát",
-    ngayHen: format(new Date(), 'yyyy-MM-dd'),
-    gioBatDau: "09:00",
-    gioKetThuc: "09:30",
-    maTrangThai: 2,
-    tenTrangThai: "Đã xác nhận",
-    ghiChuLichHen: "Đau đầu, sốt",
-    coBenhAn: false
-  }
-];
-
-// Mock functions
+// API functions
 export const getDoctorAppointments = async (maBacSi: number) => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockAppointments;
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('Không tìm thấy token xác thực');
+
+  const response = await axios.get(
+    `http://localhost:8080/api/tham-kham/bac-si/${maBacSi}/lich-hen-benh-an`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+  return response.data;
 };
 
 export const getAppointmentDetails = async (maLichHen: number) => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockAppointments.find(app => app.maLichHen === maLichHen);
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('Không tìm thấy token xác thực');
+
+  const response = await axios.get(
+    `http://localhost:8080/api/tham-kham/lich-hen/${maLichHen}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+  return response.data;
 };
 
 export const getPatientMedicalRecords = async (maBenhNhan: number) => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return [
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('Không tìm thấy token xác thực');
+
+  const response = await axios.get(
+    `http://localhost:8080/api/tham-kham/benh-nhan/${maBenhNhan}/benh-an`,
     {
-      maBenhAn: 1,
-      ngayTao: new Date().toISOString(),
-      maLichHen: 1,
-      maBacSi: 1,
-      tenBacSi: "Bác sĩ A",
-      maBenhNhan: maBenhNhan,
-      tenBenhNhan: "Nguyễn Văn A",
-      soDienThoai: "0123456789",
-      lyDoKham: "Đau đầu",
-      chanDoan: "Cảm cúm",
-      ghiChuDieuTri: "Nghỉ ngơi, uống thuốc",
-      ngayTaiKham: null
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     }
-  ];
+  );
+  return response.data;
 };
 
 export const createMedicalExam = async (examData: any) => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return true;
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('Không tìm thấy token xác thực');
+
+  const response = await axios.post(
+    'http://localhost:8080/api/tham-kham/benh-an',
+    examData,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  return response.data;
 };
 
 export const searchDrugsRxNav = async (text: string) => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return [
-    { rxcui: "123", name: "Paracetamol", synonym: "Acetaminophen", doseFormName: "viên" }
-  ];
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('Không tìm thấy token xác thực');
+
+  const response = await axios.get(
+    `http://localhost:8080/api/thuoc/search?text=${encodeURIComponent(text)}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+  return response.data;
 };
 
 export default function Appointments() {
@@ -160,7 +183,7 @@ export default function Appointments() {
 
   const handleStartExam = (appointment: Appointment | null, walkIn: boolean = false) => {
     if (walkIn) {
-      setSelectedAppointment({
+      const walkInAppointment: Appointment = {
         maLichHen: 0,
         maBenhNhan: 0,
         tenBenhNhan: '',
@@ -175,8 +198,17 @@ export default function Appointments() {
         maTrangThai: 2,
         tenTrangThai: 'Đã xác nhận',
         ghiChuLichHen: 'Khám vãng lai',
+        lyDoHen: null,
+        thoiGian: 30,
+        maBenhAn: null,
+        lyDoKham: null,
+        chanDoan: null,
+        ghiChuDieuTri: null,
+        ngayTaiKham: null,
+        ngayTaoBenhAn: null,
         coBenhAn: false
-      });
+      };
+      setSelectedAppointment(walkInAppointment);
       setIsWalkIn(true);
     } else {
       setSelectedAppointment(appointment);
