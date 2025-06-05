@@ -66,14 +66,24 @@ export const getAppointmentDetails = async (maLichHen: number) => {
   if (!token) throw new Error('Không tìm thấy token xác thực');
 
   const response = await axios.get(
-    `http://localhost:8080/api/tham-kham/lich-hen/${maLichHen}`,
+    `http://localhost:8080/api/tham-kham/lich-hen/${maLichHen}/chi-tiet`,
     {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     }
   );
-  return response.data;
+
+  // Modify the response data to use real-time values
+  const data = response.data;
+  if (data) {
+    const now = new Date();
+    data.gioBatDau = format(now, 'HH:mm:ss');
+    data.gioKetThuc = ''; // Clear end time initially
+    data.thoiGian = 30; // Set default time to 30 minutes
+  }
+  
+  return data;
 };
 
 export const getPatientMedicalRecords = async (maBenhNhan: number) => {
@@ -96,12 +106,13 @@ export const createMedicalExam = async (examData: any) => {
   if (!token) throw new Error('Không tìm thấy token xác thực');
 
   const response = await axios.post(
-    'http://localhost:8080/api/tham-kham/benh-an',
+    'http://localhost:8080/api/tham-kham/kham',
     examData,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
     }
   );
@@ -109,18 +120,67 @@ export const createMedicalExam = async (examData: any) => {
 };
 
 export const searchDrugsRxNav = async (text: string) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
+  try {
+    // First, get approximate matches
+    const approximateResponse = await axios.get(
+      `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(text)}`
+    );
 
-  const response = await axios.get(
-    `http://localhost:8080/api/thuoc/search?text=${encodeURIComponent(text)}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  );
-  return response.data;
+    const candidates = approximateResponse.data?.approximateGroup?.candidate || [];
+    
+    // Then, get detailed information for each candidate
+    const drugDetails = await Promise.all(
+      candidates.map(async (candidate: any) => {
+        try {
+          const propertiesResponse = await axios.get(
+            `https://rxnav.nlm.nih.gov/REST/rxcui/${candidate.rxcui}/properties.json`
+          );
+          
+          const properties = propertiesResponse.data?.properties || {};
+          return {
+            rxcui: candidate.rxcui,
+            name: properties.name,
+            synonym: properties.synonym,
+            displayName: properties.displayName,
+            score: candidate.score,
+            rank: candidate.rank
+          };
+        } catch (error) {
+          console.error(`Error fetching details for rxcui ${candidate.rxcui}:`, error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out any failed requests and sort by score
+    return drugDetails
+      .filter(drug => drug !== null)
+      .sort((a, b) => (b?.score || 0) - (a?.score || 0));
+  } catch (error) {
+    console.error('Error searching drugs:', error);
+    return [];
+  }
+};
+
+// Add this CSS at the top of the file or in your CSS file
+const drugCardStyle = {
+  padding: '10px',
+  marginBottom: '5px',
+  border: '1px solid #dee2e6',
+  borderRadius: '4px',
+  backgroundColor: '#fff'
+};
+
+const drugHeaderStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '5px'
+};
+
+const drugInfoStyle = {
+  fontSize: '0.9rem',
+  color: '#6c757d'
 };
 
 export default function Appointments() {
@@ -244,15 +304,43 @@ export default function Appointments() {
 
     try {
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const now = new Date();
+
+      // Transform prescriptions to match the new API structure
+      const danhSachThuoc = prescriptions.map(pres => ({
+        maThuoc: pres.maThuoc,
+        tenThuoc: pres.tenThuoc,
+        lieuDung: pres.cachDung,
+        tanSuat: pres.dotDungThuoc,
+        thoiDiem: '',
+        thoiGianDieuTri: 7, // Default to 7 days
+        soLuong: pres.soLuong,
+        donViDung: pres.donVi,
+        donGia: pres.giaBan,
+        ghiChu: pres.ghiChu,
+        lyDoDonThuoc: ''
+      }));
+
       const examData = {
+        maBenhNhan: selectedAppointment.maBenhNhan,
+        hoTen: selectedAppointment.tenBenhNhan,
+        soDienThoai: selectedAppointment.soDienThoaiBenhNhan,
+        email: '',
+        diaChi: '',
+        ngaySinh: '',
+        gioiTinh: '',
+        tienSuBenh: medicalRecord.tienSuBenh,
+        diUng: medicalRecord.diUng,
         maLichHen: isWalkIn ? null : selectedAppointment.maLichHen,
         maBacSi: userData.maBacSi,
-        tenBacSi: userData.tenBacSi,
-        maBenhNhan: selectedAppointment.maBenhNhan,
-        tenBenhNhan: selectedAppointment.tenBenhNhan,
-        soDienThoai: selectedAppointment.soDienThoaiBenhNhan,
-        ...medicalRecord,
-        donThuoc: prescriptions
+        lyDoKham: medicalRecord.lyDoKham,
+        chanDoan: medicalRecord.chanDoan,
+        ghiChuDieuTri: medicalRecord.ghiChuDieuTri,
+        ngayTaiKham: medicalRecord.ngayTaiKham,
+        maDichVu: [selectedAppointment.maDichVu],
+        danhSachThuoc: danhSachThuoc,
+        ghiChuDonThuoc: '',
+        ngayKham: format(now, "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
       };
 
       await createMedicalExam(examData);
@@ -292,8 +380,41 @@ export default function Appointments() {
     }
   });
 
+  // Sắp xếp lịch hẹn
+  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
+    // Ưu tiên trạng thái theo thứ tự: Đang thực hiện > Đã xác nhận > Đã đặt > Hoàn thành > Đã hủy
+    const statusPriority = (status: number) => {
+      switch (status) {
+        case 3: // Đang thực hiện
+          return 1;
+        case 2: // Đã xác nhận
+          return 2;
+        case 1: // Đã đặt
+          return 3;
+        case 4: // Hoàn thành
+          return 4;
+        case 5: // Đã hủy
+          return 5;
+        default:
+          return 6;
+      }
+    };
+
+    const statusA = statusPriority(a.maTrangThai);
+    const statusB = statusPriority(b.maTrangThai);
+
+    if (statusA !== statusB) {
+      return statusA - statusB;
+    }
+
+    // Nếu cùng trạng thái, sắp xếp theo ngày và giờ
+    const dateA = new Date(`${a.ngayHen}T${a.gioBatDau}`);
+    const dateB = new Date(`${b.ngayHen}T${b.gioBatDau}`);
+    return dateA.getTime() - dateB.getTime();
+  });
+
   // Lọc dữ liệu theo searchTerm
-  const displayedAppointments = filteredAppointments.filter(appointment =>
+  const displayedAppointments = sortedAppointments.filter(appointment =>
     appointment.tenBenhNhan.toLowerCase().includes(searchTerm.toLowerCase()) ||
     appointment.soDienThoaiBenhNhan.includes(searchTerm) ||
     appointment.tenDichVu.toLowerCase().includes(searchTerm.toLowerCase())
@@ -400,7 +521,7 @@ export default function Appointments() {
                       {appointment.tenTrangThai}
                     </span>
                 </td>
-                  <td>{appointment.ghiChuLichHen || '-'}</td>
+                  <td>{appointment.ghiChuLichHen || ' '}</td>
                   <td>
                     {!appointment.coBenhAn && (appointment.maTrangThai === 1 || appointment.maTrangThai === 2) && (
                       <button 
@@ -589,14 +710,13 @@ export default function Appointments() {
                             onChange={(selected) => {
                               if (selected && selected[0]) {
                                 const drug: any = selected[0];
-                                // Thêm thuốc vào bảng với các trường mặc định
                                 setPrescriptions(prev => [
                                   ...prev,
                                   {
                                     maThuoc: drug.rxcui || '',
                                     tenThuoc: drug.name || drug.synonym || drug.displayName || '',
                                     soLuong: 1,
-                                    donVi: drug.doseFormName || 'viên',
+                                    donVi: 'viên',
                                     cachDung: '',
                                     ghiChu: '',
                                     giaBan: 0,
@@ -604,36 +724,45 @@ export default function Appointments() {
                                     dotDungThuoc: ''
                                   }
                                 ]);
-                                setNewPrescription({
-                                  maThuoc: 0,
-                                  tenThuoc: '',
-                                  soLuong: 1,
-                                  donVi: '',
-                                  cachDung: '',
-                                  ghiChu: '',
-                                  giaBan: 0,
-                                  tongTien: 0,
-                                  dotDungThuoc: ''
-                                });
                               }
                             }}
                             options={drugOptions}
                             placeholder="Nhập tên thuốc..."
                             minLength={2}
                             renderMenuItemChildren={(option: any, props, idx) => (
-                              <div className="d-flex flex-column">
-                                <div>
-                                  <span className="fw-bold text-primary me-2">{option.rxcui}</span>
-                                  <Highlighter
-                                    searchWords={[props.text]}
-                                    autoEscape={true}
-                                    textToHighlight={option.name || option.synonym || option.displayName || ''}
-                                    highlightClassName="bg-warning px-1"
-                                  />
-                                  {option.doseFormName && <span className="ms-2 text-muted">{option.doseFormName}</span>}
+                              <div style={drugCardStyle}>
+                                <div style={drugHeaderStyle}>
+                                  <div>
+                                    <span className="fw-bold text-primary me-2">RxCUI: {option.rxcui}</span>
+                                    <Highlighter
+                                      searchWords={[props.text]}
+                                      autoEscape={true}
+                                      textToHighlight={option.name || option.synonym || option.displayName || ''}
+                                      highlightClassName="bg-warning px-1"
+                                    />
+                                  </div>
+                                  <div>
+                                    <span className="badge bg-info me-2">Score: {option.score}</span>
+                                    <span className="badge bg-secondary">Rank: {option.rank}</span>
+                                  </div>
                                 </div>
-                                {option.synonym && <div className="text-muted small">{option.synonym}</div>}
-                                {/* Có thể bổ sung giá, quy cách nếu API trả về */}
+                                <div style={drugInfoStyle}>
+                                  {option.synonym && (
+                                    <div className="mb-1">
+                                      <strong>Synonym:</strong> {option.synonym}
+                                    </div>
+                                  )}
+                                  {option.displayName && (
+                                    <div className="mb-1">
+                                      <strong>Display Name:</strong> {option.displayName}
+                                    </div>
+                                  )}
+                                  {option.source && (
+                                    <div>
+                                      <strong>Source:</strong> {option.source}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             )}
                             clearButton
@@ -760,14 +889,16 @@ export default function Appointments() {
 
 function getStatusBadgeClass(maTrangThai: number): string {
   switch (maTrangThai) {
-    case 1: // Chờ xác nhận
-      return 'bg-warning';
+    case 1: // Đã đặt
+      return 'bg-primary'; // #3498db
     case 2: // Đã xác nhận
-      return 'bg-info';
-    case 3: // Đã hủy
-      return 'bg-danger';
+      return 'bg-success'; // #2ecc71
+    case 3: // Đang thực hiện
+      return 'bg-warning'; // #f39c12
     case 4: // Hoàn thành
-      return 'bg-success';
+      return 'bg-success'; // #27ae60
+    case 5: // Đã hủy
+      return 'bg-danger'; // #e74c3c
     default:
       return 'bg-secondary';
   }

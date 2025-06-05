@@ -22,6 +22,14 @@ interface Appointment {
   maTrangThai: number;
   tenTrangThai: string;
   ghiChuLichHen: string | null;
+  lyDoHen: string | null;
+  thoiGian: number;
+  maBenhAn: number | null;
+  lyDoKham: string | null;
+  chanDoan: string | null;
+  ghiChuDieuTri: string | null;
+  ngayTaiKham: string | null;
+  ngayTaoBenhAn: string | null;
   coBenhAn: boolean;
 }
 
@@ -88,6 +96,14 @@ export default function Examination() {
             maTrangThai: 2,
             tenTrangThai: '',
             ghiChuLichHen: '',
+            lyDoHen: null,
+            thoiGian: 30,
+            maBenhAn: null,
+            lyDoKham: null,
+            chanDoan: null,
+            ghiChuDieuTri: null,
+            ngayTaiKham: null,
+            ngayTaoBenhAn: null,
             coBenhAn: false
           });
           setLoading(false);
@@ -95,23 +111,18 @@ export default function Examination() {
         }
         const data = await getAppointmentDetails(parseInt(maLichHen));
         if (data) {
-          setAppointment({
-            maLichHen: data.maLichHen,
-            maBenhNhan: data.maBenhNhan,
-            tenBenhNhan: data.tenBenhNhan,
-            soDienThoaiBenhNhan: data.soDienThoaiBenhNhan,
-            maBacSi: data.maBacSi,
-            tenBacSi: data.tenBacSi,
-            maDichVu: data.maDichVu,
-            tenDichVu: data.tenDichVu,
-            ngayHen: data.ngayHen,
-            gioBatDau: data.gioBatDau,
-            gioKetThuc: data.gioKetThuc,
-            maTrangThai: data.maTrangThai,
-            tenTrangThai: data.tenTrangThai,
-            ghiChuLichHen: data.ghiChuLichHen,
-            coBenhAn: data.coBenhAn
-          });
+          setAppointment(data);
+          // If there's existing medical record data, set it
+          if (data.lyDoKham || data.chanDoan || data.ghiChuDieuTri || data.ngayTaiKham) {
+            setMedicalRecord({
+              lyDoKham: data.lyDoKham || '',
+              chanDoan: data.chanDoan || '',
+              ghiChuDieuTri: data.ghiChuDieuTri || '',
+              ngayTaiKham: data.ngayTaiKham || '',
+              tienSuBenh: '',
+              diUng: ''
+            });
+          }
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
@@ -207,7 +218,7 @@ export default function Examination() {
                   </Col>
                   <Col md={6}>
                     <p><strong>Dịch vụ:</strong> {appointment?.tenDichVu}</p>
-                    <p><strong>Thời gian:</strong> {appointment?.gioBatDau} - {appointment?.gioKetThuc}</p>
+                    <p><strong>Thời gian:</strong> {appointment?.gioBatDau}  {appointment?.gioKetThuc}</p>
                   </Col>
                 </Row>
               ) : (
@@ -377,7 +388,7 @@ export default function Examination() {
                       <Form.Label>Tìm thuốc</Form.Label>
                       <Typeahead
                         id="drug-typeahead"
-                        labelKey={(option: any) => option.name || option.rxcui || ''}
+                        labelKey={(option: any) => option.name || option.synonym || option.displayName || ''}
                         isLoading={isSearchingDrug}
                         onInputChange={async (text) => {
                           if (text.length < 2) return;
@@ -393,9 +404,9 @@ export default function Examination() {
                               ...prev,
                               {
                                 maThuoc: drug.rxcui || '',
-                                tenThuoc: drug.name || '',
+                                tenThuoc: drug.name || drug.synonym || drug.displayName || '',
                                 soLuong: 1,
-                                donVi: drug.doseFormName || 'viên',
+                                donVi: 'viên',
                                 cachDung: '',
                                 ghiChu: '',
                                 giaBan: 0,
@@ -409,18 +420,12 @@ export default function Examination() {
                         placeholder="Nhập tên thuốc..."
                         minLength={2}
                         renderMenuItemChildren={(option: any, props, idx) => (
-                          <div className="d-flex flex-column">
-                            <div>
-                              <span className="fw-bold text-primary me-2">{option.rxcui}</span>
-                              <Highlighter
-                                searchWords={[props.text]}
-                                autoEscape={true}
-                                textToHighlight={option.name || ''}
-                                highlightClassName="bg-warning px-1"
-                              />
-                              {option.doseFormName && <span className="ms-2 text-muted">{option.doseFormName}</span>}
-                            </div>
-                          </div>
+                          <Highlighter
+                            searchWords={[props.text]}
+                            autoEscape={true}
+                            textToHighlight={option.name || option.synonym || option.displayName || ''}
+                            highlightClassName="bg-warning px-1"
+                          />
                         )}
                         clearButton
                       />
