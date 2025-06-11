@@ -4,6 +4,7 @@ import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
 import { format } from 'date-fns';
 import { getAppointmentDetails, createMedicalExam } from './Appointments';
 import { DrugSearch } from '../components/DrugSearch';
+import type { Drug } from '../components/DrugSearch';
 
 interface Appointment {
   maLichHen: number;
@@ -33,14 +34,31 @@ interface Appointment {
 
 interface Prescription {
   maThuoc: number;
-  tenThuoc: string;
+  lieuDung: string;
+  tanSuat: string;
+  thoiDiem: string;
+  thoiGianDieuTri: number;
   soLuong: number;
-  donVi: string;
-  cachDung: string;
+  donViDung: string;
   ghiChu: string;
-  giaBan: number;
-  tongTien: number;
-  dotDungThuoc: string;
+  lyDoDonThuoc: string;
+}
+
+interface MedicalExamData {
+  maLichHen: number | null;
+  maBacSi: number;
+  maBenhNhan: number;
+  tenBenhNhan: string;
+  soDienThoai: string;
+  lyDoKham: string;
+  chanDoan: string;
+  ghiChuDieuTri: string;
+  ngayTaiKham: string;
+  tienSuBenh: string;
+  diUng: string;
+  maDichVu?: number[];
+  danhSachThuoc?: Prescription[];
+  ghiChuDonThuoc?: string;
 }
 
 export default function Examination() {
@@ -57,6 +75,7 @@ export default function Examination() {
     tienSuBenh: '',
     diUng: ''
   });
+  const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
 
   useEffect(() => {
     const fetchAppointment = async () => {
@@ -122,14 +141,30 @@ export default function Examination() {
 
     try {
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const examData = {
+      
+      // Convert selected drugs to prescription format
+      const danhSachThuoc = selectedDrugs.map(drug => ({
+        maThuoc: drug.maThuoc,
+        lieuDung: drug.hamLuong,
+        tanSuat: drug.huongDanSuDung.split(',')[0] || '',
+        thoiDiem: drug.huongDanSuDung.split(',')[1] || '',
+        thoiGianDieuTri: 7, // Default to 7 days
+        soLuong: drug.quantity || 1,
+        donViDung: drug.donViTinh,
+        ghiChu: drug.notes || '',
+        lyDoDonThuoc: drug.huongDanSuDung
+      }));
+
+      const examData: MedicalExamData = {
         maLichHen: maLichHen === 'walk-in' ? null : appointment.maLichHen,
         maBacSi: userData.maBacSi,
-        tenBacSi: userData.tenBacSi,
         maBenhNhan: appointment.maBenhNhan,
         tenBenhNhan: appointment.tenBenhNhan,
         soDienThoai: appointment.soDienThoaiBenhNhan,
-        ...medicalRecord
+        ...medicalRecord,
+        maDichVu: [appointment.maDichVu],
+        danhSachThuoc,
+        ghiChuDonThuoc: 'Bệnh nhân cần tuân thủ đúng liều lượng và thời gian dùng thuốc'
       };
 
       await createMedicalExam(examData);
@@ -320,7 +355,7 @@ export default function Examination() {
               <h5 className="mb-0">Đơn thuốc</h5>
             </Card.Header>
             <Card.Body>
-              <DrugSearch />
+              <DrugSearch onDrugsChange={setSelectedDrugs} />
             </Card.Body>
           </Card>
         </Col>
