@@ -10,6 +10,13 @@ interface Doctor {
   hoTen: string;
 }
 
+interface Service {
+  maDichVu: number;
+  tenDichVu: string;
+  moTa: string;
+  gia: string;
+}
+
 interface TimeSlot {
   gioBatDau: string;
   gioKetThuc: string;
@@ -31,19 +38,27 @@ function Appointment() {
     ghiChu: ''
   });
 
-  // State for doctors and available time slots
+  // State for doctors, services and available time slots
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Dữ liệu dịch vụ trực tiếp
-  const dichvus = [
-    { MaDv: "1", TenDv: "Tẩy trắng răng" },
-    { MaDv: "2", TenDv: "Niềng răng" },
-    { MaDv: "3", TenDv: "Nhổ răng khôn" },
-    { MaDv: "4", TenDv: "Trám răng" }
-  ];
+  // Fetch services on component mount
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await axios.get('/api/public/dichvu');
+        setServices(response.data);
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        setError('Không thể tải danh sách dịch vụ. Vui lòng thử lại sau.');
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   // Fetch doctors on component mount
   useEffect(() => {
@@ -312,9 +327,9 @@ function Appointment() {
                       onChange={handleChange}
                     >
                       <option value="">Lựa chọn dịch vụ</option>
-                      {dichvus.map((dichvu) => (
-                        <option key={dichvu.MaDv} value={dichvu.MaDv}>
-                          {dichvu.TenDv}
+                      {services.map((service) => (
+                        <option key={service.maDichVu} value={service.maDichVu}>
+                          {service.tenDichVu}
                         </option>
                       ))}
                     </select>

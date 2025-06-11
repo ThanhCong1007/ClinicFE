@@ -76,7 +76,7 @@ export default function Patients() {
           // If patient has medical records, fetch them
           if (appointment.coBenhAn) {
             const records = await getPatientMedicalRecords(appointment.maBenhNhan);
-            const processedRecords = records.map(record => ({
+            const processedRecords = records.map((record: MedicalRecord) => ({
               ...record,
               maBenhAn: record.maBenhAn.toString(),
               maLichHen: record.maLichHen?.toString() || '',
