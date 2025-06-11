@@ -1,6 +1,5 @@
 {
     "tenDangNhap": "bacsi02",
-    "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYWNzaTAyIiwiaWF0IjoxNzQ5NjQ0NDk3LCJleHAiOjE3NDk3MzA4OTd9.9zZXmuN0ZWghrJGXMtwkqhxHoMTa5bEBq7WBpvO5gKM",
     "medical_record_15": "{\"lyDoKham\":\"sadasd\",\"chanDoan\":\"ádasd\",\"ghiChuDieuTri\":\"ádassa\",\"ngayTaiKham\":\"\",\"tienSuBenh\":\"ádasdas\",\"diUng\":\"ádasd\"}",
     "maNguoiDung": "3",
     "user": "{\"maNguoiDung\":3,\"tenDangNhap\":\"bacsi02\",\"email\":\"bacsi02@example.com\",\"hoTen\":\"Lê Văn C\",\"soDienThoai\":\"0923456789\",\"trangThaiHoatDong\":true,\"ngayTao\":\"2025-05-28T21:35:37\",\"maVaiTro\":6,\"tenVaiTro\":\"BACSI\",\"maBacSi\":2,\"chuyenKhoa\":\"Nha chu\",\"soNamKinhNghiem\":3,\"trangThaiLamViec\":true,\"maBenhNhan\":null,\"ngaySinh\":null,\"gioiTinh\":null,\"diaChi\":null,\"tienSuBenh\":null,\"diUng\":null,\"tuoi\":null}",
