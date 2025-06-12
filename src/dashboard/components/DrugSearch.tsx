@@ -65,7 +65,7 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
   }, []);
 
   // Filter drugs based on search term
-  const filteredDrugs = drugs.filter(drug => 
+  const filteredDrugs = drugs.filter(drug =>
     drug.tenThuoc.toLowerCase().includes(searchTerm.toLowerCase()) ||
     drug.hoatChat.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -77,7 +77,7 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setActiveSuggestion(prev => 
+        setActiveSuggestion(prev =>
           prev < filteredDrugs.length - 1 ? prev + 1 : prev
         );
         break;
@@ -124,7 +124,7 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
 
   // Update drug quantity
   const updateQuantity = (maThuoc: number, quantity: number) => {
-    const newDrugs = selectedDrugs.map(drug => 
+    const newDrugs = selectedDrugs.map(drug =>
       drug.maThuoc === maThuoc ? { ...drug, quantity: Math.max(1, quantity) } : drug
     );
     updateSelectedDrugs(newDrugs);
@@ -132,7 +132,7 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
 
   // Update drug notes
   const updateNotes = (maThuoc: number, notes: string) => {
-    const newDrugs = selectedDrugs.map(drug => 
+    const newDrugs = selectedDrugs.map(drug =>
       drug.maThuoc === maThuoc ? { ...drug, notes } : drug
     );
     updateSelectedDrugs(newDrugs);
@@ -142,8 +142,8 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
   const highlightText = (text: string, highlight: string) => {
     if (!highlight) return text;
     const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
-    return parts.map((part, index) => 
-      part.toLowerCase() === highlight.toLowerCase() ? 
+    return parts.map((part, index) =>
+      part.toLowerCase() === highlight.toLowerCase() ?
         <span key={index} className="bg-yellow-200 font-medium">{part}</span> : part
     );
   };
@@ -160,7 +160,7 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
         <Card.Body>
           {loading && <div>Đang tải danh sách thuốc...</div>}
           {error && <div className="alert alert-danger">{error}</div>}
-          
+
           {/* Form tìm kiếm */}
           <div className="position-relative mb-4">
             <InputGroup>
@@ -193,9 +193,8 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
                     suggestionRefs.current[index] = el;
                   }}
                   onClick={() => selectDrug(drug)}
-                  className={`p-3 border-bottom cursor-pointer ${
-                    index === activeSuggestion ? 'bg-light' : 'hover-bg-light'
-                  }`}
+                  className={`p-3 border-bottom cursor-pointer ${index === activeSuggestion ? 'bg-light' : 'hover-bg-light'
+                    }`}
                 >
                   <div className="d-flex justify-content-between">
                     <div className="flex-grow-1">
@@ -208,7 +207,7 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
                           {highlightText(drug.hoatChat, searchTerm)}
                         </span>
                       </div>
-                      
+
                       <div className="row g-2 mb-2">
                         <div className="col-6">
                           <small className="text-muted">
@@ -246,108 +245,85 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
             </div>
           )}
 
-          {/* Danh sách thuốc đã chọn */}
           {selectedDrugs.length > 0 && (
             <div>
               <h6 className="mb-3 d-flex align-items-center">
                 <Clock className="text-success me-2" />
                 Thuốc đã chọn ({selectedDrugs.length})
               </h6>
-              
-              <div className="mb-4">
+
+              <div className="mb-3">
                 {selectedDrugs.map((drug) => (
-                  <Card key={drug.maThuoc} className="mb-3">
-                    <Card.Body>
-                      <div className="d-flex justify-content-between mb-3">
-                        <div className="flex-grow-1">
-                          <div className="d-flex align-items-center mb-2">
+                  <Card key={drug.maThuoc} className="mb-2 px-2 py-2">
+                    <Card.Body className="p-2">
+                      <Row className="align-items-center">
+                        <Col xs={12} md={6}>
+                          <div className="d-flex align-items-center">
                             <Pill className="text-primary me-2" />
-                            <h6 className="mb-0 fw-semibold">{drug.tenThuoc}</h6>
+                            <strong>{drug.tenThuoc}</strong>
                             <span className="badge bg-primary ms-2">{drug.hoatChat}</span>
                           </div>
-                          
-                          <div className="row g-3 mb-3">
-                            <div className="col-md-4">
-                              <small className="text-muted">
-                                <strong>Hãng:</strong> {drug.nhaSanXuat}
-                              </small>
-                            </div>
-                            <div className="col-md-4">
-                              <small className="text-success">
-                                <strong>Giá:</strong> {drug.gia.toLocaleString()}đ/{drug.donViTinh}
-                              </small>
-                            </div>
-                            <div className="col-md-4">
-                              <small className="text-muted">
-                                <strong>Hướng dẫn:</strong> {drug.huongDanSuDung}
-                              </small>
-                            </div>
+                          <div className="small text-muted">
+                            {drug.nhaSanXuat} - {drug.gia.toLocaleString()}đ/{drug.donViTinh}
                           </div>
-                        </div>
-                        
-                        <Button
-                          variant="link"
-                          className="text-danger p-0"
-                          onClick={() => removeDrug(drug.maThuoc)}
-                        >
-                          <svg className="bi" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                          </svg>
-                        </Button>
-                      </div>
-
-                      <Row className="g-3">
-                        <Col md={4}>
-                          <Form.Group>
-                            <Form.Label className="small">Số lượng</Form.Label>
-                            <Form.Control
-                              type="number"
-                              min="1"
-                              value={drug.quantity || 1}
-                              onChange={(e) => updateQuantity(drug.maThuoc, parseInt(e.target.value) || 1)}
-                            />
-                          </Form.Group>
                         </Col>
-                        
-                        <Col md={8}>
-                          <Form.Group>
-                            <Form.Label className="small">Ghi chú (cách dùng, liều lượng...)</Form.Label>
-                            <Form.Control
-                              type="text"
-                              value={drug.notes || ''}
-                              onChange={(e) => updateNotes(drug.maThuoc, e.target.value)}
-                              placeholder="VD: Uống sau ăn, ngày 2 lần..."
-                            />
-                          </Form.Group>
+
+                        <Col xs={6} md={2}>
+                          <Form.Control
+                            size="sm"
+                            type="number"
+                            min="1"
+                            value={drug.quantity || 1}
+                            onChange={(e) => updateQuantity(drug.maThuoc, parseInt(e.target.value) || 1)}
+                          />
+                        </Col>
+
+                        <Col xs={6} md={3}>
+                          <Form.Control
+                            size="sm"
+                            type="text"
+                            placeholder="Ghi chú"
+                            value={drug.notes || ''}
+                            onChange={(e) => updateNotes(drug.maThuoc, e.target.value)}
+                          />
+                        </Col>
+
+                        <Col xs={12} md={1} className="text-end">
+                          <Button
+                            variant="link"
+                            className="text-danger p-0"
+                            onClick={() => removeDrug(drug.maThuoc)}
+                          >
+                            <svg className="bi" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                            </svg>
+                          </Button>
                         </Col>
                       </Row>
 
-                      <div className="text-end mt-3">
-                        <span className="h5 text-primary">
-                          Tổng: {(drug.gia * (drug.quantity || 1)).toLocaleString()}đ
-                        </span>
+                      <div className="text-end mt-2 small text-primary">
+                        Tổng: {(drug.gia * (drug.quantity || 1)).toLocaleString()}đ
                       </div>
                     </Card.Body>
                   </Card>
                 ))}
               </div>
 
-              {/* Tổng tiền */}
-              <Card className="bg-light mb-4">
-                <Card.Body>
+              <Card className="bg-light mb-3">
+                <Card.Body className="py-2">
                   <div className="text-end">
-                    <h5 className="text-primary mb-0">
-                      Tổng tiền đơn thuốc: {selectedDrugs.reduce((total, drug) => 
+                    <strong className="text-primary">
+                      Tổng tiền: {selectedDrugs.reduce((total, drug) =>
                         total + (drug.gia * (drug.quantity || 1)), 0).toLocaleString()}đ
-                    </h5>
+                    </strong>
                   </div>
                 </Card.Body>
               </Card>
 
-              {/* Nút hành động */}
-              <div className="d-flex justify-content-end gap-2">
-                <Button 
+              <div className="d-flex justify-content-end">
+                <Button
                   variant="outline-secondary"
+                  size="sm"
                   onClick={() => setSelectedDrugs([])}
                 >
                   Xóa tất cả
@@ -355,6 +331,7 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
               </div>
             </div>
           )}
+
         </Card.Body>
       </Card>
     </div>
