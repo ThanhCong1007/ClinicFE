@@ -1,10 +1,30 @@
 {
-    "tenDangNhap": "bacsi02",
-    "medical_record_15": "{\"lyDoKham\":\"sadasd\",\"chanDoan\":\"ádasd\",\"ghiChuDieuTri\":\"ádassa\",\"ngayTaiKham\":\"\",\"tienSuBenh\":\"ádasdas\",\"diUng\":\"ádasd\"}",
-    "maNguoiDung": "3",
-    "user": "{\"maNguoiDung\":3,\"tenDangNhap\":\"bacsi02\",\"email\":\"bacsi02@example.com\",\"hoTen\":\"Lê Văn C\",\"soDienThoai\":\"0923456789\",\"trangThaiHoatDong\":true,\"ngayTao\":\"2025-05-28T21:35:37\",\"maVaiTro\":6,\"tenVaiTro\":\"BACSI\",\"maBacSi\":2,\"chuyenKhoa\":\"Nha chu\",\"soNamKinhNghiem\":3,\"trangThaiLamViec\":true,\"maBenhNhan\":null,\"ngaySinh\":null,\"gioiTinh\":null,\"diaChi\":null,\"tienSuBenh\":null,\"diUng\":null,\"tuoi\":null}",
-    "hoTen": "Lê Văn C",
-    "maBacSi": "2",
-    "prescription_2": "[{\"id\":101,\"name\":\"Paracetamol 500mg\",\"type\":\"KE_DON\",\"price\":10000,\"unit\":\"mg\",\"manufacturer\":\"Hoffmann-La Roche\",\"indication\":\"Giảm đau, hạ sốt\",\"dosage\":\"Uống\",\"contraindication\":\"Suy gan, quá mẫn\",\"quantity\":1,\"lieuDung\":\"\",\"tanSuat\":\"\",\"thoiDiem\":\"\",\"thoiGianDieuTri\":7,\"ghiChu\":\"\",\"lyDoDonThuoc\":\"\"}]",
-    "maBenhNhan": "null"
-}
+    "maLichHen": 27,
+    "maBacSi": 2,
+    "maBenhNhan": 2,
+    "tenBenhNhan": "Phạm Thị Dieu",
+    "soDienThoai": "0934567890",
+    "lyDoKham": "ádasd",
+    "chanDoan": "ádas",
+    "ghiChuDieuTri": "dsadass",
+    "ngayTaiKham": "",
+    "tienSuBenh": "ádsadsa",
+    "diUng": "ádsadasdsadas",
+    "maDichVu": [
+      null
+    ],
+    "danhSachThuoc": [
+      {
+        "maThuoc": 106,
+        "lieuDung": "500",
+        "tanSuat": "Kháng sinh fluoroquinolone",
+        "thoiDiem": "",
+        "thoiGianDieuTri": 7,
+        "soLuong": 1,
+        "donViDung": "mg",
+        "ghiChu": "",
+        "lyDoDonThuoc": "Kháng sinh fluoroquinolone"
+      }
+    ],
+    "ghiChuDonThuoc": "Bệnh nhân cần tuân thủ đúng liều lượng và thời gian dùng thuốc"
+  }
