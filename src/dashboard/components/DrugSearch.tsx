@@ -33,11 +33,12 @@ export interface Drug {
 
 interface DrugSearchProps {
   onDrugsChange?: (drugs: Drug[]) => void;
+  initialSelectedDrugs?: Drug[];
 }
 
-export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
+export function DrugSearch({ onDrugsChange, initialSelectedDrugs }: DrugSearchProps) {
   const [drugs, setDrugs] = useState<Drug[]>([]);
-  const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
+  const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>(initialSelectedDrugs || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,6 +46,12 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const searchRef = useRef<HTMLInputElement>(null);
   const suggestionRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  useEffect(() => {
+    if (initialSelectedDrugs) {
+      setSelectedDrugs(initialSelectedDrugs);
+    }
+  }, [initialSelectedDrugs]);
 
   // Fetch drugs from API
   useEffect(() => {
@@ -244,7 +251,8 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
               Không tìm thấy thuốc phù hợp
             </div>
           )}
-
+          
+          {/* Danh sách thuốc đã chọn */}
           {selectedDrugs.length > 0 && (
             <div>
               <h6 className="mb-3 d-flex align-items-center">
@@ -264,7 +272,7 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
                             <span className="badge bg-primary ms-2">{drug.hoatChat}</span>
                           </div>
                           <div className="small text-muted">
-                            {drug.nhaSanXuat} - {drug.gia.toLocaleString()}đ/{drug.donViTinh}
+                            {drug.nhaSanXuat} - {drug.donViTinh}
                           </div>
                         </Col>
 

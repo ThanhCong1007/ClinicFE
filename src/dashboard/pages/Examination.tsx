@@ -64,6 +64,7 @@ interface MedicalExamData {
 export default function Examination() {
   const { maLichHen } = useParams();
   const navigate = useNavigate();
+  const storageKey = `exam_${maLichHen || 'walk-in'}`;
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +77,31 @@ export default function Examination() {
     diUng: ''
   });
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
+
+  // Lưu dữ liệu vào localStorage khi thay đổi
+  useEffect(() => {
+    if (!loading) {
+      const dataToSave = {
+        appointment,
+        medicalRecord,
+        selectedDrugs,
+      };
+      localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+    }
+  }, [appointment, medicalRecord, selectedDrugs, loading, storageKey]);
+
+  // Khôi phục dữ liệu từ localStorage nếu có
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.appointment) setAppointment(parsed.appointment);
+        if (parsed.medicalRecord) setMedicalRecord(parsed.medicalRecord);
+        if (parsed.selectedDrugs) setSelectedDrugs(parsed.selectedDrugs);
+      } catch {}
+    }
+  }, [storageKey]);
 
   useEffect(() => {
     const fetchAppointment = async () => {
@@ -168,6 +194,7 @@ export default function Examination() {
       };
 
       await createMedicalExam(examData);
+      localStorage.removeItem(storageKey); // Xóa dữ liệu tạm khi lưu thành công
       navigate('/dashboard/appointments');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bệnh án');
@@ -355,7 +382,9 @@ export default function Examination() {
               <h5 className="mb-0">Đơn thuốc</h5>
             </Card.Header>
             <Card.Body>
-              <DrugSearch onDrugsChange={setSelectedDrugs} />
+              {!loading && (
+                <DrugSearch onDrugsChange={setSelectedDrugs} initialSelectedDrugs={selectedDrugs} />
+              )}
             </Card.Body>
           </Card>
         </Col>
