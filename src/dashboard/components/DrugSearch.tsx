@@ -33,9 +33,10 @@ export interface Drug {
 
 interface DrugSearchProps {
   onDrugsChange?: (drugs: Drug[]) => void;
+  storageKey?: string;
 }
 
-export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
+export function DrugSearch({ onDrugsChange, storageKey }: DrugSearchProps) {
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
   const [loading, setLoading] = useState(false);
@@ -63,6 +64,38 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
 
     fetchDrugs();
   }, []);
+
+  // Restore selected drugs from localStorage when component mounts
+  useEffect(() => {
+    if (storageKey) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.selectedDrugs && drugs.length > 0) {
+            // Map saved drugs to current drug list
+            const restoredDrugs = parsed.selectedDrugs.map((savedDrug: Drug) => {
+              // Find matching drug in current drug list
+              const currentDrug = drugs.find(d => d.maThuoc === savedDrug.maThuoc);
+              if (currentDrug) {
+                return {
+                  ...currentDrug,
+                  quantity: savedDrug.quantity || 1,
+                  notes: savedDrug.notes || ''
+                };
+              }
+              return null;
+            }).filter((drug: Drug | null): drug is Drug => drug !== null);
+
+            setSelectedDrugs(restoredDrugs);
+            onDrugsChange?.(restoredDrugs);
+          }
+        } catch (error) {
+          console.error('Error parsing saved drugs:', error);
+        }
+      }
+    }
+  }, [storageKey, onDrugsChange, drugs]);
 
   // Filter drugs based on search term
   const filteredDrugs = drugs.filter(drug =>

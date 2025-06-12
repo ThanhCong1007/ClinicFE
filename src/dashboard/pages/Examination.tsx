@@ -107,7 +107,20 @@ export default function Examination() {
     const fetchAppointment = async () => {
       try {
         if (!maLichHen) {
-          // Khám vãng lai: form trống
+          // Khám vãng lai: kiểm tra localStorage trước
+          const saved = localStorage.getItem(storageKey);
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved);
+              if (parsed.appointment) {
+                setAppointment(parsed.appointment);
+                setLoading(false);
+                return;
+              }
+            } catch {}
+          }
+          
+          // Nếu không có dữ liệu trong localStorage, tạo form trống
           setAppointment({
             maLichHen: 0,
             maBenhNhan: 0,
@@ -382,7 +395,7 @@ export default function Examination() {
               <h5 className="mb-0">Đơn thuốc</h5>
             </Card.Header>
             <Card.Body>
-              <DrugSearch onDrugsChange={setSelectedDrugs} />
+              <DrugSearch onDrugsChange={setSelectedDrugs} storageKey={storageKey} />
             </Card.Body>
           </Card>
         </Col>
