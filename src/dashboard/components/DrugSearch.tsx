@@ -164,8 +164,8 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
           {/* Form tìm kiếm */}
           <div className="position-relative mb-4">
             <InputGroup>
-              <InputGroup.Text>
-                <Search className="text-muted" />
+              <InputGroup.Text style={{ height: '42px', display: 'flex', alignItems: 'center', padding: '0 12px' }}>
+                <Search className="text-muted" style={{ height: '24px', width: '24px' }} />
               </InputGroup.Text>
               <Form.Control
                 ref={searchRef}
@@ -178,6 +178,7 @@ export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
                 }}
                 onKeyDown={handleKeyDown}
                 onFocus={() => searchTerm.length >= 2 && setShowSuggestions(true)}
+                style={{ height: '42px', paddingTop: '10px', paddingBottom: '10px' }}
               />
             </InputGroup>
           </div>
