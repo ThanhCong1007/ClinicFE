@@ -382,9 +382,7 @@ export default function Examination() {
               <h5 className="mb-0">Đơn thuốc</h5>
             </Card.Header>
             <Card.Body>
-              {!loading && (
-                <DrugSearch onDrugsChange={setSelectedDrugs} initialSelectedDrugs={selectedDrugs} />
-              )}
+              <DrugSearch onDrugsChange={setSelectedDrugs} />
             </Card.Body>
           </Card>
         </Col>

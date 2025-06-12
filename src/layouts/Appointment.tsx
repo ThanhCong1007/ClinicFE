@@ -325,6 +325,7 @@ function Appointment() {
                       name="maDichVu"
                       value={formData.maDichVu}
                       onChange={handleChange}
+                      required
                     >
                       <option value="">Lựa chọn dịch vụ</option>
                       {services.map((service) => (

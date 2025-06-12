@@ -33,12 +33,11 @@ export interface Drug {
 
 interface DrugSearchProps {
   onDrugsChange?: (drugs: Drug[]) => void;
-  initialSelectedDrugs?: Drug[];
 }
 
-export function DrugSearch({ onDrugsChange, initialSelectedDrugs }: DrugSearchProps) {
+export function DrugSearch({ onDrugsChange }: DrugSearchProps) {
   const [drugs, setDrugs] = useState<Drug[]>([]);
-  const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>(initialSelectedDrugs || []);
+  const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,12 +45,6 @@ export function DrugSearch({ onDrugsChange, initialSelectedDrugs }: DrugSearchPr
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const searchRef = useRef<HTMLInputElement>(null);
   const suggestionRefs = useRef<Array<HTMLDivElement | null>>([]);
-
-  useEffect(() => {
-    if (initialSelectedDrugs) {
-      setSelectedDrugs(initialSelectedDrugs);
-    }
-  }, [initialSelectedDrugs]);
 
   // Fetch drugs from API
   useEffect(() => {
@@ -251,8 +244,7 @@ export function DrugSearch({ onDrugsChange, initialSelectedDrugs }: DrugSearchPr
               Không tìm thấy thuốc phù hợp
             </div>
           )}
-          
-          {/* Danh sách thuốc đã chọn */}
+
           {selectedDrugs.length > 0 && (
             <div>
               <h6 className="mb-3 d-flex align-items-center">
