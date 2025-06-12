@@ -298,28 +298,30 @@ const Dashboard = () => {
                       </td>
                       <td>{appointment.ghiChuLichHen || '-'}</td>
                       <td>
-                        <button
-                          className="btn btn-primary btn-sm rounded-pill"
-                          onClick={() => window.location.href = `/dashboard/appointments/${appointment.maLichHen}`}
-                        >
-                          Chi tiết
-                        </button>
-                        {!appointment.coBenhAn && (appointment.maTrangThai === 1 || appointment.maTrangThai === 2) && (
-                          <button
-                            className="btn btn-success btn-sm rounded-pill ms-2"
-                            onClick={() => window.location.href = `/dashboard/examination/${appointment.maLichHen}`}
+                        <div className="d-flex gap-2">
+                          <button 
+                            className="btn btn-primary btn-sm rounded-pill"
+                            onClick={() => window.location.href = `/dashboard/appointments/${appointment.maLichHen}`}
                           >
-                            Khám bệnh
+                            Chi tiết
                           </button>
-                        )}
-                        {appointment.maTrangThai !== 5 && appointment.maTrangThai !== 4 && (
-                          <button
-                            className="btn btn-danger btn-sm rounded-pill ms-2"
-                            onClick={() => handleCancelAppointment(appointment)}
-                          >
-                            Hủy lịch
-                          </button>
-                        )}
+                          {!appointment.coBenhAn && (appointment.maTrangThai === 1 || appointment.maTrangThai === 2) && (
+                            <button 
+                              className="btn btn-success btn-sm rounded-pill"
+                              onClick={() => window.location.href = `/dashboard/examination/${appointment.maLichHen}`}
+                            >
+                              Khám bệnh
+                            </button>
+                          )}
+                          {appointment.maTrangThai !== 5 && appointment.maTrangThai !== 4 && (
+                            <button 
+                              className="btn btn-danger btn-sm rounded-pill"
+                              onClick={() => handleCancelAppointment(appointment)}
+                            >
+                              Hủy lịch
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
