@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { getDoctorAppointments, getPatientMedicalRecords } from './Appointments';
+import axios from 'axios';
+import debounce from 'lodash/debounce';
 
 interface MedicalRecord {
   maBenhAn: string;
@@ -40,9 +42,150 @@ interface Appointment {
 export default function Patients() {
   const [patients, setPatients] = useState<Patients>({});
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
+
+  const searchPatient = async (searchValue: string) => {
+    try {
+      setSearching(true);
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('Không tìm thấy token xác thực');
+
+      // If search value is a phone number (contains only digits)
+      if (/^\d+$/.test(searchValue)) {
+        try {
+          const response = await axios.get(
+            `http://localhost:8080/api/tham-kham/benh-nhan/sdt/${searchValue}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          
+          if (response.data && Array.isArray(response.data)) {
+            const patientsMap: Patients = {};
+            
+            // Process each patient in the array
+            for (const patient of response.data) {
+              if (patient.maBenhNhan) {
+                // Fetch medical records for each patient
+                try {
+                  const records = await getPatientMedicalRecords(patient.maBenhNhan);
+                  const processedRecords = records.map((record: MedicalRecord) => ({
+                    ...record,
+                    maBenhAn: record.maBenhAn.toString(),
+                    maLichHen: record.maLichHen?.toString() || '',
+                    maBacSi: record.maBacSi.toString(),
+                    maBenhNhan: record.maBenhNhan.toString()
+                  }));
+
+                  patientsMap[patient.maBenhNhan] = {
+                    appointments: [{
+                      maBenhNhan: patient.maBenhNhan.toString(),
+                      tenBenhNhan: patient.hoTen || '',
+                      soDienThoaiBenhNhan: patient.soDienThoai || ''
+                    }],
+                    records: processedRecords
+                  };
+                } catch (recordError) {
+                  console.error('Error fetching records for patient:', patient.maBenhNhan, recordError);
+                  // Still add the patient even if we can't get their records
+                  patientsMap[patient.maBenhNhan] = {
+                    appointments: [{
+                      maBenhNhan: patient.maBenhNhan.toString(),
+                      tenBenhNhan: patient.hoTen || '',
+                      soDienThoaiBenhNhan: patient.soDienThoai || ''
+                    }],
+                    records: []
+                  };
+                }
+              }
+            }
+            
+            setPatients(patientsMap);
+            if (response.data.length === 0) {
+              alert('Không tìm thấy bệnh nhân với số điện thoại này');
+            }
+          }
+        } catch (apiError: any) {
+          if (apiError.response?.status === 404) {
+            alert('Không tìm thấy bệnh nhân với số điện thoại này');
+            // Reset patients list to empty
+            setPatients({});
+          } else {
+            alert('Có lỗi xảy ra khi tìm kiếm bệnh nhân. Vui lòng thử lại sau.');
+          }
+          console.error('API Error:', apiError);
+        }
+      } else {
+        // If search value is a name, fetch all patients and filter
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        const maBacSi = userData.maBacSi;
+        
+        if (!maBacSi) {
+          alert('Không tìm thấy thông tin bác sĩ');
+          return;
+        }
+
+        try {
+          const appointments = await getDoctorAppointments(maBacSi);
+          const patientsMap: Patients = {};
+          
+          for (const appointment of appointments) {
+            const maBenhNhan = appointment.maBenhNhan.toString();
+            if (!patientsMap[maBenhNhan]) {
+              patientsMap[maBenhNhan] = {
+                appointments: [],
+                records: []
+              };
+            }
+            patientsMap[maBenhNhan].appointments.push({
+              ...appointment,
+              maBenhNhan: maBenhNhan
+            });
+            
+            if (appointment.coBenhAn) {
+              const records = await getPatientMedicalRecords(appointment.maBenhNhan);
+              const processedRecords = records.map((record: MedicalRecord) => ({
+                ...record,
+                maBenhAn: record.maBenhAn.toString(),
+                maLichHen: record.maLichHen?.toString() || '',
+                maBacSi: record.maBacSi.toString(),
+                maBenhNhan: record.maBenhNhan.toString()
+              }));
+              patientsMap[maBenhNhan].records = processedRecords;
+            }
+          }
+          
+          setPatients(patientsMap);
+          if (Object.keys(patientsMap).length === 0) {
+            alert('Không tìm thấy bệnh nhân với tên này');
+          }
+        } catch (err) {
+          alert('Có lỗi xảy ra khi tìm kiếm bệnh nhân. Vui lòng thử lại sau.');
+          console.error('Search Error:', err);
+        }
+      }
+    } catch (err) {
+      alert('Có lỗi xảy ra khi tìm kiếm bệnh nhân. Vui lòng thử lại sau.');
+      console.error('Search Error:', err);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  // Create a debounced version of the search function
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      if (value.length >= 3) {
+        searchPatient(value);
+      }
+    }, 500),
+    []
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,10 +197,7 @@ export default function Patients() {
           throw new Error('Không tìm thấy thông tin bác sĩ');
         }
 
-        // Get all appointments
         const appointments = await getDoctorAppointments(maBacSi);
-        
-        // Group appointments by patient
         const patientsMap: Patients = {};
         
         for (const appointment of appointments) {
@@ -73,7 +213,6 @@ export default function Patients() {
             maBenhNhan: maBenhNhan
           });
           
-          // If patient has medical records, fetch them
           if (appointment.coBenhAn) {
             const records = await getPatientMedicalRecords(appointment.maBenhNhan);
             const processedRecords = records.map((record: MedicalRecord) => ({
@@ -100,7 +239,14 @@ export default function Patients() {
 
   const filteredPatients = Object.entries(patients).filter(([_, data]) => {
     const patientName = data.appointments[0]?.tenBenhNhan.toLowerCase() || '';
+    const patientPhone = data.appointments[0]?.soDienThoaiBenhNhan || '';
     const searchLower = searchTerm.toLowerCase();
+    
+    // If search term is a phone number, only search by phone
+    if (/^\d+$/.test(searchTerm)) {
+      return patientPhone.includes(searchTerm);
+    }
+    // Otherwise search by name
     return patientName.includes(searchLower);
   });
 
@@ -126,14 +272,25 @@ export default function Patients() {
     <div className="container-fluid p-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Danh sách bệnh nhân</h2>
-        <div className="col-md-4">
+        <div className="col-md-4 position-relative">
           <input
             type="text"
             className="form-control"
-            placeholder="Tìm kiếm bệnh nhân..."
+            placeholder="Tìm kiếm theo tên hoặc số điện thoại..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchTerm(value);
+              debouncedSearch(value);
+            }}
           />
+          {searching && (
+            <div className="position-absolute end-0 top-50 translate-middle-y me-2">
+              <div className="spinner-border spinner-border-sm text-primary" role="status">
+                <span className="visually-hidden">Đang tìm kiếm...</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

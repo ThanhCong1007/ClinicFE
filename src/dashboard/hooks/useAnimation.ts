@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
-const anime = require('animejs');
+import anime from 'animejs/lib/anime.es.js';
+
+
 
 export const useAnimation = () => {
   const animationRef = useRef<anime.AnimeInstance | null>(null);

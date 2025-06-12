@@ -29,6 +29,23 @@ interface Appointment {
   coBenhAn: boolean;
 }
 
+export const cancelAppointment = async (maLichHen: number, appointmentData: any) => {
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('Không tìm thấy token xác thực');
+
+  const response = await axios.put(
+    `http://localhost:8080/api/appointments/${maLichHen}/cancel`,
+    appointmentData,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  return response.data;
+};
+
 const Dashboard = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +107,64 @@ const Dashboard = () => {
 
     fetchData();
   }, []);
+
+  const handleCancelAppointment = async (appointment: Appointment) => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) {
+      return;
+    }
+
+    try {
+      const appointmentData = {
+        maBenhNhan: appointment.maBenhNhan,
+        maBacSi: appointment.maBacSi,
+        maDichVu: appointment.maDichVu,
+        ngayHen: appointment.ngayHen,
+        gioBatDau: appointment.gioBatDau,
+        gioKetThuc: appointment.gioKetThuc,
+        maTrangThai: 5, // Trạng thái đã hủy
+        ghiChu: appointment.ghiChuLichHen
+      };
+
+      await cancelAppointment(appointment.maLichHen, appointmentData);
+      
+      // Refresh appointments list
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const response = await axios.get(
+        `http://localhost:8080/api/tham-kham/bac-si/${userData.maBacSi}/lich-hen-benh-an`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      
+      setAppointments(response.data);
+      
+      // Recalculate statistics
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const todayAppointments = response.data.filter((app: Appointment) => app.ngayHen === today);
+      const uniquePatients = new Set(response.data.map((app: Appointment) => app.maBenhNhan));
+      const pendingExams = response.data.filter((app: Appointment) => !app.coBenhAn && (app.maTrangThai === 1 || app.maTrangThai === 2));
+      
+      const newPatients = todayAppointments.filter((app: Appointment) => {
+        const previousAppointments = response.data.filter((a: Appointment) => 
+          a.maBenhNhan === app.maBenhNhan && a.ngayHen < today
+        );
+        return previousAppointments.length === 0;
+      });
+
+      setStats({
+        totalPatients: uniquePatients.size,
+        todayAppointments: todayAppointments.length,
+        newPatients: newPatients.length,
+        pendingExaminations: pendingExams.length
+      });
+      
+      alert('Hủy lịch hẹn thành công');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi hủy lịch hẹn');
+    }
+  };
 
   if (loading) {
     return (
@@ -223,18 +298,26 @@ const Dashboard = () => {
                       </td>
                       <td>{appointment.ghiChuLichHen || '-'}</td>
                       <td>
-                        <button 
-                          className="btn btn-primary btn-sm me-2"
+                        <button
+                          className="btn btn-primary btn-sm rounded-pill"
                           onClick={() => window.location.href = `/dashboard/appointments/${appointment.maLichHen}`}
                         >
                           Chi tiết
                         </button>
                         {!appointment.coBenhAn && (appointment.maTrangThai === 1 || appointment.maTrangThai === 2) && (
-                          <button 
-                            className="btn btn-success btn-sm"
+                          <button
+                            className="btn btn-success btn-sm rounded-pill ms-2"
                             onClick={() => window.location.href = `/dashboard/examination/${appointment.maLichHen}`}
                           >
                             Khám bệnh
+                          </button>
+                        )}
+                        {appointment.maTrangThai !== 5 && appointment.maTrangThai !== 4 && (
+                          <button
+                            className="btn btn-danger btn-sm rounded-pill ms-2"
+                            onClick={() => handleCancelAppointment(appointment)}
+                          >
+                            Hủy lịch
                           </button>
                         )}
                       </td>

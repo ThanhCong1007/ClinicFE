@@ -162,6 +162,23 @@ export const searchDrugsRxNav = async (text: string) => {
   }
 };
 
+export const cancelAppointment = async (maLichHen: number, appointmentData: any) => {
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('Không tìm thấy token xác thực');
+
+  const response = await axios.put(
+    `http://localhost:8080/api/appointments/${maLichHen}/cancel`,
+    appointmentData,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  return response.data;
+};
+
 // Add this CSS at the top of the file or in your CSS file
 const drugCardStyle = {
   padding: '10px',
@@ -363,6 +380,36 @@ export default function Appointments() {
     }
   };
 
+  const handleCancelAppointment = async (appointment: Appointment) => {
+    if (!window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) {
+      return;
+    }
+
+    try {
+      const appointmentData = {
+        maBenhNhan: appointment.maBenhNhan,
+        maBacSi: appointment.maBacSi,
+        maDichVu: appointment.maDichVu,
+        ngayHen: appointment.ngayHen,
+        gioBatDau: appointment.gioBatDau,
+        gioKetThuc: appointment.gioKetThuc,
+        maTrangThai: 5, // Trạng thái đã hủy
+        ghiChu: appointment.ghiChuLichHen
+      };
+
+      await cancelAppointment(appointment.maLichHen, appointmentData);
+      
+      // Refresh appointments list
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const data = await getDoctorAppointments(userData.maBacSi);
+      setAppointments(data);
+      
+      alert('Hủy lịch hẹn thành công');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi hủy lịch hẹn');
+    }
+  };
+
   const filteredAppointments = appointments.filter(appointment => {
     const appointmentDateStr = format(new Date(appointment.ngayHen), 'yyyy-MM-dd');
     const today = new Date();
@@ -520,19 +567,29 @@ export default function Appointments() {
                     <span className={`badge ${getStatusBadgeClass(appointment.maTrangThai)}`}>
                       {appointment.tenTrangThai}
                     </span>
-                </td>
+                  </td>
                   <td>{appointment.ghiChuLichHen || ' '}</td>
                   <td>
-                    {!appointment.coBenhAn && (appointment.maTrangThai === 1 || appointment.maTrangThai === 2) && (
-                      <button 
-                        className="btn btn-success btn-sm"
-                        onClick={() => navigate(`/dashboard/examination/${appointment.maLichHen}`)}
-                      >
-                        Khám bệnh
-                      </button>
-                    )}
-                </td>
-              </tr>
+                    <div className="btn-group">
+                      {!appointment.coBenhAn && (appointment.maTrangThai === 1 || appointment.maTrangThai === 2) && (
+                        <button 
+                          className="btn btn-success btn-sm me-2"
+                          onClick={() => navigate(`/dashboard/examination/${appointment.maLichHen}`)}
+                        >
+                          Khám bệnh
+                        </button>
+                      )}
+                      {appointment.maTrangThai !== 5 && appointment.maTrangThai !== 4 && (
+                        <button 
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleCancelAppointment(appointment)}
+                        >
+                          Hủy lịch
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
