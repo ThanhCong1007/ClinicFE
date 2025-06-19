@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Button } from 'react-bootstrap';
 import { format } from 'date-fns';
 import axios from 'axios';
+import NotificationModal from '../components/NotificationModal';
 
 interface Appointment {
   maLichHen: number;
@@ -56,6 +57,7 @@ const Dashboard = () => {
     newPatients: 0,
     pendingExaminations: 0
   });
+  const [notification, setNotification] = useState<{show: boolean, title: string, message: string, type: 'success'|'error'|'info'}>({show: false, title: '', message: '', type: 'info'});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -160,9 +162,9 @@ const Dashboard = () => {
         pendingExaminations: pendingExams.length
       });
       
-      alert('Hủy lịch hẹn thành công');
+      setNotification({show: true, title: 'Thành công', message: 'Hủy lịch hẹn thành công', type: 'success'});
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Có lỗi xảy ra khi hủy lịch hẹn');
+      setNotification({show: true, title: 'Lỗi', message: err instanceof Error ? err.message : 'Có lỗi xảy ra khi hủy lịch hẹn', type: 'error'});
     }
   };
 
@@ -374,6 +376,14 @@ const Dashboard = () => {
           </Table>
         </Card.Body>
       </Card>
+
+      <NotificationModal
+        show={notification.show}
+        onClose={() => setNotification({...notification, show: false})}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </Container>
   );
 };

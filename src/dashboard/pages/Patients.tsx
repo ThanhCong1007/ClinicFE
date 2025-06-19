@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { getDoctorAppointments, getPatientMedicalRecords } from './Appointments';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
+import NotificationModal from '../components/NotificationModal';
 
 interface MedicalRecord {
   maBenhAn: string;
@@ -46,6 +47,7 @@ export default function Patients() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{show: boolean, title: string, message: string, type: 'success'|'error'|'info'}>({show: false, title: '', message: '', type: 'info'});
 
   const searchPatient = async (searchValue: string) => {
     try {
@@ -107,16 +109,16 @@ export default function Patients() {
             
             setPatients(patientsMap);
             if (response.data.length === 0) {
-              alert('Không tìm thấy bệnh nhân với số điện thoại này');
+              setNotification({show: true, title: 'Không tìm thấy', message: 'Không tìm thấy bệnh nhân với số điện thoại này', type: 'info'});
             }
           }
         } catch (apiError: any) {
           if (apiError.response?.status === 404) {
-            alert('Không tìm thấy bệnh nhân với số điện thoại này');
+            setNotification({show: true, title: 'Không tìm thấy', message: 'Không tìm thấy bệnh nhân với số điện thoại này', type: 'info'});
             // Reset patients list to empty
             setPatients({});
           } else {
-            alert('Có lỗi xảy ra khi tìm kiếm bệnh nhân. Vui lòng thử lại sau.');
+            setNotification({show: true, title: 'Lỗi', message: 'Có lỗi xảy ra khi tìm kiếm bệnh nhân. Vui lòng thử lại sau.', type: 'error'});
           }
           console.error('API Error:', apiError);
         }
@@ -341,6 +343,12 @@ export default function Patients() {
                           >
                             Chi tiết
                           </button>
+                          <button
+                            className="btn btn-success btn-sm ms-2"
+                            onClick={() => window.location.href = `/dashboard/examination?reexam=${record.maBenhAn}`}
+                          >
+                            Tái khám
+                          </button>
                         </div>
                         <div className="card-body">
                           <p><strong>Lý do khám:</strong> {record.lyDoKham}</p>
@@ -362,6 +370,14 @@ export default function Patients() {
           )}
         </div>
       </div>
+
+      <NotificationModal
+        show={notification.show}
+        onClose={() => setNotification({...notification, show: false})}
+        title={notification.title}
+        message={notification.message}
+        type={notification.type}
+      />
     </div>
   );
 } 

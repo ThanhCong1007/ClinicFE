@@ -47,9 +47,12 @@ export const getPatientAppointments = async (token: string, patientId: number) =
 // Cancel appointment
 export const cancelAppointment = async (token: string, appointment: any) => {
   try {
-    const response = await axios.put(`${API_URL}/appointments/${appointment.maLichHen}/cancel`, appointment, {
+    const response = await axios.put(`${API_URL}/appointments/${appointment.maLichHen}/cancel`, {
+      lyDo: appointment.lydo
+    }, {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
     });
     return response.data;

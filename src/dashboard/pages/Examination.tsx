@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
-import { format } from 'date-fns';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Container, Row, Col, Form, Button, Card, Modal } from 'react-bootstrap';
+import { format, parseISO, isValid } from 'date-fns';
 import { getAppointmentDetails, createMedicalExam } from './Appointments';
 import { DrugSearch } from '../components/DrugSearch';
 import type { Drug } from '../components/DrugSearch';
+import axios from 'axios';
+import Select, { MultiValue, StylesConfig, ActionMeta } from 'react-select';
+import NotificationModal from '../components/NotificationModal';
 
 interface Appointment {
-  maLichHen: number;
-  maBenhNhan: number;
-  tenBenhNhan: string;
+  maLichHen: number | null;
+  maBenhNhan: number | null;
+  hoTen: string;
+  ngaySinh: string;
   soDienThoaiBenhNhan: string;
   maBacSi: number;
   tenBacSi: string;
@@ -44,11 +48,19 @@ interface Prescription {
   lyDoDonThuoc: string;
 }
 
+interface Service {
+  maDichVu: number;
+  tenDichVu: string;
+  moTa: string;
+  gia: number;
+}
+
 interface MedicalExamData {
   maLichHen: number | null;
   maBacSi: number;
-  maBenhNhan: number;
-  tenBenhNhan: string;
+  maBenhNhan: number | null;
+  hoTen: string;
+  ngaySinh: string;
   soDienThoai: string;
   lyDoKham: string;
   chanDoan: string;
@@ -56,7 +68,7 @@ interface MedicalExamData {
   ngayTaiKham: string;
   tienSuBenh: string;
   diUng: string;
-  maDichVu?: number[];
+  danhSachDichVu?: { maDichVu: number; gia: number }[];
   danhSachThuoc?: Prescription[];
   ghiChuDonThuoc?: string;
 }
@@ -64,6 +76,11 @@ interface MedicalExamData {
 export default function Examination() {
   const { maLichHen } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const reexamId = searchParams.get('reexam');
+  const [isReexam, setIsReexam] = useState(!!reexamId);
+  const [reexamLoading, setReexamLoading] = useState(false);
   const storageKey = `exam_${maLichHen || 'walk-in'}`;
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +94,9 @@ export default function Examination() {
     diUng: ''
   });
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedServices, setSelectedServices] = useState<{maDichVu: number, tenDichVu: string, gia: number}[]>([]);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Lưu dữ liệu vào localStorage khi thay đổi
   useEffect(() => {
@@ -85,10 +105,11 @@ export default function Examination() {
         appointment,
         medicalRecord,
         selectedDrugs,
+        selectedServices,
       };
       localStorage.setItem(storageKey, JSON.stringify(dataToSave));
     }
-  }, [appointment, medicalRecord, selectedDrugs, loading, storageKey]);
+  }, [appointment, medicalRecord, selectedDrugs, selectedServices, loading, storageKey]);
 
   // Khôi phục dữ liệu từ localStorage nếu có
   useEffect(() => {
@@ -99,6 +120,7 @@ export default function Examination() {
         if (parsed.appointment) setAppointment(parsed.appointment);
         if (parsed.medicalRecord) setMedicalRecord(parsed.medicalRecord);
         if (parsed.selectedDrugs) setSelectedDrugs(parsed.selectedDrugs);
+        if (parsed.selectedServices) setSelectedServices(parsed.selectedServices);
       } catch {}
     }
   }, [storageKey]);
@@ -122,9 +144,10 @@ export default function Examination() {
           
           // Nếu không có dữ liệu trong localStorage, tạo form trống
           setAppointment({
-            maLichHen: 0,
-            maBenhNhan: 0,
-            tenBenhNhan: '',
+            maLichHen: null,
+            maBenhNhan: null,
+            hoTen: '',
+            ngaySinh: '',
             soDienThoaiBenhNhan: '',
             maBacSi: 0,
             tenBacSi: '',
@@ -174,9 +197,102 @@ export default function Examination() {
     fetchAppointment();
   }, [maLichHen]);
 
+  // Fetch dịch vụ
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await axios.get('/api/public/dichvu');
+        setServices(response.data);
+      } catch (error) {
+        setError('Không thể tải danh sách dịch vụ. Vui lòng thử lại sau.');
+      }
+    };
+    fetchServices();
+  }, []);
+
+  // Nếu là tái khám, fetch chi tiết bệnh án
+  useEffect(() => {
+    if (reexamId) {
+      setReexamLoading(true);
+      const token = localStorage.getItem('token');
+      axios.get(`/api/tham-kham/benh-an/${reexamId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
+        .then(res => {
+          const data = res.data;
+          setAppointment({
+            maLichHen: data.maLichHen,
+            maBenhNhan: data.maBenhNhan,
+            hoTen: data.hoTen || data.tenBenhNhan || '',
+            ngaySinh: data.ngaySinh || '',
+            soDienThoaiBenhNhan: data.soDienThoai || '',
+            maBacSi: data.maBacSi,
+            tenBacSi: data.tenBacSi || '',
+            maDichVu: 0,
+            tenDichVu: '',
+            ngayHen: '',
+            gioBatDau: '',
+            gioKetThuc: '',
+            maTrangThai: 2,
+            tenTrangThai: '',
+            ghiChuLichHen: data.ghiChuLichHen || '',
+            lyDoHen: null,
+            thoiGian: 30,
+            maBenhAn: data.maBenhAn,
+            lyDoKham: data.lyDoKham || '',
+            chanDoan: data.chanDoan || '',
+            ghiChuDieuTri: data.ghiChuDieuTri || '',
+            ngayTaiKham: data.ngayTaiKham || '',
+            ngayTaoBenhAn: data.ngayTao || '',
+            coBenhAn: true
+          });
+          setMedicalRecord({
+            lyDoKham: data.lyDoKham || '',
+            chanDoan: data.chanDoan || '',
+            ghiChuDieuTri: data.ghiChuDieuTri || '',
+            ngayTaiKham: data.ngayTaiKham || '',
+            tienSuBenh: data.tienSuBenh || '',
+            diUng: data.diUng || ''
+          });
+          setSelectedServices(Array.isArray(data.danhSachDichVu) ? data.danhSachDichVu.map((dv: any) => ({ maDichVu: dv.maDichVu, tenDichVu: dv.tenDichVu, gia: dv.gia })) : []);
+          setSelectedDrugs(Array.isArray(data.danhSachThuoc) ? data.danhSachThuoc.map((thuoc: any) => ({
+            maThuoc: thuoc.maThuoc,
+            tenThuoc: thuoc.tenThuoc,
+            hamLuong: thuoc.lieudung || thuoc.hamLuong || '',
+            huongDanSuDung: thuoc.tanSuat || '',
+            donViTinh: thuoc.donViDung || '',
+            quantity: thuoc.soLuong || 1,
+            notes: thuoc.ghiChu || ''
+          })) : []);
+        })
+        .catch(() => setError('Không thể tải chi tiết bệnh án để tái khám'))
+        .finally(() => setReexamLoading(false));
+    }
+  }, [reexamId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!appointment) return;
+
+    // Đảm bảo có họ tên
+    const hoTen = (appointment as any).hoTen || (appointment as any).tenBenhNhan || '';
+    if (!hoTen.trim()) {
+      setError('Họ tên là thông tin bắt buộc khi tạo bệnh nhân mới');
+      return;
+    }
+    // Đảm bảo có ngày sinh
+    if (!appointment.ngaySinh || !appointment.ngaySinh.trim()) {
+      setError('Ngày sinh là thông tin bắt buộc khi tạo bệnh nhân mới');
+      return;
+    }
+    // Format ngày sinh về yyyy-MM-dd
+    let ngaySinhFormatted = appointment.ngaySinh;
+    try {
+      const parsed = parseISO(appointment.ngaySinh);
+      if (isValid(parsed)) {
+        ngaySinhFormatted = format(parsed, 'yyyy-MM-dd');
+      }
+    } catch {}
 
     try {
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -195,26 +311,42 @@ export default function Examination() {
       }));
 
       const examData: MedicalExamData = {
-        maLichHen: maLichHen === 'walk-in' ? null : appointment.maLichHen,
+        maLichHen: !appointment.maLichHen || appointment.maLichHen === 0 ? null : appointment.maLichHen,
         maBacSi: userData.maBacSi,
-        maBenhNhan: appointment.maBenhNhan,
-        tenBenhNhan: appointment.tenBenhNhan,
+        maBenhNhan: !appointment.maBenhNhan ? null : appointment.maBenhNhan,
+        hoTen,
+        ngaySinh: ngaySinhFormatted,
         soDienThoai: appointment.soDienThoaiBenhNhan,
         ...medicalRecord,
-        maDichVu: [appointment.maDichVu],
+        danhSachDichVu: selectedServices.map(s => ({ maDichVu: s.maDichVu, gia: s.gia })),
         danhSachThuoc,
         ghiChuDonThuoc: 'Bệnh nhân cần tuân thủ đúng liều lượng và thời gian dùng thuốc'
       };
 
-      await createMedicalExam(examData);
-      localStorage.removeItem(storageKey); // Xóa dữ liệu tạm khi lưu thành công
-      navigate('/dashboard/appointments');
+      if (isReexam && appointment.maBenhAn) {
+        // PUT cập nhật bệnh án
+        await axios.put(`/api/tham-kham/benh-an/${appointment.maBenhAn}`, {
+          ...examData,
+          maBenhAn: appointment.maBenhAn,
+          nguoiDung: userData.id || userData.maBacSi || null
+        });
+      } else {
+        // POST tạo mới
+        await createMedicalExam(examData);
+      }
+      localStorage.removeItem(storageKey);
+      setShowSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bệnh án');
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu bệnh án');
     }
   };
 
-  if (loading) {
+  // Khi thay đổi giá dịch vụ
+  const handleServicePriceChange = (maDichVu: number, newPrice: number) => {
+    setSelectedServices(prev => prev.map(s => s.maDichVu === maDichVu ? { ...s, gia: newPrice } : s));
+  };
+
+  if (loading || reexamLoading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
         <div className="spinner-border text-primary" role="status">
@@ -234,6 +366,15 @@ export default function Examination() {
 
   return (
     <Container fluid className="py-4">
+      {/* Modal thông báo thành công/thất bại */}
+      <NotificationModal
+        show={showSuccess}
+        onClose={() => { setShowSuccess(false); navigate('/dashboard/appointments'); }}
+        title="Thành công"
+        message="Bệnh án đã được lưu thành công!"
+        type="success"
+      />
+
       <h2 className="mb-4">Khám bệnh {maLichHen === 'walk-in' ? 'vãng lai' : ''}</h2>
 
       <Row>
@@ -248,7 +389,7 @@ export default function Examination() {
               {maLichHen ? (
                 <Row>
                   <Col md={6}>
-                    <p><strong>Họ và tên:</strong> {appointment?.tenBenhNhan}</p>
+                    <p><strong>Họ và tên:</strong> {appointment?.hoTen}</p>
                     <p><strong>Số điện thoại:</strong> {appointment?.soDienThoaiBenhNhan}</p>
                   </Col>
                   <Col md={6}>
@@ -263,8 +404,8 @@ export default function Examination() {
                       <Form.Label>Họ và tên</Form.Label>
                       <Form.Control
                         type="text"
-                        value={appointment?.tenBenhNhan || ''}
-                        onChange={e => setAppointment(prev => prev ? { ...prev, tenBenhNhan: e.target.value } : null)}
+                        value={appointment?.hoTen || ''}
+                        onChange={e => setAppointment(prev => prev ? { ...prev, hoTen: e.target.value } : null)}
                         required
                       />
                     </Form.Group>
@@ -282,26 +423,77 @@ export default function Examination() {
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Dịch vụ</Form.Label>
+                      <Form.Label>Ngày sinh</Form.Label>
                       <Form.Control
-                        type="text"
-                        value={appointment?.tenDichVu || ''}
-                        onChange={e => setAppointment(prev => prev ? { ...prev, tenDichVu: e.target.value } : null)}
+                        type="date"
+                        value={appointment?.ngaySinh || ''}
+                        onChange={e => setAppointment(prev => prev ? { ...prev, ngaySinh: e.target.value } : null)}
+                        required
                       />
                     </Form.Group>
                   </Col>
                   <Col md={6}>
                     <Form.Group className="mb-3">
-                      <Form.Label>Thời gian</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={appointment ? `${appointment.gioBatDau} - ${appointment.gioKetThuc}` : ''}
-                        onChange={e => {
-                          // Tách giờ bắt đầu và kết thúc nếu người dùng nhập lại
-                          const [gioBatDau, gioKetThuc] = e.target.value.split('-').map(s => s.trim());
-                          setAppointment(prev => prev ? { ...prev, gioBatDau: gioBatDau || '', gioKetThuc: gioKetThuc || '' } : null);
+                      <Form.Label>Dịch vụ</Form.Label>
+                      <Select
+                        isMulti
+                        options={services.map(s => ({ value: s.maDichVu, label: s.tenDichVu }))}
+                        value={selectedServices.map(s => ({ value: s.maDichVu, label: s.tenDichVu }))}
+                        onChange={(options, _action: ActionMeta<{ value: number; label: string }>) => {
+                          if (options && Array.isArray(options)) {
+                            const newSelectedServices = options
+                              .map(option => {
+                                const service = services.find(s => s.maDichVu === option.value);
+                                if (service) {
+                                  // Giữ giá cũ nếu đã chọn trước đó, hoặc lấy giá mặc định
+                                  const existingService = selectedServices.find(s => s.maDichVu === service.maDichVu);
+                                  return {
+                                    maDichVu: service.maDichVu,
+                                    tenDichVu: service.tenDichVu,
+                                    gia: existingService ? existingService.gia : service.gia
+                                  };
+                                }
+                                return null;
+                              })
+                              .filter((x): x is { maDichVu: number; tenDichVu: string; gia: number } => Boolean(x));
+                            setSelectedServices(newSelectedServices);
+                          } else {
+                            setSelectedServices([]);
+                          }
                         }}
+                        placeholder="Tìm và chọn dịch vụ..."
+                        classNamePrefix="react-select"
+                        styles={{ menu: (base: any) => ({ ...base, zIndex: 9999 }) } as StylesConfig<{ value: number; label: string }>}
                       />
+                      {/* Hiển thị dịch vụ đã chọn và nhập giá */}
+                      {selectedServices.length > 0 && (
+                        <div style={{ marginTop: 12 }}>
+                          {selectedServices.map(s => (
+                            <div key={s.maDichVu} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                              <span style={{ minWidth: 120 }}>{s.tenDichVu}</span>
+                              <Form.Control
+                                type="number"
+                                min={0}
+                                value={s.gia}
+                                onChange={e => handleServicePriceChange(s.maDichVu, Number(e.target.value))}
+                                style={{ width: 100, padding: '2px 8px', fontSize: 14 }}
+                              />
+                              <span>VNĐ</span>
+                            </div>
+                          ))}
+                          <div style={{ marginTop: 8, textAlign: 'right', fontWeight: 600, color: '#0d6efd', fontSize: 16 }}>
+                            Tổng tiền dịch vụ: {selectedServices.reduce((sum, s) => sum + (s.gia || 0), 0).toLocaleString()} VNĐ
+                          </div>
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Thời gian</Form.Label>
+                      <div style={{ padding: '0.375rem 0.75rem', border: '1px solid #ced4da', borderRadius: '0.375rem', background: '#f8f9fa', minHeight: '38px' }}>
+                        {appointment ? `${appointment.gioBatDau} ` : ''}
+                      </div>
                     </Form.Group>
                   </Col>
                   <Col md={12}>

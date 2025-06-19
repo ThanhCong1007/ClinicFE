@@ -119,49 +119,6 @@ export const createMedicalExam = async (examData: any) => {
   return response.data;
 };
 
-export const searchDrugsRxNav = async (text: string) => {
-  try {
-    // First, get approximate matches
-    const approximateResponse = await axios.get(
-      `https://rxnav.nlm.nih.gov/REST/approximateTerm.json?term=${encodeURIComponent(text)}`
-    );
-
-    const candidates = approximateResponse.data?.approximateGroup?.candidate || [];
-    
-    // Then, get detailed information for each candidate
-    const drugDetails = await Promise.all(
-      candidates.map(async (candidate: any) => {
-        try {
-          const propertiesResponse = await axios.get(
-            `https://rxnav.nlm.nih.gov/REST/rxcui/${candidate.rxcui}/properties.json`
-          );
-          
-          const properties = propertiesResponse.data?.properties || {};
-          return {
-            rxcui: candidate.rxcui,
-            name: properties.name,
-            synonym: properties.synonym,
-            displayName: properties.displayName,
-            score: candidate.score,
-            rank: candidate.rank
-          };
-        } catch (error) {
-          console.error(`Error fetching details for rxcui ${candidate.rxcui}:`, error);
-          return null;
-        }
-      })
-    );
-
-    // Filter out any failed requests and sort by score
-    return drugDetails
-      .filter(drug => drug !== null)
-      .sort((a, b) => (b?.score || 0) - (a?.score || 0));
-  } catch (error) {
-    console.error('Error searching drugs:', error);
-    return [];
-  }
-};
-
 export const cancelAppointment = async (maLichHen: number, appointmentData: any) => {
   const token = localStorage.getItem('token');
   if (!token) throw new Error('Không tìm thấy token xác thực');
@@ -760,8 +717,6 @@ export default function Appointments() {
                             onInputChange={async (text) => {
                               if (text.length < 2) return;
                               setIsSearchingDrug(true);
-                              const drugs = await searchDrugsRxNav(text);
-                              setDrugOptions(drugs);
                               setIsSearchingDrug(false);
                             }}
                             onChange={(selected) => {
