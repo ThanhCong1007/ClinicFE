@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Search, Pill, AlertCircle, Clock, DollarSign } from 'lucide-react';
 import { Form, Button, Card, Row, Col, InputGroup } from 'react-bootstrap';
-import axios from 'axios';
+import { fetchDrugs } from '../services/api';
 
 export interface Drug {
   maThuoc: number;
@@ -49,11 +49,11 @@ export function DrugSearch({ onDrugsChange, storageKey }: DrugSearchProps) {
 
   // Fetch drugs from API
   useEffect(() => {
-    const fetchDrugs = async () => {
+    const fetchDrugsList = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/public/Thuoc');
-        setDrugs(response.data);
+        const drugs = await fetchDrugs();
+        setDrugs(drugs);
       } catch (error) {
         console.error('Error fetching drugs:', error);
         setError('Không thể tải danh sách thuốc. Vui lòng thử lại sau.');
@@ -62,7 +62,7 @@ export function DrugSearch({ onDrugsChange, storageKey }: DrugSearchProps) {
       }
     };
 
-    fetchDrugs();
+    fetchDrugsList();
   }, []);
 
   // Restore selected drugs from localStorage when component mounts

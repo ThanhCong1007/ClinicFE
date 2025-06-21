@@ -6,6 +6,7 @@ import 'react-bootstrap-typeahead/css/Typeahead.css';
 import Highlighter from 'react-highlight-words';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getDoctorAppointments, getAppointmentDetails, getPatientMedicalRecords, createMedicalExam, cancelAppointment } from '../services/api';
 
 interface Appointment {
   maLichHen: number;
@@ -44,97 +45,6 @@ interface Prescription {
   tongTien: number;
   dotDungThuoc: string;
 }
-
-// API functions
-export const getDoctorAppointments = async (maBacSi: number) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
-  const response = await axios.get(
-    `http://localhost:8080/api/tham-kham/bac-si/${maBacSi}/lich-hen-benh-an`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  );
-  return response.data;
-};
-
-export const getAppointmentDetails = async (maLichHen: number) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
-  const response = await axios.get(
-    `http://localhost:8080/api/tham-kham/lich-hen/${maLichHen}/chi-tiet`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  );
-
-  // Modify the response data to use real-time values
-  const data = response.data;
-  if (data) {
-    const now = new Date();
-    data.gioBatDau = format(now, 'HH:mm:ss');
-    data.gioKetThuc = ''; // Clear end time initially
-    data.thoiGian = 30; // Set default time to 30 minutes
-  }
-  
-  return data;
-};
-
-export const getPatientMedicalRecords = async (maBenhNhan: number) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
-  const response = await axios.get(
-    `http://localhost:8080/api/tham-kham/benh-nhan/${maBenhNhan}/benh-an`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  );
-  return response.data;
-};
-
-export const createMedicalExam = async (examData: any) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
-  const response = await axios.post(
-    'http://localhost:8080/api/tham-kham/kham',
-    examData,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    }
-  );
-  return response.data;
-};
-
-export const cancelAppointment = async (maLichHen: number, appointmentData: any) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
-  const response = await axios.put(
-    `http://localhost:8080/api/appointments/${maLichHen}/cancel`,
-    appointmentData,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    }
-  );
-  return response.data;
-};
 
 // Add this CSS at the top of the file or in your CSS file
 const drugCardStyle = {

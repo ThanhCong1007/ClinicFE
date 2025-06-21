@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { getDoctorAppointments, getPatientMedicalRecords } from './Appointments';
-import axios from 'axios';
+import { getMedicalRecordsByDoctor } from '../services/api';
 import debounce from 'lodash/debounce';
 import NotificationModal from '../components/NotificationModal';
 
@@ -17,14 +16,17 @@ interface MedicalRecord {
   chanDoan: string;
   ghiChuDieuTri: string;
   ngayTaiKham: string | null;
+  diaChi?: string;
+  ngaySinh?: string;
+  diUng?: string;
 }
 
 interface PatientData {
-  appointments: Array<{
+  info: {
     maBenhNhan: string;
     tenBenhNhan: string;
     soDienThoaiBenhNhan: string;
-  }>;
+  };
   records: MedicalRecord[];
 }
 
@@ -32,226 +34,150 @@ interface Patients {
   [key: string]: PatientData;
 }
 
-interface Appointment {
-  maLichHen: number;
-  maBenhNhan: number;
-  tenBenhNhan: string;
-  soDienThoaiBenhNhan: string;
-  coBenhAn: boolean;
-}
-
 export default function Patients() {
-  const [patients, setPatients] = useState<Patients>({});
+  const [allPatients, setAllPatients] = useState<Patients>({});
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
-  const [notification, setNotification] = useState<{show: boolean, title: string, message: string, type: 'success'|'error'|'info'}>({show: false, title: '', message: '', type: 'info'});
+  const [notification, setNotification] = useState<{ show: boolean, title: string, message: string, type: 'success' | 'error' | 'info' }>({ show: false, title: '', message: '', type: 'info' });
+  
+  // Client-side pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const PATIENTS_PER_PAGE = 10;
 
-  const searchPatient = async (searchValue: string) => {
+  const processRecordsToPatients = (records: MedicalRecord[]) => {
+    const patientsMap: Patients = {};
+    for (const record of records) {
+      const maBenhNhan = record.maBenhNhan?.toString() || '';
+      if (!maBenhNhan) continue;
+      if (!patientsMap[maBenhNhan]) {
+        patientsMap[maBenhNhan] = {
+          info: {
+            maBenhNhan,
+            tenBenhNhan: record.tenBenhNhan || '',
+            soDienThoaiBenhNhan: record.soDienThoai || '',
+          },
+          records: []
+        };
+      }
+      patientsMap[maBenhNhan].records.push(record);
+    }
+    return patientsMap;
+  };
+  
+  const fetchAllMedicalRecords = useCallback(async (keyword: string) => {
     try {
       setSearching(true);
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('Không tìm thấy token xác thực');
+      setAllPatients({});
+      setSelectedPatient(null);
+      setCurrentPage(1);
 
-      // If search value is a phone number (contains only digits)
-      if (/^\d+$/.test(searchValue)) {
-        try {
-          const response = await axios.get(
-            `http://localhost:8080/api/tham-kham/benh-nhan/sdt/${searchValue}`,
-            {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            }
-          );
-          
-          if (response.data && Array.isArray(response.data)) {
-            const patientsMap: Patients = {};
-            
-            // Process each patient in the array
-            for (const patient of response.data) {
-              if (patient.maBenhNhan) {
-                // Fetch medical records for each patient
-                try {
-                  const records = await getPatientMedicalRecords(patient.maBenhNhan);
-                  const processedRecords = records.map((record: MedicalRecord) => ({
-                    ...record,
-                    maBenhAn: record.maBenhAn.toString(),
-                    maLichHen: record.maLichHen?.toString() || '',
-                    maBacSi: record.maBacSi.toString(),
-                    maBenhNhan: record.maBenhNhan.toString()
-                  }));
-
-                  patientsMap[patient.maBenhNhan] = {
-                    appointments: [{
-                      maBenhNhan: patient.maBenhNhan.toString(),
-                      tenBenhNhan: patient.hoTen || '',
-                      soDienThoaiBenhNhan: patient.soDienThoai || ''
-                    }],
-                    records: processedRecords
-                  };
-                } catch (recordError) {
-                  console.error('Error fetching records for patient:', patient.maBenhNhan, recordError);
-                  // Still add the patient even if we can't get their records
-                  patientsMap[patient.maBenhNhan] = {
-                    appointments: [{
-                      maBenhNhan: patient.maBenhNhan.toString(),
-                      tenBenhNhan: patient.hoTen || '',
-                      soDienThoaiBenhNhan: patient.soDienThoai || ''
-                    }],
-                    records: []
-                  };
-                }
-              }
-            }
-            
-            setPatients(patientsMap);
-            if (response.data.length === 0) {
-              setNotification({show: true, title: 'Không tìm thấy', message: 'Không tìm thấy bệnh nhân với số điện thoại này', type: 'info'});
-            }
-          }
-        } catch (apiError: any) {
-          if (apiError.response?.status === 404) {
-            setNotification({show: true, title: 'Không tìm thấy', message: 'Không tìm thấy bệnh nhân với số điện thoại này', type: 'info'});
-            // Reset patients list to empty
-            setPatients({});
-          } else {
-            setNotification({show: true, title: 'Lỗi', message: 'Có lỗi xảy ra khi tìm kiếm bệnh nhân. Vui lòng thử lại sau.', type: 'error'});
-          }
-          console.error('API Error:', apiError);
-        }
-      } else {
-        // If search value is a name, fetch all patients and filter
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        const maBacSi = userData.maBacSi;
-        
-        if (!maBacSi) {
-          alert('Không tìm thấy thông tin bác sĩ');
-          return;
-        }
-
-        try {
-          const appointments = await getDoctorAppointments(maBacSi);
-          const patientsMap: Patients = {};
-          
-          for (const appointment of appointments) {
-            const maBenhNhan = appointment.maBenhNhan.toString();
-            if (!patientsMap[maBenhNhan]) {
-              patientsMap[maBenhNhan] = {
-                appointments: [],
-                records: []
-              };
-            }
-            patientsMap[maBenhNhan].appointments.push({
-              ...appointment,
-              maBenhNhan: maBenhNhan
-            });
-            
-            if (appointment.coBenhAn) {
-              const records = await getPatientMedicalRecords(appointment.maBenhNhan);
-              const processedRecords = records.map((record: MedicalRecord) => ({
-                ...record,
-                maBenhAn: record.maBenhAn.toString(),
-                maLichHen: record.maLichHen?.toString() || '',
-                maBacSi: record.maBacSi.toString(),
-                maBenhNhan: record.maBenhNhan.toString()
-              }));
-              patientsMap[maBenhNhan].records = processedRecords;
-            }
-          }
-          
-          setPatients(patientsMap);
-          if (Object.keys(patientsMap).length === 0) {
-            alert('Không tìm thấy bệnh nhân với tên này');
-          }
-        } catch (err) {
-          alert('Có lỗi xảy ra khi tìm kiếm bệnh nhân. Vui lòng thử lại sau.');
-          console.error('Search Error:', err);
-        }
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const maBacSi = userData.maBacSi;
+      if (!maBacSi) {
+        throw new Error('Không tìm thấy thông tin bác sĩ');
       }
+
+      const initialResponse = await getMedicalRecordsByDoctor(maBacSi, 0, 100, keyword);
+      if (!initialResponse || !initialResponse.data) {
+        setAllPatients({});
+        return;
+      }
+      
+      let allRecords = initialResponse.data;
+      const totalPagesFromApi = initialResponse.totalPages;
+
+      if (totalPagesFromApi > 1) {
+        const pageRequests = [];
+        for (let page = 1; page < totalPagesFromApi; page++) {
+          pageRequests.push(getMedicalRecordsByDoctor(maBacSi, page, 100, keyword));
+        }
+        const subsequentResponses = await Promise.all(pageRequests);
+        subsequentResponses.forEach(response => {
+          if (response && response.data) {
+            allRecords = [...allRecords, ...response.data];
+          }
+        });
+      }
+
+      const patientsMap = processRecordsToPatients(allRecords);
+      setAllPatients(patientsMap);
+
     } catch (err) {
-      alert('Có lỗi xảy ra khi tìm kiếm bệnh nhân. Vui lòng thử lại sau.');
-      console.error('Search Error:', err);
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
+      setAllPatients({});
     } finally {
       setSearching(false);
     }
-  };
+  }, []);
 
-  // Create a debounced version of the search function
   const debouncedSearch = useCallback(
     debounce((value: string) => {
-      if (value.length >= 3) {
-        searchPatient(value);
-      }
+      fetchAllMedicalRecords(value);
     }, 500),
-    []
+    [fetchAllMedicalRecords]
   );
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userData = JSON.parse(localStorage.getItem('user') || '{}');
-        const maBacSi = userData.maBacSi;
-        
-        if (!maBacSi) {
-          throw new Error('Không tìm thấy thông tin bác sĩ');
-        }
+    setLoading(true);
+    fetchAllMedicalRecords('').finally(() => setLoading(false));
+  }, [fetchAllMedicalRecords]);
 
-        const appointments = await getDoctorAppointments(maBacSi);
-        const patientsMap: Patients = {};
-        
-        for (const appointment of appointments) {
-          const maBenhNhan = appointment.maBenhNhan.toString();
-          if (!patientsMap[maBenhNhan]) {
-            patientsMap[maBenhNhan] = {
-              appointments: [],
-              records: []
-            };
-          }
-          patientsMap[maBenhNhan].appointments.push({
-            ...appointment,
-            maBenhNhan: maBenhNhan
-          });
-          
-          if (appointment.coBenhAn) {
-            const records = await getPatientMedicalRecords(appointment.maBenhNhan);
-            const processedRecords = records.map((record: MedicalRecord) => ({
-              ...record,
-              maBenhAn: record.maBenhAn.toString(),
-              maLichHen: record.maLichHen?.toString() || '',
-              maBacSi: record.maBacSi.toString(),
-              maBenhNhan: record.maBenhNhan.toString()
-            }));
-            patientsMap[maBenhNhan].records = processedRecords;
-          }
-        }
-        
-        setPatients(patientsMap);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const filteredPatients = Object.entries(patients).filter(([_, data]) => {
-    const patientName = data.appointments[0]?.tenBenhNhan.toLowerCase() || '';
-    const patientPhone = data.appointments[0]?.soDienThoaiBenhNhan || '';
-    const searchLower = searchTerm.toLowerCase();
-    
-    // If search term is a phone number, only search by phone
-    if (/^\d+$/.test(searchTerm)) {
-      return patientPhone.includes(searchTerm);
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+      setSelectedPatient(null);
     }
-    // Otherwise search by name
-    return patientName.includes(searchLower);
-  });
+  };
+  
+  const patientEntries = Object.entries(allPatients);
+  const totalPages = Math.ceil(patientEntries.length / PATIENTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * PATIENTS_PER_PAGE;
+  const displayedPatientEntries = patientEntries.slice(startIndex, startIndex + PATIENTS_PER_PAGE);
 
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pageNumbers = [];
+    const maxPagesToShow = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    return (
+      <nav className="mt-auto py-3 d-flex justify-content-center">
+        <ul className="pagination">
+          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+            <button className="page-link" onClick={() => handlePageChange(1)}>&laquo;</button>
+          </li>
+          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+            <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>&lsaquo;</button>
+          </li>
+          {pageNumbers.map(number => (
+            <li key={number} className={`page-item ${currentPage === number ? 'active' : ''}`}>
+              <button className="page-link" onClick={() => handlePageChange(number)}>{number}</button>
+            </li>
+          ))}
+          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+            <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>&rsaquo;</button>
+          </li>
+          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+            <button className="page-link" onClick={() => handlePageChange(totalPages)}>&raquo;</button>
+          </li>
+        </ul>
+      </nav>
+    );
+  };
+  
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
@@ -298,74 +224,132 @@ export default function Patients() {
 
       <div className="row">
         {/* Left column - Patient list */}
-        <div className="col-md-4">
+        <div className="col-md-4 d-flex flex-column" style={{ minHeight: 'calc(100vh - 250px)' }}>
           <div className="list-group">
-            {filteredPatients.map(([maBenhNhan, data]) => {
-              const patient = data.appointments[0];
-              return (
-                <button
-                  key={maBenhNhan}
-                  className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${selectedPatient === maBenhNhan ? 'active' : ''}`}
-                  onClick={() => setSelectedPatient(maBenhNhan)}
-                >
-                  <div>
-                    <strong>{patient.tenBenhNhan}</strong>
-                    <div className="text-muted small">{patient.soDienThoaiBenhNhan}</div>
-                  </div>
-                  <span className="badge bg-primary rounded-pill">
-                    {data.records.length} bệnh án
-                  </span>
-                </button>
-              );
-            })}
+            {displayedPatientEntries.map(([maBenhNhan, patient]) => (
+              <button
+                key={maBenhNhan}
+                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${selectedPatient === maBenhNhan ? 'active' : ''}`}
+                onClick={() => setSelectedPatient(maBenhNhan)}
+              >
+                <div>
+                  <strong>{patient.info.tenBenhNhan}</strong>
+                  <div className="text-muted small">SĐT: {patient.info.soDienThoaiBenhNhan}</div>
+                </div>
+                <span className="badge bg-primary rounded-pill">
+                  {patient.records.length} bệnh án
+                </span>
+              </button>
+            ))}
+             {displayedPatientEntries.length === 0 && !loading && (
+              <p className="text-center mt-3">Không có bệnh nhân nào khớp với tìm kiếm.</p>
+            )}
           </div>
+          {renderPagination()}
         </div>
 
         {/* Right column - Medical records */}
         <div className="col-md-8">
-          {selectedPatient ? (
-            <div>
-              <h4 className="mb-4">Lịch sử khám bệnh</h4>
-              {patients[selectedPatient].records.length === 0 ? (
-                <div className="alert alert-info">
-                  Chưa có bệnh án nào
-                </div>
-              ) : (
-                <div className="row">
-                  {patients[selectedPatient].records.map((record) => (
-                    <div key={record.maBenhAn} className="col-md-6 mb-4">
-                      <div className="card h-100">
-                        <div className="card-header d-flex justify-content-between align-items-center">
-                          <h5 className="mb-0">Ngày khám: {new Date(record.ngayTao).toLocaleDateString()}</h5>
-                          <button
-                            className="btn btn-primary btn-sm"
-                            onClick={() => window.location.href = `/dashboard/records/${record.maBenhAn}`}
-                          >
-                            Chi tiết
-                          </button>
-                          <button
-                            className="btn btn-success btn-sm ms-2"
-                            onClick={() => window.location.href = `/dashboard/examination?reexam=${record.maBenhAn}`}
-                          >
-                            Tái khám
-                          </button>
-                        </div>
-                        <div className="card-body">
-                          <p><strong>Lý do khám:</strong> {record.lyDoKham}</p>
-                          <p><strong>Chẩn đoán:</strong> {record.chanDoan}</p>
-                          <p><strong>Điều trị:</strong> {record.ghiChuDieuTri}</p>
-                          <p><strong>Ngày tái khám:</strong> {record.ngayTaiKham || '-'}</p>
-                        </div>
-                      </div>
+          {selectedPatient && allPatients[selectedPatient] ? (
+            (() => {
+              const patient = allPatients[selectedPatient];
+              const latestRecord = patient.records.length > 0 ? patient.records[0] : null;
+
+              const calculateAge = (birthDateString: string | null) => {
+                if (!birthDateString) return 'Không rõ';
+                const birthDate = new Date(birthDateString);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                return age;
+              };
+
+              return (
+                <div className="card">
+                  <div className="card-header">
+                    <h4 className="mb-0">Thông tin chi tiết bệnh nhân</h4>
+                  </div>
+                  <div className="card-body">
+                    <div className="row mb-3">
+                      <div className="col-sm-4"><strong>Tên bệnh nhân:</strong></div>
+                      <div className="col-sm-8">{patient.info.tenBenhNhan}</div>
                     </div>
-                  ))}
+                    <div className="row mb-3">
+                      <div className="col-sm-4"><strong>Số điện thoại:</strong></div>
+                      <div className="col-sm-8">{patient.info.soDienThoaiBenhNhan}</div>
+                    </div>
+                    {latestRecord && (
+                      <>
+                        <div className="row mb-3">
+                          <div className="col-sm-4"><strong>Địa chỉ:</strong></div>
+                          <div className="col-sm-8">{latestRecord.diaChi || 'Không rõ'}</div>
+                        </div>
+                        <div className="row mb-3">
+                          <div className="col-sm-4"><strong>Năm sinh:</strong></div>
+                          <div className="col-sm-8">{latestRecord.ngaySinh ? new Date(latestRecord.ngaySinh).toLocaleDateString('vi-VN') : 'Không rõ'}</div>
+                        </div>
+                        <div className="row mb-3">
+                          <div className="col-sm-4"><strong>Tuổi:</strong></div>
+                          <div className="col-sm-8">{calculateAge(latestRecord.ngaySinh || null)}</div>
+                        </div>
+                        <div className="row mb-3">
+                            <div className="col-sm-4"><strong>Dị ứng:</strong></div>
+                            <div className="col-sm-8">{latestRecord.diUng || 'Không có'}</div>
+                        </div>
+                        <div className="row mb-3">
+                            <div className="col-sm-4"><strong>Chẩn đoán gần nhất:</strong></div>
+                            <div className="col-sm-8">{latestRecord.chanDoan || 'Chưa có'}</div>
+                        </div>
+                      </>
+                    )}
+                    
+                    <hr />
+                    <h5 className="mt-4">Lịch sử bệnh án</h5>
+                    {patient.records.length > 0 ? (
+                        <div className="table-responsive">
+                            <table className="table table-bordered table-hover">
+                                <thead>
+                                <tr>
+                                    <th>Mã bệnh án</th>
+                                    <th>Ngày khám</th>
+                                    <th>Lý do khám</th>
+                                    <th>Chẩn đoán</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {patient.records.map((record) => (
+                                    <tr key={record.maBenhAn}>
+                                    <td>{record.maBenhAn}</td>
+                                    <td>{new Date(record.ngayTao).toLocaleDateString()}</td>
+                                    <td>{record.lyDoKham}</td>
+                                    <td>{record.chanDoan}</td>
+                                    <td>
+                                        <button
+                                        className="btn btn-primary btn-sm"
+                                        onClick={() => window.open(`/dashboard/examination?reexam=${record.maBenhAn}`, '_blank')}
+                                        >
+                                        Xem chi tiết
+                                        </button>
+                                    </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <p>Không có bệnh án nào.</p>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+              );
+            })()
           ) : (
-            <div className="text-center text-muted mt-5">
-              <i className="fas fa-user-md fa-3x mb-3"></i>
-              <h4>Chọn bệnh nhân để xem lịch sử khám bệnh</h4>
+            <div className="text-center mt-5">
+              <p>Chọn một bệnh nhân từ danh sách để xem chi tiết bệnh án.</p>
             </div>
           )}
         </div>

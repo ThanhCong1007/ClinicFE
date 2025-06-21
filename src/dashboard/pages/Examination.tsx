@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Card, Modal } from 'react-bootstrap';
 import { format, parseISO, isValid } from 'date-fns';
-import { getAppointmentDetails, createMedicalExam } from './Appointments';
+import { getAppointmentDetails, createMedicalExam, fetchServices, getMedicalRecordById, updateMedicalRecord } from '../services/api';
 import { DrugSearch } from '../components/DrugSearch';
 import type { Drug } from '../components/DrugSearch';
 import axios from 'axios';
@@ -198,28 +198,21 @@ export default function Examination() {
   }, [maLichHen]);
 
   // Fetch dịch vụ
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await axios.get('/api/public/dichvu');
-        setServices(response.data);
-      } catch (error) {
-        setError('Không thể tải danh sách dịch vụ. Vui lòng thử lại sau.');
-      }
-    };
-    fetchServices();
-  }, []);
+  const fetchServicesList = async () => {
+    try {
+      const data = await fetchServices();
+      setServices(data);
+    } catch (error) {
+      setError('Không thể tải danh sách dịch vụ. Vui lòng thử lại sau.');
+    }
+  };
 
   // Nếu là tái khám, fetch chi tiết bệnh án
   useEffect(() => {
     if (reexamId) {
       setReexamLoading(true);
-      const token = localStorage.getItem('token');
-      axios.get(`/api/tham-kham/benh-an/${reexamId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      })
-        .then(res => {
-          const data = res.data;
+      getMedicalRecordById(Number(reexamId))
+        .then(data => {
           setAppointment({
             maLichHen: data.maLichHen,
             maBenhNhan: data.maBenhNhan,
@@ -264,9 +257,9 @@ export default function Examination() {
             quantity: thuoc.soLuong || 1,
             notes: thuoc.ghiChu || ''
           })) : []);
+          setReexamLoading(false);
         })
-        .catch(() => setError('Không thể tải chi tiết bệnh án để tái khám'))
-        .finally(() => setReexamLoading(false));
+        .catch(() => setReexamLoading(false));
     }
   }, [reexamId]);
 
@@ -325,7 +318,7 @@ export default function Examination() {
 
       if (isReexam && appointment.maBenhAn) {
         // PUT cập nhật bệnh án
-        await axios.put(`/api/tham-kham/benh-an/${appointment.maBenhAn}`, {
+        await updateMedicalRecord(appointment.maBenhAn, {
           ...examData,
           maBenhAn: appointment.maBenhAn,
           nguoiDung: userData.id || userData.maBacSi || null

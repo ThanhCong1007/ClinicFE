@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Table, Badge, Button } from 'react-bootstrap
 import { format } from 'date-fns';
 import axios from 'axios';
 import NotificationModal from '../components/NotificationModal';
+import { getDoctorAppointments, cancelAppointment } from '../services/api';
 
 interface Appointment {
   maLichHen: number;
@@ -29,23 +30,6 @@ interface Appointment {
   ngayTaoBenhAn: string | null;
   coBenhAn: boolean;
 }
-
-export const cancelAppointment = async (maLichHen: number, appointmentData: any) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
-  const response = await axios.put(
-    `http://localhost:8080/api/appointments/${maLichHen}/cancel`,
-    appointmentData,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    }
-  );
-  return response.data;
-};
 
 const Dashboard = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
