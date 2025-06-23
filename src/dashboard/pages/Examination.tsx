@@ -207,6 +207,11 @@ export default function Examination() {
     }
   };
 
+  // Tự động gọi fetchServicesList khi load trang
+  useEffect(() => {
+    fetchServicesList();
+  }, []);
+
   // Nếu là tái khám, fetch chi tiết bệnh án
   useEffect(() => {
     if (reexamId) {
