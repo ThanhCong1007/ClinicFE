@@ -20,3 +20,5 @@ export interface Appointment {
   reason: string;
   notes?: string;
 }
+
+declare module 'diacritics';

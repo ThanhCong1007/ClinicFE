@@ -7,6 +7,7 @@ import { DrugSearch } from '../components/DrugSearch';
 import type { Drug } from '../components/DrugSearch';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import { remove as removeDiacritics } from 'diacritics';
 
 const { Option } = Select;
 
@@ -199,6 +200,17 @@ export default function Examination() {
     fetchServicesList();
   }, []);
 
+  // Hàm chuyển đổi các trường ngày sang dayjs
+  function normalizeDateFields(obj: any, fields: string[]) {
+    const result = { ...obj };
+    fields.forEach(field => {
+      if (result[field] && typeof result[field] === 'string' && result[field] !== '') {
+        result[field] = dayjs(result[field]);
+      }
+    });
+    return result;
+  }
+
   useEffect(() => {
     if (reexamId) {
       setReexamLoading(true);
@@ -214,7 +226,7 @@ export default function Examination() {
             tenBacSi: data.tenBacSi || '',
             maDichVu: 0,
             tenDichVu: '',
-            ngayHen: '',
+            ngayHen: data.ngayHen || '',
             gioBatDau: '',
             gioKetThuc: '',
             maTrangThai: 2,
@@ -240,7 +252,20 @@ export default function Examination() {
             diUng: data.diUng || ''
           };
           setMedicalRecord(record);
-          form.setFieldsValue({ ...reexamAppointment, ...record });
+          // Chuyển các trường ngày sang dayjs trước khi setFieldsValue
+          const dateFields = ['ngaySinh', 'ngayTaiKham', 'ngayHen', 'ngayTaoBenhAn', 'ngayTao'];
+          const formValues = normalizeDateFields({ ...reexamAppointment, ...record }, dateFields);
+          form.setFieldsValue(formValues);
+          if (Array.isArray(data.danhSachDichVu)) {
+            setSelectedServices(data.danhSachDichVu.map((dv: any) => ({
+              maDichVu: dv.maDichVu,
+              tenDichVu: dv.tenDichVu || (services.find(s => s.maDichVu === dv.maDichVu)?.tenDichVu) || '',
+              gia: dv.gia
+            })));
+          }
+          if (Array.isArray(data.danhSachThuoc)) {
+            setSelectedDrugs(data.danhSachThuoc);
+          }
         })
         .catch(err => setError(err.message))
         .finally(() => setReexamLoading(false));
@@ -259,7 +284,10 @@ export default function Examination() {
       try {
         const values = JSON.parse(draft);
         const { selectedServices: draftServices, ...formValues } = values;
-        form.setFieldsValue(formValues);
+        // Chuyển các trường ngày sang dayjs trước khi setFieldsValue
+        const dateFields = ['ngaySinh', 'ngayTaiKham', 'ngayHen', 'ngayTaoBenhAn', 'ngayTao'];
+        const normalized = normalizeDateFields(formValues, dateFields);
+        form.setFieldsValue(normalized);
         setSelectedServices(Array.isArray(draftServices) ? draftServices : []);
       } catch {}
     }
@@ -417,6 +445,13 @@ export default function Examination() {
                   style={{ width: '100%' }}
                   placeholder="Chọn dịch vụ"
                   value={selectedServices.map(s => s.maDichVu)}
+                  showSearch
+                  filterOption={(input, option) => {
+                    const label = option?.children || '';
+                    // Loại bỏ dấu và so sánh không phân biệt hoa thường
+                    const normalize = (str: string) => removeDiacritics(str).toLowerCase();
+                    return normalize(label as string).includes(normalize(input));
+                  }}
                   onChange={(value: number[]) => {
                     const newServices = value.map(maDichVu => {
                       const existed = selectedServices.find(s => s.maDichVu === maDichVu);
@@ -455,6 +490,13 @@ export default function Examination() {
                       <span>VNĐ</span>
                     </div>
                   ))}
+                  {/* Tổng tiền dịch vụ */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12, fontWeight: 600, fontSize: 16 }}>
+                    Tổng tiền dịch vụ:&nbsp;
+                    <span style={{ color: '#d4380d' }}>
+                      {selectedServices.reduce((sum, s) => sum + (s.gia || 0), 0).toLocaleString('vi-VN')} VNĐ
+                    </span>
+                  </div>
                 </div>
               )}
               
