@@ -1,218 +1,191 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Card, Table, Button, Form, Modal, Badge } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Card, Table, Button, Form, Modal, Tag, Input, Select, DatePicker } from 'antd';
+import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
+
+const { Option } = Select;
 
 const PatientRecords = () => {
-  const [showModal, setShowModal] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [form] = Form.useForm();
+  const DRAFT_KEY = 'draft_patient_form';
 
-  const handleClose = () => setShowModal(false);
-  const handleShow = () => setShowModal(true);
+  // Auto-restore form values from localStorage khi mở modal
+  useEffect(() => {
+    if (isModalVisible) {
+      const draft = localStorage.getItem(DRAFT_KEY);
+      if (draft) {
+        try {
+          const values = JSON.parse(draft);
+          form.setFieldsValue(values);
+        } catch {}
+      }
+    }
+  }, [isModalVisible, form]);
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    form.validateFields().then(values => {
+      console.log('Form values:', values);
+      setIsModalVisible(false);
+      form.resetFields();
+      localStorage.removeItem(DRAFT_KEY); // Xóa draft khi submit thành công
+    });
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    form.resetFields();
+  };
+
+  const columns = [
+    { title: 'Mã BN', dataIndex: 'id', key: 'id' },
+    { title: 'Họ và Tên', dataIndex: 'name', key: 'name' },
+    { title: 'Ngày Sinh', dataIndex: 'dob', key: 'dob' },
+    { title: 'Giới Tính', dataIndex: 'gender', key: 'gender' },
+    { title: 'Số Điện Thoại', dataIndex: 'phone', key: 'phone' },
+    { title: 'Nhóm Máu', dataIndex: 'bloodType', key: 'bloodType', render: (bloodType: string) => <Tag color={bloodType === 'A' ? 'volcano' : 'geekblue'}>{bloodType}</Tag> },
+    { title: 'Lần Khám Cuối', dataIndex: 'lastVisit', key: 'lastVisit' },
+    {
+      title: 'Thao Tác',
+      key: 'action',
+      render: () => (
+        <Row gutter={8}>
+          <Col><Button size="small">Xem Hồ Sơ</Button></Col>
+          <Col><Button size="small" type="dashed">Tạo Lịch Hẹn</Button></Col>
+          <Col><Button size="small" type="primary">Sửa</Button></Col>
+        </Row>
+      ),
+    },
+  ];
+
+  const data = [
+    { key: '1', id: 'BN001', name: 'Nguyễn Văn A', dob: '15/05/1985', gender: 'Nam', phone: '0123456789', bloodType: 'A', lastVisit: '15/03/2024' },
+    { key: '2', id: 'BN002', name: 'Trần Thị B', dob: '20/08/1990', gender: 'Nữ', phone: '0987654321', bloodType: 'O', lastVisit: '14/03/2024' },
+  ];
 
   return (
-    <Container fluid className="py-4">
-      <Row className="mb-4">
+    <div style={{ padding: 24 }}>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+        <Col><h2>Quản Lý Hồ Sơ Bệnh Nhân</h2></Col>
         <Col>
-          <h4 className="mb-0">Quản Lý Hồ Sơ Bệnh Nhân</h4>
-        </Col>
-        <Col xs="auto">
-          <Button variant="primary" onClick={handleShow}>
-            <i className="fas fa-plus me-2"></i>
+          <Button type="primary" icon={<PlusOutlined />} onClick={showModal}>
             Thêm Bệnh Nhân Mới
           </Button>
         </Col>
       </Row>
 
-      {/* Search and Filters */}
-      <Card className="border-0 shadow-sm mb-4">
-        <Card.Body>
-          <Row className="g-3">
-            <Col md={3}>
-              <Form.Group>
-                <Form.Label>Tìm Kiếm</Form.Label>
-                <Form.Control type="text" placeholder="Tên, số điện thoại..." />
-              </Form.Group>
+      <Card style={{ marginBottom: 24 }}>
+        <Form layout="inline">
+          <Form.Item label="Tìm Kiếm">
+            <Input placeholder="Tên, số điện thoại..." />
+          </Form.Item>
+          <Form.Item label="Nhóm Máu">
+            <Select placeholder="Tất Cả" style={{ width: 120 }}>
+              <Option value="A">A</Option>
+              <Option value="B">B</Option>
+              <Option value="AB">AB</Option>
+              <Option value="O">O</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item label="Độ Tuổi">
+            <Select placeholder="Tất Cả" style={{ width: 120 }}>
+              <Option value="0-18">0-18</Option>
+              <Option value="19-30">19-30</Option>
+              <Option value="31-50">31-50</Option>
+              <Option value="51+">51+</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <Button type="default" icon={<SearchOutlined />}>
+              Tìm Kiếm
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
+
+      <Card>
+        <Table columns={columns} dataSource={data} bordered />
+      </Card>
+
+      <Modal
+        title="Thêm Bệnh Nhân Mới"
+        open={isModalVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        width={800}
+        footer={[
+          <Button key="back" onClick={handleCancel}>
+            Hủy
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleOk}>
+            Thêm Bệnh Nhân
+          </Button>,
+        ]}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onValuesChange={(_, allValues) => {
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(allValues));
+          }}
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="name" label="Họ và Tên" rules={[{ required: true, message: 'Vui lòng nhập họ và tên!' }]}>
+                <Input placeholder="Nhập họ và tên" />
+              </Form.Item>
             </Col>
-            <Col md={3}>
-              <Form.Group>
-                <Form.Label>Nhóm Máu</Form.Label>
-                <Form.Select>
-                  <option value="">Tất Cả</option>
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="AB">AB</option>
-                  <option value="O">O</option>
-                </Form.Select>
-              </Form.Group>
+            <Col span={12}>
+              <Form.Item name="dob" label="Ngày Sinh" rules={[{ required: true, message: 'Vui lòng chọn ngày sinh!' }]}>
+                <DatePicker style={{ width: '100%' }} placeholder="Chọn ngày sinh" />
+              </Form.Item>
             </Col>
-            <Col md={3}>
-              <Form.Group>
-                <Form.Label>Độ Tuổi</Form.Label>
-                <Form.Select>
-                  <option value="">Tất Cả</option>
-                  <option value="0-18">0-18</option>
-                  <option value="19-30">19-30</option>
-                  <option value="31-50">31-50</option>
-                  <option value="51+">51+</option>
-                </Form.Select>
-              </Form.Group>
+            <Col span={12}>
+              <Form.Item name="gender" label="Giới Tính" rules={[{ required: true, message: 'Vui lòng chọn giới tính!' }]}>
+                <Select placeholder="Chọn giới tính">
+                  <Option value="male">Nam</Option>
+                  <Option value="female">Nữ</Option>
+                  <Option value="other">Khác</Option>
+                </Select>
+              </Form.Item>
             </Col>
-            <Col md={3} className="d-flex align-items-end">
-              <Button variant="secondary" className="w-100">
-                <i className="fas fa-search me-2"></i>
-                Tìm Kiếm
-              </Button>
+            <Col span={12}>
+              <Form.Item name="phone" label="Số Điện Thoại" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}>
+                <Input placeholder="Nhập số điện thoại" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="email" label="Email" rules={[{ type: 'email', message: 'Email không hợp lệ!' }]}>
+                <Input placeholder="Nhập email" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="bloodType" label="Nhóm Máu">
+                <Select placeholder="Chọn nhóm máu">
+                  <Option value="A">A</Option>
+                  <Option value="B">B</Option>
+                  <Option value="AB">AB</Option>
+                  <Option value="O">O</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="address" label="Địa Chỉ">
+                <Input.TextArea rows={2} placeholder="Nhập địa chỉ" />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="medicalHistory" label="Tiền Sử Bệnh">
+                <Input.TextArea rows={3} placeholder="Nhập tiền sử bệnh (nếu có)" />
+              </Form.Item>
             </Col>
           </Row>
-        </Card.Body>
-      </Card>
-
-      {/* Patients Table */}
-      <Card className="border-0 shadow-sm">
-        <Card.Body>
-          <Table responsive hover>
-            <thead>
-              <tr>
-                <th>Mã BN</th>
-                <th>Họ và Tên</th>
-                <th>Ngày Sinh</th>
-                <th>Giới Tính</th>
-                <th>Số Điện Thoại</th>
-                <th>Nhóm Máu</th>
-                <th>Lần Khám Cuối</th>
-                <th>Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>BN001</td>
-                <td>Nguyễn Văn A</td>
-                <td>15/05/1985</td>
-                <td>Nam</td>
-                <td>0123456789</td>
-                <td><Badge bg="danger">A</Badge></td>
-                <td>15/03/2024</td>
-                <td>
-                  <Button variant="info" size="sm" className="me-2">
-                    <i className="fas fa-file-medical me-1"></i>
-                    Xem Hồ Sơ
-                  </Button>
-                  <Button variant="primary" size="sm" className="me-2">
-                    <i className="fas fa-calendar-plus me-1"></i>
-                    Tạo Lịch Hẹn
-                  </Button>
-                  <Button variant="warning" size="sm">
-                    <i className="fas fa-edit me-1"></i>
-                    Sửa
-                  </Button>
-                </td>
-              </tr>
-              <tr>
-                <td>BN002</td>
-                <td>Trần Thị B</td>
-                <td>20/08/1990</td>
-                <td>Nữ</td>
-                <td>0987654321</td>
-                <td><Badge bg="primary">O</Badge></td>
-                <td>14/03/2024</td>
-                <td>
-                  <Button variant="info" size="sm" className="me-2">
-                    <i className="fas fa-file-medical me-1"></i>
-                    Xem Hồ Sơ
-                  </Button>
-                  <Button variant="primary" size="sm" className="me-2">
-                    <i className="fas fa-calendar-plus me-1"></i>
-                    Tạo Lịch Hẹn
-                  </Button>
-                  <Button variant="warning" size="sm">
-                    <i className="fas fa-edit me-1"></i>
-                    Sửa
-                  </Button>
-                </td>
-              </tr>
-            </tbody>
-          </Table>
-        </Card.Body>
-      </Card>
-
-      {/* New Patient Modal */}
-      <Modal show={showModal} onHide={handleClose} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Thêm Bệnh Nhân Mới</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Row className="g-3">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Họ và Tên</Form.Label>
-                  <Form.Control type="text" placeholder="Nhập họ và tên" />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Ngày Sinh</Form.Label>
-                  <Form.Control type="date" />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Giới Tính</Form.Label>
-                  <Form.Select>
-                    <option value="">Chọn giới tính</option>
-                    <option value="male">Nam</option>
-                    <option value="female">Nữ</option>
-                    <option value="other">Khác</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Số Điện Thoại</Form.Label>
-                  <Form.Control type="tel" placeholder="Nhập số điện thoại" />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control type="email" placeholder="Nhập email" />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Nhóm Máu</Form.Label>
-                  <Form.Select>
-                    <option value="">Chọn nhóm máu</option>
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="AB">AB</option>
-                    <option value="O">O</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={12}>
-                <Form.Group>
-                  <Form.Label>Địa Chỉ</Form.Label>
-                  <Form.Control as="textarea" rows={2} placeholder="Nhập địa chỉ" />
-                </Form.Group>
-              </Col>
-              <Col md={12}>
-                <Form.Group>
-                  <Form.Label>Tiền Sử Bệnh</Form.Label>
-                  <Form.Control as="textarea" rows={3} placeholder="Nhập tiền sử bệnh (nếu có)" />
-                </Form.Group>
-              </Col>
-            </Row>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Hủy
-          </Button>
-          <Button variant="primary" onClick={handleClose}>
-            Thêm Bệnh Nhân
-          </Button>
-        </Modal.Footer>
+        </Form>
       </Modal>
-    </Container>
+    </div>
   );
 };
 

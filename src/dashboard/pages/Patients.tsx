@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getMedicalRecordsByDoctor } from '../services/api';
 import debounce from 'lodash/debounce';
+import { Row, Col, Input, List, Spin, Alert, Card, Empty, Pagination, Descriptions, Table, Button, Tag } from 'antd';
+import { format } from 'date-fns';
 import NotificationModal from '../components/NotificationModal';
 
 interface MedicalRecord {
@@ -154,56 +156,71 @@ export default function Patients() {
     }
 
     return (
-      <nav className="mt-auto py-3 d-flex justify-content-center">
-        <ul className="pagination">
-          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-            <button className="page-link" onClick={() => handlePageChange(1)}>&laquo;</button>
-          </li>
-          <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-            <button className="page-link" onClick={() => handlePageChange(currentPage - 1)}>&lsaquo;</button>
-          </li>
-          {pageNumbers.map(number => (
-            <li key={number} className={`page-item ${currentPage === number ? 'active' : ''}`}>
-              <button className="page-link" onClick={() => handlePageChange(number)}>{number}</button>
-            </li>
-          ))}
-          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-            <button className="page-link" onClick={() => handlePageChange(currentPage + 1)}>&rsaquo;</button>
-          </li>
-          <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-            <button className="page-link" onClick={() => handlePageChange(totalPages)}>&raquo;</button>
-          </li>
-        </ul>
-      </nav>
+      <Pagination
+        current={currentPage}
+        total={patientEntries.length}
+        pageSize={PATIENTS_PER_PAGE}
+        onChange={handlePageChange}
+        style={{ marginTop: 16, textAlign: 'center' }}
+        showSizeChanger={false}
+      />
     );
   };
   
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="alert alert-danger m-3" role="alert">
-        {error}
+      <div style={{ padding: 24 }}>
+        <Alert message="Lỗi" description={error} type="error" showIcon />
       </div>
     );
   }
 
+  const recordColumns = [
+    { title: 'Mã bệnh án', dataIndex: 'maBenhAn', key: 'maBenhAn' },
+    { title: 'Ngày khám', dataIndex: 'ngayTao', key: 'ngayTao', render: (text: string) => format(new Date(text), 'dd/MM/yyyy') },
+    { title: 'Lý do khám', dataIndex: 'lyDoKham', key: 'lyDoKham' },
+    { title: 'Chẩn đoán', dataIndex: 'chanDoan', key: 'chanDoan' },
+    {
+      title: 'Thao tác',
+      key: 'action',
+      render: (_: any, record: MedicalRecord) => (
+        <Button
+          type="primary"
+          size="small"
+          onClick={() => window.open(`/dashboard/examination?reexam=${record.maBenhAn}`, '_blank')}
+        >
+          Xem chi tiết
+        </Button>
+      ),
+    },
+  ];
+
+  const calculateAge = (birthDateString?: string) => {
+    if (!birthDateString) return 'Không rõ';
+    const birthDate = new Date(birthDateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+  };
+  
   return (
-    <div className="container-fluid p-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Danh sách bệnh nhân</h2>
-        <div className="col-md-4 position-relative">
-          <input
-            type="text"
-            className="form-control"
+    <div style={{ padding: 24 }}>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+        <Col><h2>Danh sách bệnh nhân</h2></Col>
+        <Col span={8}>
+          <Input.Search
             placeholder="Tìm kiếm theo tên hoặc số điện thoại..."
             value={searchTerm}
             onChange={(e) => {
@@ -211,149 +228,79 @@ export default function Patients() {
               setSearchTerm(value);
               debouncedSearch(value);
             }}
+            loading={searching}
+            allowClear
           />
-          {searching && (
-            <div className="position-absolute end-0 top-50 translate-middle-y me-2">
-              <div className="spinner-border spinner-border-sm text-primary" role="status">
-                <span className="visually-hidden">Đang tìm kiếm...</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+        </Col>
+      </Row>
 
-      <div className="row">
-        {/* Left column - Patient list */}
-        <div className="col-md-4 d-flex flex-column" style={{ minHeight: 'calc(100vh - 250px)' }}>
-          <div className="list-group">
-            {displayedPatientEntries.map(([maBenhNhan, patient]) => (
-              <button
+      <Row gutter={24}>
+        <Col span={8} style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)' }}>
+          <List
+            style={{ flex: 1, overflowY: 'auto' }}
+            dataSource={displayedPatientEntries}
+            renderItem={([maBenhNhan, patient]) => (
+              <List.Item
                 key={maBenhNhan}
-                className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${selectedPatient === maBenhNhan ? 'active' : ''}`}
                 onClick={() => setSelectedPatient(maBenhNhan)}
+                style={{
+                  cursor: 'pointer',
+                  backgroundColor: selectedPatient === maBenhNhan ? '#e6f7ff' : '#fff',
+                }}
+                actions={[<Tag color="blue">{patient.records.length} bệnh án</Tag>]}
               >
-                <div>
-                  <strong>{patient.info.tenBenhNhan}</strong>
-                  <div className="text-muted small">SĐT: {patient.info.soDienThoaiBenhNhan}</div>
-                </div>
-                <span className="badge bg-primary rounded-pill">
-                  {patient.records.length} bệnh án
-                </span>
-              </button>
-            ))}
-             {displayedPatientEntries.length === 0 && !loading && (
-              <p className="text-center mt-3">Không có bệnh nhân nào khớp với tìm kiếm.</p>
+                <List.Item.Meta
+                  title={<a>{patient.info.tenBenhNhan}</a>}
+                  description={`SĐT: ${patient.info.soDienThoaiBenhNhan}`}
+                />
+              </List.Item>
             )}
-          </div>
+            locale={{ emptyText: <Empty description="Không có bệnh nhân nào" /> }}
+          />
           {renderPagination()}
-        </div>
+        </Col>
 
-        {/* Right column - Medical records */}
-        <div className="col-md-8">
+        <Col span={16}>
           {selectedPatient && allPatients[selectedPatient] ? (
             (() => {
               const patient = allPatients[selectedPatient];
               const latestRecord = patient.records.length > 0 ? patient.records[0] : null;
 
-              const calculateAge = (birthDateString: string | null) => {
-                if (!birthDateString) return 'Không rõ';
-                const birthDate = new Date(birthDateString);
-                const today = new Date();
-                let age = today.getFullYear() - birthDate.getFullYear();
-                const m = today.getMonth() - birthDate.getMonth();
-                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                    age--;
-                }
-                return age;
-              };
-
               return (
-                <div className="card">
-                  <div className="card-header">
-                    <h4 className="mb-0">Thông tin chi tiết bệnh nhân</h4>
-                  </div>
-                  <div className="card-body">
-                    <div className="row mb-3">
-                      <div className="col-sm-4"><strong>Tên bệnh nhân:</strong></div>
-                      <div className="col-sm-8">{patient.info.tenBenhNhan}</div>
-                    </div>
-                    <div className="row mb-3">
-                      <div className="col-sm-4"><strong>Số điện thoại:</strong></div>
-                      <div className="col-sm-8">{patient.info.soDienThoaiBenhNhan}</div>
-                    </div>
+                <Card title="Thông tin chi tiết bệnh nhân">
+                  <Descriptions bordered column={2}>
+                    <Descriptions.Item label="Tên bệnh nhân">{patient.info.tenBenhNhan}</Descriptions.Item>
+                    <Descriptions.Item label="Số điện thoại">{patient.info.soDienThoaiBenhNhan}</Descriptions.Item>
                     {latestRecord && (
                       <>
-                        <div className="row mb-3">
-                          <div className="col-sm-4"><strong>Địa chỉ:</strong></div>
-                          <div className="col-sm-8">{latestRecord.diaChi || 'Không rõ'}</div>
-                        </div>
-                        <div className="row mb-3">
-                          <div className="col-sm-4"><strong>Năm sinh:</strong></div>
-                          <div className="col-sm-8">{latestRecord.ngaySinh ? new Date(latestRecord.ngaySinh).toLocaleDateString('vi-VN') : 'Không rõ'}</div>
-                        </div>
-                        <div className="row mb-3">
-                          <div className="col-sm-4"><strong>Tuổi:</strong></div>
-                          <div className="col-sm-8">{calculateAge(latestRecord.ngaySinh || null)}</div>
-                        </div>
-                        <div className="row mb-3">
-                            <div className="col-sm-4"><strong>Dị ứng:</strong></div>
-                            <div className="col-sm-8">{latestRecord.diUng || 'Không có'}</div>
-                        </div>
-                        <div className="row mb-3">
-                            <div className="col-sm-4"><strong>Chẩn đoán gần nhất:</strong></div>
-                            <div className="col-sm-8">{latestRecord.chanDoan || 'Chưa có'}</div>
-                        </div>
+                        <Descriptions.Item label="Địa chỉ">{latestRecord.diaChi || 'Không rõ'}</Descriptions.Item>
+                        <Descriptions.Item label="Năm sinh">{latestRecord.ngaySinh ? new Date(latestRecord.ngaySinh).toLocaleDateString('vi-VN') : 'Không rõ'}</Descriptions.Item>
+                        <Descriptions.Item label="Tuổi">{calculateAge(latestRecord.ngaySinh)}</Descriptions.Item>
+                        <Descriptions.Item label="Dị ứng">{latestRecord.diUng || 'Không có'}</Descriptions.Item>
+                        <Descriptions.Item label="Chẩn đoán gần nhất" span={2}>{latestRecord.chanDoan || 'Chưa có'}</Descriptions.Item>
                       </>
                     )}
-                    
-                    <hr />
-                    <h5 className="mt-4">Lịch sử bệnh án</h5>
-                    {patient.records.length > 0 ? (
-                        <div className="table-responsive">
-                            <table className="table table-bordered table-hover">
-                                <thead>
-                                <tr>
-                                    <th>Mã bệnh án</th>
-                                    <th>Ngày khám</th>
-                                    <th>Lý do khám</th>
-                                    <th>Chẩn đoán</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {patient.records.map((record) => (
-                                    <tr key={record.maBenhAn}>
-                                    <td>{record.maBenhAn}</td>
-                                    <td>{new Date(record.ngayTao).toLocaleDateString()}</td>
-                                    <td>{record.lyDoKham}</td>
-                                    <td>{record.chanDoan}</td>
-                                    <td>
-                                        <button
-                                        className="btn btn-primary btn-sm"
-                                        onClick={() => window.open(`/dashboard/examination?reexam=${record.maBenhAn}`, '_blank')}
-                                        >
-                                        Xem chi tiết
-                                        </button>
-                                    </td>
-                                    </tr>
-                                ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <p>Không có bệnh án nào.</p>
-                    )}
-                  </div>
-                </div>
+                  </Descriptions>
+                  
+                  <h5 style={{ marginTop: 24, marginBottom: 16 }}>Lịch sử bệnh án</h5>
+                  <Table
+                    columns={recordColumns}
+                    dataSource={patient.records}
+                    rowKey="maBenhAn"
+                    pagination={{ pageSize: 5 }}
+                    bordered
+                    size="small"
+                  />
+                </Card>
               );
             })()
           ) : (
-            <div className="text-center mt-5">
-              <p>Chọn một bệnh nhân từ danh sách để xem chi tiết bệnh án.</p>
-            </div>
+            <Card style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <Empty description="Chọn một bệnh nhân từ danh sách để xem chi tiết bệnh án." />
+            </Card>
           )}
-        </div>
-      </div>
+        </Col>
+      </Row>
 
       <NotificationModal
         show={notification.show}

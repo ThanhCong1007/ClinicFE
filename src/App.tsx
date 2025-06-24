@@ -202,7 +202,7 @@ function App() {
         {!window.location.pathname.includes('/dashboard') && <Footer />}
 
         {/* Back to Top Button */}
-        {showBackToTop && (
+        {!window.location.pathname.includes('/dashboard') && showBackToTop && (
           <button
             onClick={scrollToTop}
             className="btn btn-lg btn-primary btn-lg-square rounded back-to-top"

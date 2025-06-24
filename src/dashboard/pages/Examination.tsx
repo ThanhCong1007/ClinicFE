@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Container, Row, Col, Form, Button, Card, Modal } from 'react-bootstrap';
+import { Row, Col, Form, Button, Card, Modal, Spin, Alert, Input, DatePicker, Select, notification, Descriptions, InputNumber } from 'antd';
 import { format, parseISO, isValid } from 'date-fns';
 import { getAppointmentDetails, createMedicalExam, fetchServices, getMedicalRecordById, updateMedicalRecord } from '../services/api';
 import { DrugSearch } from '../components/DrugSearch';
 import type { Drug } from '../components/DrugSearch';
 import axios from 'axios';
-import Select, { MultiValue, StylesConfig, ActionMeta } from 'react-select';
-import NotificationModal from '../components/NotificationModal';
+import dayjs from 'dayjs';
+
+const { Option } = Select;
 
 interface Appointment {
   maLichHen: number | null;
@@ -96,22 +97,9 @@ export default function Examination() {
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<{maDichVu: number, tenDichVu: string, gia: number}[]>([]);
-  const [showSuccess, setShowSuccess] = useState(false);
+  
+  const [form] = Form.useForm();
 
-  // Lưu dữ liệu vào localStorage khi thay đổi
-  useEffect(() => {
-    if (!loading) {
-      const dataToSave = {
-        appointment,
-        medicalRecord,
-        selectedDrugs,
-        selectedServices,
-      };
-      localStorage.setItem(storageKey, JSON.stringify(dataToSave));
-    }
-  }, [appointment, medicalRecord, selectedDrugs, selectedServices, loading, storageKey]);
-
-  // Khôi phục dữ liệu từ localStorage nếu có
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
@@ -129,21 +117,19 @@ export default function Examination() {
     const fetchAppointment = async () => {
       try {
         if (!maLichHen) {
-          // Khám vãng lai: kiểm tra localStorage trước
           const saved = localStorage.getItem(storageKey);
           if (saved) {
             try {
               const parsed = JSON.parse(saved);
               if (parsed.appointment) {
                 setAppointment(parsed.appointment);
+                form.setFieldsValue(parsed.appointment);
                 setLoading(false);
                 return;
               }
             } catch {}
           }
-          
-          // Nếu không có dữ liệu trong localStorage, tạo form trống
-          setAppointment({
+          const newAppointment = {
             maLichHen: null,
             maBenhNhan: null,
             hoTen: '',
@@ -168,23 +154,27 @@ export default function Examination() {
             ngayTaiKham: null,
             ngayTaoBenhAn: null,
             coBenhAn: false
-          });
+          };
+          setAppointment(newAppointment);
+          form.setFieldsValue(newAppointment);
           setLoading(false);
           return;
         }
         const data = await getAppointmentDetails(parseInt(maLichHen));
         if (data) {
           setAppointment(data);
-          // If there's existing medical record data, set it
+          form.setFieldsValue(data);
           if (data.lyDoKham || data.chanDoan || data.ghiChuDieuTri || data.ngayTaiKham) {
-            setMedicalRecord({
+            const record = {
               lyDoKham: data.lyDoKham || '',
               chanDoan: data.chanDoan || '',
               ghiChuDieuTri: data.ghiChuDieuTri || '',
               ngayTaiKham: data.ngayTaiKham || '',
               tienSuBenh: '',
               diUng: ''
-            });
+            };
+            setMedicalRecord(record);
+            form.setFieldsValue(record);
           }
         }
       } catch (err) {
@@ -193,11 +183,9 @@ export default function Examination() {
         setLoading(false);
       }
     };
-
     fetchAppointment();
-  }, [maLichHen]);
+  }, [maLichHen, form]);
 
-  // Fetch dịch vụ
   const fetchServicesList = async () => {
     try {
       const data = await fetchServices();
@@ -207,18 +195,16 @@ export default function Examination() {
     }
   };
 
-  // Tự động gọi fetchServicesList khi load trang
   useEffect(() => {
     fetchServicesList();
   }, []);
 
-  // Nếu là tái khám, fetch chi tiết bệnh án
   useEffect(() => {
     if (reexamId) {
       setReexamLoading(true);
       getMedicalRecordById(Number(reexamId))
         .then(data => {
-          setAppointment({
+          const reexamAppointment = {
             maLichHen: data.maLichHen,
             maBenhNhan: data.maBenhNhan,
             hoTen: data.hoTen || data.tenBenhNhan || '',
@@ -243,362 +229,254 @@ export default function Examination() {
             ngayTaiKham: data.ngayTaiKham || '',
             ngayTaoBenhAn: data.ngayTao || '',
             coBenhAn: true
-          });
-          setMedicalRecord({
+          };
+          setAppointment(reexamAppointment);
+          const record = {
             lyDoKham: data.lyDoKham || '',
             chanDoan: data.chanDoan || '',
             ghiChuDieuTri: data.ghiChuDieuTri || '',
-            ngayTaiKham: data.ngayTaiKham || '',
+            ngayTaiKham: data.ngayTaiKham ? format(new Date(data.ngayTaiKham), 'yyyy-MM-dd') : '',
             tienSuBenh: data.tienSuBenh || '',
             diUng: data.diUng || ''
-          });
-          setSelectedServices(Array.isArray(data.danhSachDichVu) ? data.danhSachDichVu.map((dv: any) => ({ maDichVu: dv.maDichVu, tenDichVu: dv.tenDichVu, gia: dv.gia })) : []);
-          setSelectedDrugs(Array.isArray(data.danhSachThuoc) ? data.danhSachThuoc.map((thuoc: any) => ({
-            maThuoc: thuoc.maThuoc,
-            tenThuoc: thuoc.tenThuoc,
-            hamLuong: thuoc.lieudung || thuoc.hamLuong || '',
-            huongDanSuDung: thuoc.tanSuat || '',
-            donViTinh: thuoc.donViDung || '',
-            quantity: thuoc.soLuong || 1,
-            notes: thuoc.ghiChu || ''
-          })) : []);
-          setReexamLoading(false);
+          };
+          setMedicalRecord(record);
+          form.setFieldsValue({ ...reexamAppointment, ...record });
         })
-        .catch(() => setReexamLoading(false));
+        .catch(err => setError(err.message))
+        .finally(() => setReexamLoading(false));
     }
-  }, [reexamId]);
+  }, [reexamId, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!appointment) return;
+  // Hàm lưu draft form + dịch vụ
+  const saveDraft = (formValues: any, services: any) => {
+    localStorage.setItem('draft_examination', JSON.stringify({ ...formValues, selectedServices: services }));
+  };
 
-    // Đảm bảo có họ tên
-    const hoTen = (appointment as any).hoTen || (appointment as any).tenBenhNhan || '';
-    if (!hoTen.trim()) {
-      setError('Họ tên là thông tin bắt buộc khi tạo bệnh nhân mới');
-      return;
+  // Khi khôi phục draft, tách selectedServices khỏi draft và set lại state
+  useEffect(() => {
+    const draft = localStorage.getItem('draft_examination');
+    if (draft) {
+      try {
+        const values = JSON.parse(draft);
+        const { selectedServices: draftServices, ...formValues } = values;
+        form.setFieldsValue(formValues);
+        setSelectedServices(Array.isArray(draftServices) ? draftServices : []);
+      } catch {}
     }
-    // Đảm bảo có ngày sinh
-    if (!appointment.ngaySinh || !appointment.ngaySinh.trim()) {
-      setError('Ngày sinh là thông tin bắt buộc khi tạo bệnh nhân mới');
-      return;
-    }
-    // Format ngày sinh về yyyy-MM-dd
-    let ngaySinhFormatted = appointment.ngaySinh;
+  }, [form]);
+
+  const handleSubmit = async (values: any) => {
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const examData: MedicalExamData = {
+      maLichHen: isReexam ? null : (maLichHen ? parseInt(maLichHen) : null),
+      maBacSi: userData.maBacSi,
+      maBenhNhan: appointment?.maBenhNhan || null,
+      hoTen: values.hoTen,
+      ngaySinh: values.ngaySinh ? format(new Date(values.ngaySinh), 'yyyy-MM-dd') : '',
+      soDienThoai: values.soDienThoaiBenhNhan,
+      lyDoKham: values.lyDoKham,
+      chanDoan: values.chanDoan,
+      ghiChuDieuTri: values.ghiChuDieuTri,
+      ngayTaiKham: values.ngayTaiKham ? format(new Date(values.ngayTaiKham), 'yyyy-MM-dd') : '',
+      tienSuBenh: values.tienSuBenh,
+      diUng: values.diUng,
+      danhSachDichVu: selectedServices.map(s => ({ maDichVu: s.maDichVu, gia: s.gia })),
+      danhSachThuoc: selectedDrugs.map(drug => ({
+        maThuoc: drug.rxcui,
+        lieuDung: '', 
+        tanSuat: '', 
+        thoiDiem: '', 
+        thoiGianDieuTri: 7, 
+        soLuong: 1, 
+        donViDung: 'viên', 
+        ghiChu: '', 
+        lyDoDonThuoc: drug.name || ''
+      })),
+      ghiChuDonThuoc: ''
+    };
+
     try {
-      const parsed = parseISO(appointment.ngaySinh);
-      if (isValid(parsed)) {
-        ngaySinhFormatted = format(parsed, 'yyyy-MM-dd');
-      }
-    } catch {}
-
-    try {
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      // Convert selected drugs to prescription format
-      const danhSachThuoc = selectedDrugs.map(drug => ({
-        maThuoc: drug.maThuoc,
-        lieuDung: drug.hamLuong,
-        tanSuat: drug.huongDanSuDung.split(',')[0] || '',
-        thoiDiem: drug.huongDanSuDung.split(',')[1] || '',
-        thoiGianDieuTri: 7, // Default to 7 days
-        soLuong: drug.quantity || 1,
-        donViDung: drug.donViTinh,
-        ghiChu: drug.notes || '',
-        lyDoDonThuoc: drug.huongDanSuDung
-      }));
-
-      const examData: MedicalExamData = {
-        maLichHen: !appointment.maLichHen || appointment.maLichHen === 0 ? null : appointment.maLichHen,
-        maBacSi: userData.maBacSi,
-        maBenhNhan: !appointment.maBenhNhan ? null : appointment.maBenhNhan,
-        hoTen,
-        ngaySinh: ngaySinhFormatted,
-        soDienThoai: appointment.soDienThoaiBenhNhan,
-        ...medicalRecord,
-        danhSachDichVu: selectedServices.map(s => ({ maDichVu: s.maDichVu, gia: s.gia })),
-        danhSachThuoc,
-        ghiChuDonThuoc: 'Bệnh nhân cần tuân thủ đúng liều lượng và thời gian dùng thuốc'
-      };
-
-      if (isReexam && appointment.maBenhAn) {
-        // PUT cập nhật bệnh án
-        await updateMedicalRecord(appointment.maBenhAn, {
-          ...examData,
-          maBenhAn: appointment.maBenhAn,
-          nguoiDung: userData.id || userData.maBacSi || null
-        });
+      if (appointment?.maBenhAn) {
+        await updateMedicalRecord(appointment.maBenhAn, examData);
+        notification.success({ message: 'Thành công', description: 'Cập nhật bệnh án thành công!' });
       } else {
-        // POST tạo mới
         await createMedicalExam(examData);
+        notification.success({ message: 'Thành công', description: 'Tạo bệnh án thành công!' });
       }
+      localStorage.removeItem('draft_examination'); // Xóa draft khi submit thành công
       localStorage.removeItem(storageKey);
-      setShowSuccess(true);
+      navigate('/dashboard/appointments');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu bệnh án');
+      notification.error({ message: 'Lỗi', description: err instanceof Error ? err.message : 'Có lỗi xảy ra' });
     }
   };
-
-  // Khi thay đổi giá dịch vụ
+  
   const handleServicePriceChange = (maDichVu: number, newPrice: number) => {
-    setSelectedServices(prev => prev.map(s => s.maDichVu === maDichVu ? { ...s, gia: newPrice } : s));
+    setSelectedServices(prev => 
+      prev.map(s => s.maDichVu === maDichVu ? { ...s, gia: newPrice } : s)
+    );
   };
-
+  
   if (loading || reexamLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" tip="Đang tải dữ liệu..." />
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="alert alert-danger m-3" role="alert">
-        {error}
-      </div>
-    );
+    return <Alert message="Lỗi" description={error} type="error" showIcon style={{ margin: 24 }} />;
   }
-
+  
   return (
-    <Container fluid className="py-4">
-      {/* Modal thông báo thành công/thất bại */}
-      <NotificationModal
-        show={showSuccess}
-        onClose={() => { setShowSuccess(false); navigate('/dashboard/appointments'); }}
-        title="Thành công"
-        message="Bệnh án đã được lưu thành công!"
-        type="success"
-      />
-
-      <h2 className="mb-4">Khám bệnh {maLichHen === 'walk-in' ? 'vãng lai' : ''}</h2>
-
-      <Row>
-        {/* Left Column - Patient Info & Examination */}
-        <Col md={7}>
-          {/* Patient Information */}
-          <Card className="mb-4">
-            <Card.Header>
-              <h5 className="mb-0">Thông tin bệnh nhân</h5>
-            </Card.Header>
-            <Card.Body>
-              {maLichHen ? (
-                <Row>
-                  <Col md={6}>
-                    <p><strong>Họ và tên:</strong> {appointment?.hoTen}</p>
-                    <p><strong>Số điện thoại:</strong> {appointment?.soDienThoaiBenhNhan}</p>
+    <div style={{ padding: 24 }}>
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        onValuesChange={(_, allValues) => {
+          saveDraft(allValues, selectedServices);
+        }}
+        initialValues={{...appointment, ...medicalRecord}}
+      >
+        <Row gutter={24}>
+          <Col span={16}>
+            <Card title={isReexam ? 'Tái khám' : (maLichHen ? 'Khám bệnh theo lịch hẹn' : 'Khám bệnh vãng lai')} style={{ marginBottom: 24 }}>
+              {!maLichHen || isReexam ? (
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="hoTen" label="Họ và tên" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}>
+                      <Input />
+                    </Form.Item>
                   </Col>
-                  <Col md={6}>
-                    <p><strong>Dịch vụ:</strong> {appointment?.tenDichVu}</p>
-                    <p><strong>Thời gian:</strong> {appointment?.gioBatDau}  {appointment?.gioKetThuc}</p>
+                  <Col span={12}>
+                    <Form.Item name="soDienThoaiBenhNhan" label="Số điện thoại" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}>
+                      <Input />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="ngaySinh" label="Ngày sinh">
+                      <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                    </Form.Item>
                   </Col>
                 </Row>
               ) : (
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Họ và tên</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={appointment?.hoTen || ''}
-                        onChange={e => setAppointment(prev => prev ? { ...prev, hoTen: e.target.value } : null)}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Số điện thoại</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={appointment?.soDienThoaiBenhNhan || ''}
-                        onChange={e => setAppointment(prev => prev ? { ...prev, soDienThoaiBenhNhan: e.target.value } : null)}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Ngày sinh</Form.Label>
-                      <Form.Control
-                        type="date"
-                        value={appointment?.ngaySinh || ''}
-                        onChange={e => setAppointment(prev => prev ? { ...prev, ngaySinh: e.target.value } : null)}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Dịch vụ</Form.Label>
-                      <Select
-                        isMulti
-                        options={services.map(s => ({ value: s.maDichVu, label: s.tenDichVu }))}
-                        value={selectedServices.map(s => ({ value: s.maDichVu, label: s.tenDichVu }))}
-                        onChange={(options, _action: ActionMeta<{ value: number; label: string }>) => {
-                          if (options && Array.isArray(options)) {
-                            const newSelectedServices = options
-                              .map(option => {
-                                const service = services.find(s => s.maDichVu === option.value);
-                                if (service) {
-                                  // Giữ giá cũ nếu đã chọn trước đó, hoặc lấy giá mặc định
-                                  const existingService = selectedServices.find(s => s.maDichVu === service.maDichVu);
-                                  return {
-                                    maDichVu: service.maDichVu,
-                                    tenDichVu: service.tenDichVu,
-                                    gia: existingService ? existingService.gia : service.gia
-                                  };
-                                }
-                                return null;
-                              })
-                              .filter((x): x is { maDichVu: number; tenDichVu: string; gia: number } => Boolean(x));
-                            setSelectedServices(newSelectedServices);
-                          } else {
-                            setSelectedServices([]);
-                          }
-                        }}
-                        placeholder="Tìm và chọn dịch vụ..."
-                        classNamePrefix="react-select"
-                        styles={{ menu: (base: any) => ({ ...base, zIndex: 9999 }) } as StylesConfig<{ value: number; label: string }>}
-                      />
-                      {/* Hiển thị dịch vụ đã chọn và nhập giá */}
-                      {selectedServices.length > 0 && (
-                        <div style={{ marginTop: 12 }}>
-                          {selectedServices.map(s => (
-                            <div key={s.maDichVu} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                              <span style={{ minWidth: 120 }}>{s.tenDichVu}</span>
-                              <Form.Control
-                                type="number"
-                                min={0}
-                                value={s.gia}
-                                onChange={e => handleServicePriceChange(s.maDichVu, Number(e.target.value))}
-                                style={{ width: 100, padding: '2px 8px', fontSize: 14 }}
-                              />
-                              <span>VNĐ</span>
-                            </div>
-                          ))}
-                          <div style={{ marginTop: 8, textAlign: 'right', fontWeight: 600, color: '#0d6efd', fontSize: 16 }}>
-                            Tổng tiền dịch vụ: {selectedServices.reduce((sum, s) => sum + (s.gia || 0), 0).toLocaleString()} VNĐ
-                          </div>
-                        </div>
-                      )}
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Thời gian</Form.Label>
-                      <div style={{ padding: '0.375rem 0.75rem', border: '1px solid #ced4da', borderRadius: '0.375rem', background: '#f8f9fa', minHeight: '38px' }}>
-                        {appointment ? `${appointment.gioBatDau} ` : ''}
-                      </div>
-                    </Form.Group>
-                  </Col>
-                  <Col md={12}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Ghi chú</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={appointment?.ghiChuLichHen || ''}
-                        onChange={e => setAppointment(prev => prev ? { ...prev, ghiChuLichHen: e.target.value } : null)}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                <Descriptions bordered column={2}>
+                  <Descriptions.Item label="Họ và tên">{appointment?.hoTen}</Descriptions.Item>
+                  <Descriptions.Item label="Số điện thoại">{appointment?.soDienThoaiBenhNhan}</Descriptions.Item>
+                  <Descriptions.Item label="Ngày hẹn">{appointment?.ngayHen}</Descriptions.Item>
+                  <Descriptions.Item label="Giờ hẹn">{appointment?.gioBatDau}</Descriptions.Item>
+                  <Descriptions.Item label="Dịch vụ">{appointment?.tenDichVu}</Descriptions.Item>
+                </Descriptions>
               )}
-            </Card.Body>
-          </Card>
+            </Card>
 
-          {/* Medical Record */}
-          <Card className="mb-4">
-            <Card.Header>
-              <h5 className="mb-0">Thông tin khám bệnh</h5>
-            </Card.Header>
-            <Card.Body>
-              <Row>
-                <Col md={12}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Lý do khám</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={medicalRecord.lyDoKham}
-                      onChange={(e) => setMedicalRecord({...medicalRecord, lyDoKham: e.target.value})}
-                      required
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Tiền sử bệnh</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      value={medicalRecord.tienSuBenh}
-                      onChange={(e) => setMedicalRecord({...medicalRecord, tienSuBenh: e.target.value})}
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Dị ứng</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={medicalRecord.diUng}
-                      onChange={(e) => setMedicalRecord({...medicalRecord, diUng: e.target.value})}
-                    />
-                  </Form.Group>
+            <Card title="Thông tin khám bệnh" style={{ marginBottom: 24 }}>
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item name="lyDoKham" label="Lý do khám" rules={[{ required: true, message: 'Vui lòng nhập lý do khám' }]}>
+                    <Input />
+                  </Form.Item>
                 </Col>
-                <Col md={12}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Chẩn đoán</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={medicalRecord.chanDoan}
-                      onChange={(e) => setMedicalRecord({...medicalRecord, chanDoan: e.target.value})}
-                      required
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Ghi chú điều trị</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      value={medicalRecord.ghiChuDieuTri}
-                      onChange={(e) => setMedicalRecord({...medicalRecord, ghiChuDieuTri: e.target.value})}
-                      required
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Ngày tái khám</Form.Label>
-                    <Form.Control
-                      type="date"
-                      value={medicalRecord.ngayTaiKham}
-                      onChange={(e) => setMedicalRecord({...medicalRecord, ngayTaiKham: e.target.value})}
-                    />
-                  </Form.Group>
+                <Col span={12}>
+                  <Form.Item name="tienSuBenh" label="Tiền sử bệnh">
+                    <Input.TextArea rows={3} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="diUng" label="Dị ứng">
+                    <Input.TextArea rows={3} />
+                  </Form.Item>
+                </Col>
+                <Col span={24}>
+                  <Form.Item name="chanDoan" label="Chẩn đoán" rules={[{ required: true, message: 'Vui lòng nhập chẩn đoán' }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={24}>
+                  <Form.Item name="ghiChuDieuTri" label="Ghi chú điều trị" rules={[{ required: true, message: 'Vui lòng nhập ghi chú' }]}>
+                    <Input.TextArea rows={4} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="ngayTaiKham" label="Ngày tái khám">
+                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                  </Form.Item>
                 </Col>
               </Row>
-            </Card.Body>
-          </Card>
-        </Col>
+            </Card>
+          </Col>
 
-        {/* Right Column - Prescription */}
-        <Col md={5}>
-          <Card className="mb-4">
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Đơn thuốc</h5>
-            </Card.Header>
-            <Card.Body>
+          <Col span={8}>
+            <Card title="Dịch vụ & Đơn thuốc" style={{ marginBottom: 24 }}>
+              <Form.Item label="Dịch vụ">
+                <Select
+                  mode="multiple"
+                  allowClear
+                  style={{ width: '100%' }}
+                  placeholder="Chọn dịch vụ"
+                  value={selectedServices.map(s => s.maDichVu)}
+                  onChange={(value: number[]) => {
+                    const newServices = value.map(maDichVu => {
+                      const existed = selectedServices.find(s => s.maDichVu === maDichVu);
+                      const service = services.find(s => s.maDichVu === maDichVu);
+                      return existed ? existed : (service ? { maDichVu: service.maDichVu, tenDichVu: service.tenDichVu, gia: service.gia } : null);
+                    }).filter(Boolean) as {maDichVu: number, tenDichVu: string, gia: number}[];
+                    setSelectedServices(newServices);
+                    saveDraft(form.getFieldsValue(), newServices);
+                  }}
+                >
+                  {services.map(service => (
+                    <Option key={service.maDichVu} value={service.maDichVu}>{service.tenDichVu}</Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              {/* Hiển thị danh sách dịch vụ đã chọn với tên và giá có thể chỉnh sửa */}
+              {selectedServices.length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  {selectedServices.map(s => (
+                    <div key={s.maDichVu} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ flex: 1 }}>{s.tenDichVu}</span>
+                      <InputNumber
+                        min={0}
+                        value={s.gia}
+                        style={{ width: 120, marginLeft: 8, marginRight: 8 }}
+                        onChange={val => {
+                          handleServicePriceChange(s.maDichVu, val || 0);
+                          // Lưu lại draft ngay khi đổi giá
+                          saveDraft(form.getFieldsValue(), selectedServices.map(item =>
+                            item.maDichVu === s.maDichVu ? { ...item, gia: val || 0 } : item
+                          ));
+                        }}
+                        formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                        parser={(v) => Number(v ? v.replace(/\D/g, '') : 0)}
+                      />
+                      <span>VNĐ</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <h5 style={{ marginTop: 24 }}>Đơn thuốc</h5>
               <DrugSearch onDrugsChange={setSelectedDrugs} storageKey={storageKey} />
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <div className="d-flex justify-content-end gap-2 mt-4">
-        <Button variant="secondary" onClick={() => navigate('/dashboard/appointments')}>
-          Hủy
-        </Button>
-        <Button variant="primary" type="submit" onClick={handleSubmit}>
-          Lưu bệnh án
-        </Button>
-      </div>
-    </Container>
+            </Card>
+            
+            <Row gutter={16}>
+              <Col span={12}>
+                <Button type="primary" htmlType="submit" block loading={loading}>
+                  {appointment?.maBenhAn ? 'Cập nhật bệnh án' : 'Lưu bệnh án'}
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button block onClick={() => navigate('/dashboard/appointments')}>
+                  Hủy
+                </Button>
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+      </Form>
+    </div>
   );
 } 

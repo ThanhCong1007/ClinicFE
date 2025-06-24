@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Table, Badge, Button } from 'react-bootstrap';
+import { Row, Col, Card, Table, Tag, Button, Modal, Statistic, notification } from 'antd';
 import { format } from 'date-fns';
 import axios from 'axios';
-import NotificationModal from '../components/NotificationModal';
 import { getDoctorAppointments, cancelAppointment } from '../services/api';
 
 interface Appointment {
@@ -41,18 +40,15 @@ const Dashboard = () => {
     newPatients: 0,
     pendingExaminations: 0
   });
-  const [notification, setNotification] = useState<{show: boolean, title: string, message: string, type: 'success'|'error'|'info'}>({show: false, title: '', message: '', type: 'info'});
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
         const token = localStorage.getItem('token');
-        
         if (!userData.maBacSi || !token) {
           throw new Error('Không tìm thấy thông tin bác sĩ hoặc token xác thực');
         }
-
         const response = await axios.get(
           `http://localhost:8080/api/tham-kham/bac-si/${userData.maBacSi}/lich-hen-benh-an`,
           {
@@ -61,15 +57,12 @@ const Dashboard = () => {
             }
           }
         );
-        
         setAppointments(response.data);
-        
         // Calculate statistics
         const today = format(new Date(), 'yyyy-MM-dd');
         const todayAppointments = response.data.filter((app: Appointment) => app.ngayHen === today);
         const uniquePatients = new Set(response.data.map((app: Appointment) => app.maBenhNhan));
         const pendingExams = response.data.filter((app: Appointment) => !app.coBenhAn && (app.maTrangThai === 1 || app.maTrangThai === 2));
-        
         // Get new patients (first appointment today)
         const newPatients = todayAppointments.filter((app: Appointment) => {
           const previousAppointments = response.data.filter((a: Appointment) => 
@@ -77,7 +70,6 @@ const Dashboard = () => {
           );
           return previousAppointments.length === 0;
         });
-
         setStats({
           totalPatients: uniquePatients.size,
           todayAppointments: todayAppointments.length,
@@ -90,302 +82,182 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
   const handleCancelAppointment = async (appointment: Appointment) => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) {
-      return;
-    }
-
-    try {
-      const appointmentData = {
-        maBenhNhan: appointment.maBenhNhan,
-        maBacSi: appointment.maBacSi,
-        maDichVu: appointment.maDichVu,
-        ngayHen: appointment.ngayHen,
-        gioBatDau: appointment.gioBatDau,
-        gioKetThuc: appointment.gioKetThuc,
-        maTrangThai: 5, // Trạng thái đã hủy
-        ghiChu: appointment.ghiChuLichHen
-      };
-
-      await cancelAppointment(appointment.maLichHen, appointmentData);
-      
-      // Refresh appointments list
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const response = await axios.get(
-        `http://localhost:8080/api/tham-kham/bac-si/${userData.maBacSi}/lich-hen-benh-an`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+    Modal.confirm({
+      title: 'Xác nhận',
+      content: 'Bạn có chắc chắn muốn hủy lịch hẹn này?',
+      okText: 'Hủy lịch',
+      okType: 'danger',
+      cancelText: 'Không',
+      onOk: async () => {
+        try {
+          const appointmentData = {
+            maBenhNhan: appointment.maBenhNhan,
+            maBacSi: appointment.maBacSi,
+            maDichVu: appointment.maDichVu,
+            ngayHen: appointment.ngayHen,
+            gioBatDau: appointment.gioBatDau,
+            gioKetThuc: appointment.gioKetThuc,
+            maTrangThai: 5,
+            ghiChu: appointment.ghiChuLichHen
+          };
+          await cancelAppointment(appointment.maLichHen, appointmentData);
+          // Refresh appointments list
+          const userData = JSON.parse(localStorage.getItem('user') || '{}');
+          const response = await axios.get(
+            `http://localhost:8080/api/tham-kham/bac-si/${userData.maBacSi}/lich-hen-benh-an`,
+            {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            }
+          );
+          setAppointments(response.data);
+          // Recalculate statistics
+          const today = format(new Date(), 'yyyy-MM-dd');
+          const todayAppointments = response.data.filter((app: Appointment) => app.ngayHen === today);
+          const uniquePatients = new Set(response.data.map((app: Appointment) => app.maBenhNhan));
+          const pendingExams = response.data.filter((app: Appointment) => !app.coBenhAn && (app.maTrangThai === 1 || app.maTrangThai === 2));
+          const newPatients = todayAppointments.filter((app: Appointment) => {
+            const previousAppointments = response.data.filter((a: Appointment) => 
+              a.maBenhNhan === app.maBenhNhan && a.ngayHen < today
+            );
+            return previousAppointments.length === 0;
+          });
+          setStats({
+            totalPatients: uniquePatients.size,
+            todayAppointments: todayAppointments.length,
+            newPatients: newPatients.length,
+            pendingExaminations: pendingExams.length
+          });
+          notification.success({ message: 'Thành công', description: 'Hủy lịch hẹn thành công' });
+        } catch (err) {
+          notification.error({ message: 'Lỗi', description: err instanceof Error ? err.message : 'Có lỗi xảy ra khi hủy lịch hẹn' });
         }
-      );
-      
-      setAppointments(response.data);
-      
-      // Recalculate statistics
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const todayAppointments = response.data.filter((app: Appointment) => app.ngayHen === today);
-      const uniquePatients = new Set(response.data.map((app: Appointment) => app.maBenhNhan));
-      const pendingExams = response.data.filter((app: Appointment) => !app.coBenhAn && (app.maTrangThai === 1 || app.maTrangThai === 2));
-      
-      const newPatients = todayAppointments.filter((app: Appointment) => {
-        const previousAppointments = response.data.filter((a: Appointment) => 
-          a.maBenhNhan === app.maBenhNhan && a.ngayHen < today
-        );
-        return previousAppointments.length === 0;
-      });
-
-      setStats({
-        totalPatients: uniquePatients.size,
-        todayAppointments: todayAppointments.length,
-        newPatients: newPatients.length,
-        pendingExaminations: pendingExams.length
-      });
-      
-      setNotification({show: true, title: 'Thành công', message: 'Hủy lịch hẹn thành công', type: 'success'});
-    } catch (err) {
-      setNotification({show: true, title: 'Lỗi', message: err instanceof Error ? err.message : 'Có lỗi xảy ra khi hủy lịch hẹn', type: 'error'});
-    }
+      }
+    });
   };
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <span className="ant-spin-dot ant-spin-dot-spin" style={{ fontSize: 32 }} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="alert alert-danger m-3" role="alert">
-        {error}
+      <div style={{ margin: 24 }}>
+        <Card><div style={{ color: 'red', padding: 16 }}>{error}</div></Card>
       </div>
     );
   }
 
+  const columns = [
+    {
+      title: 'Ngày',
+      dataIndex: 'ngayHen',
+      key: 'ngayHen',
+      render: (text: string) => <span>{text}</span>
+    },
+    {
+      title: 'Thời gian',
+      key: 'thoiGian',
+      render: (_: any, record: Appointment) => `${record.gioBatDau} - ${record.gioKetThuc}`
+    },
+    {
+      title: 'Bệnh nhân',
+      dataIndex: 'tenBenhNhan',
+      key: 'tenBenhNhan',
+    },
+    {
+      title: 'Số điện thoại',
+      dataIndex: 'soDienThoaiBenhNhan',
+      key: 'soDienThoaiBenhNhan',
+    },
+    {
+      title: 'Dịch vụ',
+      dataIndex: 'tenDichVu',
+      key: 'tenDichVu',
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'maTrangThai',
+      key: 'maTrangThai',
+      render: (maTrangThai: number, record: Appointment) => (
+        <Tag color={getStatusBadgeColor(maTrangThai)}>{record.tenTrangThai}</Tag>
+      )
+    },
+    {
+      title: 'Ghi chú',
+      dataIndex: 'ghiChuLichHen',
+      key: 'ghiChuLichHen',
+      render: (text: string) => text || ''
+    },
+    {
+      title: 'Thao tác',
+      key: 'actions',
+      render: (_: any, record: Appointment) => (
+        record.maTrangThai !== 5 && record.maTrangThai !== 4 && (
+          <Button danger size="small" onClick={() => handleCancelAppointment(record)}>
+            Hủy lịch
+          </Button>
+        )
+      )
+    }
+  ];
+
   return (
-    <Container fluid className="py-4">
-      {/* Statistics Cards */}
-      <Row className="g-4 mb-4">
-        <Col md={3}>
-          <Card className="h-100 border-0 shadow-sm">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-2">Tổng Số Bệnh Nhân</h6>
-                  <h3 className="mb-0">{stats.totalPatients}</h3>
-                </div>
-                <div className="bg-primary bg-opacity-10 p-3 rounded">
-                  <i className="fas fa-users text-primary fa-2x"></i>
-                </div>
-              </div>
-            </Card.Body>
+    <div style={{ padding: 24 }}>
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={6}>
+          <Card>
+            <Statistic title="Tổng Số Bệnh Nhân" value={stats.totalPatients} prefix={<i className="fas fa-users" style={{ color: '#1890ff' }} />} />
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="h-100 border-0 shadow-sm">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-2">Lịch Hẹn Hôm Nay</h6>
-                  <h3 className="mb-0">{stats.todayAppointments}</h3>
-                </div>
-                <div className="bg-success bg-opacity-10 p-3 rounded">
-                  <i className="fas fa-calendar-check text-success fa-2x"></i>
-                </div>
-              </div>
-            </Card.Body>
+        <Col span={6}>
+          <Card>
+            <Statistic title="Lịch Hẹn Hôm Nay" value={stats.todayAppointments} prefix={<i className="fas fa-calendar-day" style={{ color: '#52c41a' }} />} />
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="h-100 border-0 shadow-sm">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-2">Bệnh Nhân Mới</h6>
-                  <h3 className="mb-0">{stats.newPatients}</h3>
-                </div>
-                <div className="bg-info bg-opacity-10 p-3 rounded">
-                  <i className="fas fa-user-plus text-info fa-2x"></i>
-                </div>
-              </div>
-            </Card.Body>
+        <Col span={6}>
+          <Card>
+            <Statistic title="Bệnh Nhân Mới" value={stats.newPatients} prefix={<i className="fas fa-user-plus" style={{ color: '#faad14' }} />} />
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="h-100 border-0 shadow-sm">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-2">Chờ Khám</h6>
-                  <h3 className="mb-0">{stats.pendingExaminations}</h3>
-                </div>
-                <div className="bg-warning bg-opacity-10 p-3 rounded">
-                  <i className="fas fa-stethoscope text-warning fa-2x"></i>
-                </div>
-              </div>
-              {stats.pendingExaminations > 0 && (
-                <Button 
-                  variant="warning" 
-                  size="sm" 
-                  className="mt-2 w-100"
-                  onClick={() => window.location.href = '/dashboard/appointments'}
-                >
-                  Khám bệnh ngay
-                </Button>
-              )}
-            </Card.Body>
+        <Col span={6}>
+          <Card>
+            <Statistic title="Lịch Khám Chờ Xử Lý" value={stats.pendingExaminations} prefix={<i className="fas fa-stethoscope" style={{ color: '#eb2f96' }} />} />
           </Card>
         </Col>
       </Row>
-
-      {/* Today's Appointments */}
-      <Card className="border-0 shadow-sm mb-4">
-        <Card.Header className="bg-white">
-          <h5 className="mb-0">Lịch Hẹn Hôm Nay</h5>
-        </Card.Header>
-        <Card.Body>
-          {appointments.length === 0 ? (
-            <div className="alert alert-info">
-              Không có lịch hẹn nào cho hôm nay
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-striped table-hover">
-                <thead>
-                  <tr>
-                    <th>Thời gian</th>
-                    <th>Bệnh nhân</th>
-                    <th>Số điện thoại</th>
-                    <th>Dịch vụ</th>
-                    <th>Trạng thái</th>
-                    <th>Ghi chú</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {appointments.map((appointment) => (
-                    <tr key={appointment.maLichHen}>
-                      <td>{`${appointment.gioBatDau} - ${appointment.gioKetThuc}`}</td>
-                      <td>{appointment.tenBenhNhan}</td>
-                      <td>{appointment.soDienThoaiBenhNhan}</td>
-                      <td>{appointment.tenDichVu}</td>
-                      <td>
-                        <span className={`badge ${getStatusBadgeClass(appointment.maTrangThai)}`}>
-                          {appointment.tenTrangThai}
-                        </span>
-                      </td>
-                      <td>{appointment.ghiChuLichHen || '-'}</td>
-                      <td>
-                        <div className="d-flex gap-2">
-                          <button 
-                            className="btn btn-primary btn-sm rounded-pill"
-                            onClick={() => window.location.href = `/dashboard/appointments/${appointment.maLichHen}`}
-                          >
-                            Chi tiết
-                          </button>
-                          {!appointment.coBenhAn && (appointment.maTrangThai === 1 || appointment.maTrangThai === 2) && (
-                            <button 
-                              className="btn btn-success btn-sm rounded-pill"
-                              onClick={() => window.location.href = `/dashboard/examination/${appointment.maLichHen}`}
-                            >
-                              Khám bệnh
-                            </button>
-                          )}
-                          {appointment.maTrangThai !== 5 && appointment.maTrangThai !== 4 && (
-                            <button 
-                              className="btn btn-danger btn-sm rounded-pill"
-                              onClick={() => handleCancelAppointment(appointment)}
-                            >
-                              Hủy lịch
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card.Body>
+      <Card title="Danh sách lịch hẹn" bordered={false}>
+        <Table
+          columns={columns}
+          dataSource={appointments}
+          rowKey="maLichHen"
+          loading={loading}
+          locale={{ emptyText: 'Không có lịch hẹn nào' }}
+          pagination={{ pageSize: 10 }}
+          bordered
+        />
       </Card>
-
-      {/* Recent Patients */}
-      <Card className="border-0 shadow-sm">
-        <Card.Header className="bg-white">
-          <h5 className="mb-0">Bệnh Nhân Gần Đây</h5>
-        </Card.Header>
-        <Card.Body>
-          <Table responsive hover>
-            <thead>
-              <tr>
-                <th>Mã BN</th>
-                <th>Họ và Tên</th>
-                <th>Ngày Khám Cuối</th>
-                <th>Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>BN001</td>
-                <td>Lê Văn C</td>
-                <td>15/03/2024</td>
-                <td>
-                  <Button variant="info" size="sm">
-                    <i className="fas fa-file-medical me-1"></i>
-                    Xem Hồ Sơ
-                  </Button>
-                </td>
-              </tr>
-              <tr>
-                <td>BN002</td>
-                <td>Phạm Thị D</td>
-                <td>14/03/2024</td>
-                <td>
-                  <Button variant="info" size="sm">
-                    <i className="fas fa-file-medical me-1"></i>
-                    Xem Hồ Sơ
-                  </Button>
-                </td>
-              </tr>
-            </tbody>
-          </Table>
-        </Card.Body>
-      </Card>
-
-      <NotificationModal
-        show={notification.show}
-        onClose={() => setNotification({...notification, show: false})}
-        title={notification.title}
-        message={notification.message}
-        type={notification.type}
-      />
-    </Container>
+    </div>
   );
 };
 
-function getStatusBadgeClass(maTrangThai: number): string {
+function getStatusBadgeColor(maTrangThai: number): string {
   switch (maTrangThai) {
-    case 1: // Đã đặt
-      return 'bg-primary';
-    case 2: // Đã xác nhận
-      return 'bg-success';
-    case 3: // Đang thực hiện
-      return 'bg-warning';
-    case 4: // Hoàn thành
-      return 'bg-success';
-    case 5: // Đã hủy
-      return 'bg-danger';
-    default:
-      return 'bg-secondary';
+    case 1: return 'blue';
+    case 2: return 'green';
+    case 3: return 'gold';
+    case 4: return 'cyan';
+    case 5: return 'red';
+    default: return 'default';
   }
 }
 
