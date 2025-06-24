@@ -4,57 +4,25 @@ import { getUserProfile, updateUserProfile, getPatientAppointments, cancelAppoin
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useSpring, animated } from '@react-spring/web';
+import ProfileSidebar from '../components/profile/ProfileSidebar';
+import ProfileInfoCard from '../components/profile/ProfileInfoCard';
+import ProfileAppointments from '../components/profile/ProfileAppointments';
+import ProfileMedicalRecords from '../components/profile/ProfileMedicalRecords';
+import ProfileInvoices from '../components/profile/ProfileInvoices';
+import { UserInfo, Appointment, TimeSlot, Doctor, Service } from '../components/profile/types';
 
-// Define types
-interface UserInfo {
-  maNguoiDung: number;
-  tenDangNhap: string;
-  email: string;
-  hoTen: string;
-  soDienThoai: string;
-  ngaySinh: string;
-  gioiTinh: string;
-  diaChi: string;
-  tienSuBenh?: string;
-  diUng?: string;
-  maBenhNhan: number;
-}
-
-interface Appointment {
-  maLichHen: number;
-  maBenhNhan: number;
-  tenBenhNhan: string;
-  soDienThoaiBenhNhan: string;
-  maBacSi: number;
-  tenBacSi: string;
-  maDichVu: number;
-  tenDichVu: string;
-  ngayHen: string;
-  gioBatDau: string;
-  gioKetThuc: string;
-  maTrangThai: number;
-  tenTrangThai: string;
-  ghiChu?: string;
-  lydo?: string | null;
-  thoiGian: number;
-}
-
-interface TimeSlot {
-  gioBatDau: string;
-  gioKetThuc: string;
-  daDat: boolean;
-  trangThai: string;
-}
-
-interface Doctor {
-  maBacSi: number;
-  hoTen: string;
-}
-
-interface Service {
-  MaDv: string;
-  TenDv: string;
-}
+// Hàm chuẩn hóa userInfo
+const normalizeUserInfo = (info: any): UserInfo => ({
+  ...info,
+  hoTen: info.hoTen || '',
+  soDienThoai: info.soDienThoai || '',
+  email: info.email || '',
+  diaChi: info.diaChi || '',
+  ngaySinh: info.ngaySinh || '',
+  gioiTinh: info.gioiTinh || '',
+  tienSuBenh: info.tienSuBenh || '',
+  diUng: info.diUng || '',
+});
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -194,7 +162,7 @@ const UserProfile = () => {
         }
 
         const profileData = await getUserProfile(token);
-        setUserInfo(profileData);
+        setUserInfo(normalizeUserInfo(profileData));
 
         if (profileData.maBenhNhan) {
           fetchAppointments(profileData.maBenhNhan);
@@ -460,601 +428,62 @@ const UserProfile = () => {
           <div className="row g-4">
             {/* Sidebar */}
             <div className="col-lg-3">
-              {/* User Card */}
-              <div className="card shadow-sm mb-4">
-                <div className="card-body text-center">
-                  <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" 
-                       style={{width: '80px', height: '80px'}}>
-                    <User size={40} className="text-white" />
-                  </div>
-                  <h5 className="card-title mb-1">{userInfo.hoTen}</h5>
-                  <p className="card-text text-muted small">{userInfo.email}</p>
-                </div>
-              </div>
-
-              {/* Navigation */}
-              <div className="card shadow-sm">
-                <div className="card-body">
-                  <nav className="nav flex-column">
-                    <button
-                      onClick={() => setActiveTab('profile')}
-                      className={`nav-link d-flex align-items-center py-3 px-3 mb-2 rounded ${
-                        activeTab === 'profile' ? 'bg-primary text-white' : 'text-dark'
-                      }`}
-                      style={{border: 'none'}}
-                    >
-                      <User size={20} className="me-3" />
-                      Thông tin cá nhân
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('appointments')}
-                      className={`nav-link d-flex align-items-center py-3 px-3 mb-2 rounded ${
-                        activeTab === 'appointments' ? 'bg-primary text-white' : 'text-dark'
-                      }`}
-                      style={{border: 'none'}}
-                    >
-                      <Calendar size={20} className="me-3" />
-                      Lịch khám
-                    </button>
-                  </nav>
-                </div>
-              </div>
+              <ProfileSidebar 
+                userInfo={userInfo} 
+                activeTab={activeTab} 
+                setActiveTab={setActiveTab} 
+              />
             </div>
 
             {/* Main Content */}
             <animated.div className="col-lg-9" style={springProps}>
-              {activeTab === 'profile' && (
-                <div className="card shadow-sm">
-                  <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-                      <h3 className="card-title mb-0">Thông tin cá nhân</h3>
-                      <button
-                        onClick={() => {
-                          if (isEditingProfile) {
-                            handleUpdateProfile();
-                          } else {
-                            setIsEditingProfile(true);
-                          }
-                        }}
-                        className="btn btn-primary d-flex align-items-center"
-                      >
-                        <Edit size={16} className="me-2" />
-                        {isEditingProfile ? 'Lưu thay đổi' : 'Chỉnh sửa'}
-                      </button>
-                    </div>
-
-                    <div className="row g-4">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label fw-semibold">Họ và tên</label>
-                          {isEditingProfile ? (
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={userInfo.hoTen}
-                              onChange={(e) => setUserInfo({...userInfo, hoTen: e.target.value})}
-                            />
-                          ) : (
-                            <div className="input-group">
-                              <span className="input-group-text bg-light">
-                                <User size={16} className="text-muted" />
-                              </span>
-                              <div className="form-control bg-light">{userInfo.hoTen}</div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mb-3">
-                          <label className="form-label fw-semibold">Số điện thoại</label>
-                          {isEditingProfile ? (
-                            <input
-                              type="tel"
-                              className="form-control"
-                              value={userInfo.soDienThoai}
-                              onChange={(e) => setUserInfo({...userInfo, soDienThoai: e.target.value})}
-                            />
-                          ) : (
-                            <div className="input-group">
-                              <span className="input-group-text bg-light">
-                                <Phone size={16} className="text-muted" />
-                              </span>
-                              <div className="form-control bg-light">{userInfo.soDienThoai}</div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mb-3">
-                          <label className="form-label fw-semibold">Email</label>
-                          {isEditingProfile ? (
-                            <input
-                              type="email"
-                              className="form-control"
-                              value={userInfo.email}
-                              onChange={(e) => setUserInfo({...userInfo, email: e.target.value})}
-                            />
-                          ) : (
-                            <div className="input-group">
-                              <span className="input-group-text bg-light">
-                                <Mail size={16} className="text-muted" />
-                              </span>
-                              <div className="form-control bg-light">{userInfo.email}</div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mb-3">
-                          <label className="form-label fw-semibold">Địa chỉ</label>
-                          {isEditingProfile ? (
-                            <textarea
-                              className="form-control"
-                              rows={3}
-                              value={userInfo.diaChi}
-                              onChange={(e) => setUserInfo({...userInfo, diaChi: e.target.value})}
-                            />
-                          ) : (
-                            <div className="input-group">
-                              <span className="input-group-text bg-light">
-                                <MapPin size={16} className="text-muted" />
-                              </span>
-                              <div className="form-control bg-light">{userInfo.diaChi}</div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="form-label fw-semibold">Ngày sinh</label>
-                          {isEditingProfile ? (
-                            <input
-                              type="date"
-                              className="form-control"
-                              value={userInfo.ngaySinh} // assuming userInfo.ngaySinh is in YYYY-MM-DD format
-                              onChange={(e) => setUserInfo({...userInfo, ngaySinh: e.target.value})}
-                            />
-                          ) : (
-                            <div className="input-group">
-                              <span className="input-group-text bg-light">
-                                <Calendar size={16} className="text-muted" />
-                              </span>
-                              <div className="form-control bg-light">{userInfo.ngaySinh}</div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mb-3">
-                          <label className="form-label fw-semibold">Giới tính</label>
-                          {isEditingProfile ? (
-                            <select
-                              className="form-select"
-                              value={userInfo.gioiTinh}
-                              onChange={(e) => setUserInfo({...userInfo, gioiTinh: e.target.value})}
-                            >
-                              <option value="Nam">Nam</option>
-                              <option value="Nữ">Nữ</option>
-                              <option value="Khác">Khác</option>
-                            </select>
-                          ) : (
-                            <div className="input-group">
-                              <span className="input-group-text bg-light">
-                                <User size={16} className="text-muted" />
-                              </span>
-                              <div className="form-control bg-light">{userInfo.gioiTinh}</div>
-                            </div>
-                          )}
-                        </div>
-
-                        {userInfo.tienSuBenh && (
-                          <div className="mb-3">
-                            <label className="form-label fw-semibold">Tiền sử bệnh</label>
-                            <div className="input-group">
-                              <span className="input-group-text bg-light">
-                                <FileText size={16} className="text-muted" />
-                              </span>
-                              <div className="form-control bg-light">{userInfo.tienSuBenh}</div>
-                            </div>
-                          </div>
-                        )}
-
-                        {userInfo.diUng && (
-                          <div className="mb-3">
-                            <label className="form-label fw-semibold">Dị ứng</label>
-                            <div className="input-group">
-                              <span className="input-group-text bg-light">
-                                <Heart size={16} className="text-muted" />
-                              </span>
-                              <div className="form-control bg-light">{userInfo.diUng}</div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {activeTab === 'profile' && userInfo && (
+                <ProfileInfoCard
+                  userInfo={userInfo}
+                  isEditingProfile={isEditingProfile}
+                  setIsEditingProfile={setIsEditingProfile}
+                  setUserInfo={setUserInfo}
+                  handleUpdateProfile={handleUpdateProfile}
+                />
               )}
 
               {activeTab === 'appointments' && (
-                <div>
-                  {/* Appointments Header */}
-                  <div className="card shadow-sm mb-4">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-center mb-4">
-                        <h3 className="card-title mb-0">Lịch khám của tôi</h3>
-                        <button
-                          className="btn btn-success d-flex align-items-center"
-                          onClick={() => navigate('/lien-he')}
-                        >
-                          <Calendar size={16} className="me-2" />
-                          Đặt lịch mới
-                        </button>
-                      </div>
+                <>
+                  <ProfileAppointments
+                    appointments={appointments}
+                    userInfo={userInfo}
+                    showAppointmentDetail={showAppointmentDetail}
+                    setShowAppointmentDetail={setShowAppointmentDetail}
+                    selectedAppointment={selectedAppointment}
+                    setSelectedAppointment={setSelectedAppointment}
+                    isEditing={isEditing}
+                    setIsEditing={setIsEditing}
+                    editFormData={editFormData}
+                    setEditFormData={setEditFormData}
+                    doctors={doctors}
+                    editAvailableSlots={editAvailableSlots}
+                    editSlotsLoading={editSlotsLoading}
+                    editSlotsError={editSlotsError}
+                    fetchAppointmentDetail={fetchAppointmentDetail}
+                    handleEditClick={handleEditClick}
+                    handleEditFormChange={handleEditFormChange}
+                    handleEditSubmit={handleEditSubmit}
+                    handleCancelAppointment={handleCancelAppointment}
+                    handleBack={handleBack}
+                    navigate={navigate}
+                    dichvus={dichvus}
+                    getStatusBadge={getStatusBadge}
+                    formatDate={formatDate}
+                  />
+                </>
+              )}
 
-                      {/* Quick Stats */}
-                      <div className="row g-3">
-                        <div className="col-md-4">
-                          <div className="card bg-primary text-white">
-                            <div className="card-body">
-                              <h6 className="card-title">Lịch sắp tới</h6>
-                              <h2 className="card-text">{upcomingAppointments.length}</h2>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-4">
-                          <div className="card bg-success text-white">
-                            <div className="card-body">
-                              <h6 className="card-title">Đã hoàn thành</h6>
-                              <h2 className="card-text">{appointments.filter(a => a.maTrangThai === 4).length}</h2>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-4">
-                          <div className="card bg-danger text-white">
-                            <div className="card-body">
-                              <h6 className="card-title">Đã hủy</h6>
-                              <h2 className="card-text">{appointments.filter(a => a.maTrangThai === 5).length}</h2>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              {activeTab === 'medicalRecords' && userInfo?.maBenhNhan && (
+                <ProfileMedicalRecords maBenhNhan={userInfo.maBenhNhan} />
+              )}
 
-                  {!showAppointmentDetail ? (
-                    <>
-                  {/* Upcoming Appointments */}
-                  {upcomingAppointments.length > 0 && (
-                    <div className="card shadow-sm mb-4">
-                      <div className="card-body">
-                        <h4 className="card-title mb-4">Lịch khám sắp tới</h4>
-                        {upcomingAppointments.map((appointment) => (
-                          <div key={appointment.maLichHen} className="card mb-3 border">
-                            <div className="card-body">
-                              <div className="d-flex justify-content-between align-items-start">
-                                <div className="flex-grow-1">
-                                  <div className="d-flex align-items-center mb-2">
-                                    <h5 className="mb-0 me-3">{appointment.tenBacSi}</h5>
-                                    <span className={getStatusBadge(appointment.tenTrangThai)}>
-                                      {appointment.tenTrangThai}
-                                    </span>
-                                  </div>
-                                  <p className="text-muted mb-2">{appointment.tenDichVu}</p>
-                                  <div className="row g-3 text-muted small mb-2">
-                                    <div className="col-md-4 d-flex align-items-center">
-                                      <Calendar size={16} className="me-2" />
-                                      {formatDate(appointment.ngayHen)}
-                                    </div>
-                                    <div className="col-md-4 d-flex align-items-center">
-                                      <Clock size={16} className="me-2" />
-                                      {appointment.gioBatDau} - {appointment.gioKetThuc}
-                                    </div>
-                                    <div className="col-md-4 d-flex align-items-center">
-                                      <MapPin size={16} className="me-2" />
-                                      Phòng khám
-                                    </div>
-                                  </div>
-                                  {appointment.ghiChu && (
-                                    <p className="text-primary mb-0">
-                                      <strong>Ghi chú:</strong> {appointment.ghiChu}
-                                    </p>
-                                  )}
-                                      {appointment.maTrangThai === 5 && appointment.lydo && (
-                                        <p className="text-danger mb-0 mt-2">
-                                          <strong>Lý do hủy:</strong> {appointment.lydo}
-                                        </p>
-                                      )}
-                                </div>
-                                <div className="d-flex">
-                                      <button 
-                                        className="btn btn-outline-primary btn-sm me-2"
-                                        onClick={() => fetchAppointmentDetail(appointment.maLichHen)}
-                                      >
-                                    <Eye size={16} />
-                                  </button>
-                                      {appointment.maTrangThai === 1 && (
-                                        <button 
-                                          className="btn btn-outline-success btn-sm me-2"
-                                          onClick={() => handleEditClick(appointment)}
-                                        >
-                                    <Edit size={16} />
-                                  </button>
-                                      )}
-                                  <button
-                                    className="btn btn-outline-danger btn-sm"
-                                    onClick={() => handleCancelAppointment(appointment)}
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Past Appointments */}
-                  {pastAppointments.length > 0 && (
-                    <div className="card shadow-sm">
-                      <div className="card-body">
-                        <h4 className="card-title mb-4">Lịch sử khám bệnh</h4>
-                        {pastAppointments.map((appointment) => (
-                          <div key={appointment.maLichHen} className="card mb-3 border opacity-75">
-                            <div className="card-body">
-                              <div className="d-flex justify-content-between align-items-start">
-                                <div className="flex-grow-1">
-                                  <div className="d-flex align-items-center mb-2">
-                                    <h5 className="mb-0 me-3">{appointment.tenBacSi}</h5>
-                                    <span className={getStatusBadge(appointment.tenTrangThai)}>
-                                      {appointment.tenTrangThai}
-                                    </span>
-                                  </div>
-                                  <p className="text-muted mb-2">{appointment.tenDichVu}</p>
-                                  <div className="row g-3 text-muted small mb-2">
-                                    <div className="col-md-4 d-flex align-items-center">
-                                      <Calendar size={16} className="me-2" />
-                                      {formatDate(appointment.ngayHen)}
-                                    </div>
-                                    <div className="col-md-4 d-flex align-items-center">
-                                      <Clock size={16} className="me-2" />
-                                      {appointment.gioBatDau} - {appointment.gioKetThuc}
-                                    </div>
-                                    <div className="col-md-4 d-flex align-items-center">
-                                      <MapPin size={16} className="me-2" />
-                                      Phòng khám
-                                    </div>
-                                  </div>
-                                  {appointment.ghiChu && (
-                                    <p className="mb-0">
-                                      <strong>Ghi chú:</strong> {appointment.ghiChu}
-                                    </p>
-                                  )}
-                                      {appointment.maTrangThai === 5 && appointment.lydo && (
-                                        <p className="text-danger mb-0 mt-2">
-                                      <strong>Lý do hủy:</strong> {appointment.lydo}
-                                    </p>
-                                  )}
-                                </div>
-                                <div>
-                                      <button 
-                                        className="btn btn-outline-primary btn-sm"
-                                        onClick={() => fetchAppointmentDetail(appointment.maLichHen)}
-                                      >
-                                    <Eye size={16} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                      )}
-                    </>
-                  ) : (
-                    showAppointmentDetail && selectedAppointment && (
-                      <div className="card shadow-sm">
-                        <div className="card-body">
-                          <div className="d-flex align-items-center mb-4">
-                            <button 
-                              className="btn btn-outline-secondary me-3"
-                              onClick={handleBack}
-                            >
-                              <ArrowLeft size={20} />
-                            </button>
-                            <h4 className="card-title mb-0">Chi tiết lịch hẹn</h4>
-                            {!isEditing && selectedAppointment.maTrangThai === 1 && (
-                              <button
-                                className="btn btn-primary ms-3"
-                                onClick={() => selectedAppointment && handleEditClick(selectedAppointment)}
-                              >
-                                <Edit size={16} className="me-2" />
-                                Chỉnh sửa
-                              </button>
-                            )}
-                          </div>
-                          
-                          {isEditing && selectedAppointment ? (
-                            <form onSubmit={handleEditSubmit}>
-                              <div className="row g-4">
-                                {/* Appointment Details for Editing */}
-                                <div className="col-md-6">
-                                  <div className="mb-4">
-                                    <h5 className="text-primary mb-3">Thông tin lịch hẹn</h5>
-                                    <div className="card bg-light">
-                                      <div className="card-body">
-                                        {/* Select Service */}
-                                        <div className="mb-3">
-                                          <label className="form-label">Dịch vụ</label>
-                                          <select
-                                            className="form-select"
-                                            name="maDichVu"
-                                            value={editFormData.maDichVu}
-                                            onChange={handleEditFormChange}
-                                          >
-                                            <option value="">Chọn dịch vụ</option>
-                                            {dichvus.map((dichvu) => (
-                                              <option key={dichvu.MaDv} value={dichvu.MaDv}>
-                                                {dichvu.TenDv}
-                                              </option>
-                                            ))}
-                                          </select>
-                                        </div>
-
-                                        {/* Select Doctor */}
-                                        <div className="mb-3">
-                                          <label className="form-label">Bác sĩ</label>
-                                          <select
-                                            className="form-select"
-                                            name="maBacSi"
-                                            value={editFormData.maBacSi}
-                                            onChange={handleEditFormChange}
-                                          >
-                                            <option value="">Chọn bác sĩ</option>
-                                            {doctors.map((doctor) => (
-                                              <option key={doctor.maBacSi} value={doctor.maBacSi}>
-                                                {doctor.hoTen}
-                                              </option>
-                                            ))}
-                                          </select>
-                                        </div>
-
-                                        {/* Select Date */}
-                                        <div className="mb-3">
-                                          <label className="form-label">Ngày khám</label>
-                                          <input
-                                            type="date"
-                                            className="form-control"
-                                            name="ngayHen"
-                                            value={editFormData.ngayHen}
-                                            onChange={handleEditFormChange}
-                                          />
-                                        </div>
-
-                                        {/* Select Time Slot */}
-                                        <div className="mb-3">
-                                          <label className="form-label">Giờ khám</label>
-                                          <select
-                                            className="form-select"
-                                            name="gioKham"
-                                            value={editFormData.gioBatDau && editFormData.gioKetThuc ? `${editFormData.gioBatDau}-${editFormData.gioKetThuc}` : ''}
-                                            onChange={handleEditFormChange}
-                                            disabled={editSlotsLoading || !editFormData.maBacSi || !editFormData.ngayHen}
-                                          >
-                                            <option value="">Chọn khung giờ</option>
-                                            {editAvailableSlots.map((slot) => (
-                                              <option 
-                                                key={`${slot.gioBatDau}-${slot.gioKetThuc}`}
-                                                value={`${slot.gioBatDau}-${slot.gioKetThuc}`}
-                                                disabled={slot.daDat}
-                                              >
-                                                {slot.gioBatDau} - {slot.gioKetThuc} {slot.daDat ? '(Đã đặt)' : ''}
-                                              </option>
-                                            ))}
-                                          </select>
-                                          {editSlotsLoading && <div className="text-muted mt-2">Đang tải khung giờ...</div>}
-                                          {editSlotsError && !editSlotsLoading && <div className="text-danger mt-2">{editSlotsError}</div>}
-                                        </div>
-
-                                        {/* Notes */}
-                                        <div className="mb-3">
-                                          <label className="form-label">Ghi chú</label>
-                                          <textarea
-                                            className="form-control"
-                                            name="ghiChu"
-                                            value={editFormData.ghiChu}
-                                            onChange={handleEditFormChange}
-                                            rows={3}
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Patient Info (Read Only in Edit Mode) */}
-                                <div className="col-md-6">
-                                  <div className="mb-4">
-                                    <h5 className="text-primary mb-3">Thông tin bệnh nhân</h5>
-                                    <div className="card bg-light">
-                                      <div className="card-body">
-                                        <p><strong>Họ và tên:</strong> {selectedAppointment.tenBenhNhan}</p>
-                                        <p><strong>Số điện thoại:</strong> {selectedAppointment.soDienThoaiBenhNhan}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                              </div>
-
-                              <div className="d-flex justify-content-end gap-2 mt-4">
-                                <button
-                                  type="button"
-                                  className="btn btn-secondary"
-                                  onClick={() => setIsEditing(false)}
-                                >
-                                  Hủy
-                                </button>
-                                <button
-                                  type="submit"
-                                  className="btn btn-primary"
-                                  disabled={editSlotsLoading} // Disable submit while loading slots
-                                >
-                                  Lưu thay đổi
-                                </button>
-                              </div>
-                            </form>
-                          ) : (
-                            // Display mode
-                            <div className="row g-4">
-                              <div className="col-md-6">
-                                <div className="mb-4">
-                                  <h5 className="text-primary mb-3">Thông tin bệnh nhân</h5>
-                                  <div className="card bg-light">
-                                    <div className="card-body">
-                                      <p><strong>Họ và tên:</strong> {selectedAppointment.tenBenhNhan}</p>
-                                      <p><strong>Số điện thoại:</strong> {selectedAppointment.soDienThoaiBenhNhan}</p>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="mb-4">
-                                  <h5 className="text-primary mb-3">Thông tin bác sĩ</h5>
-                                  <div className="card bg-light">
-                                    <div className="card-body">
-                                      <p><strong>Bác sĩ:</strong> {selectedAppointment.tenBacSi}</p>
-                                      <p><strong>Dịch vụ:</strong> {selectedAppointment.tenDichVu}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="col-md-6">
-                                <div className="mb-4">
-                                  <h5 className="text-primary mb-3">Thông tin lịch hẹn</h5>
-                                  <div className="card bg-light">
-                                    <div className="card-body">
-                                      <p><strong>Ngày khám:</strong> {formatDate(selectedAppointment.ngayHen)}</p>
-                                      <p><strong>Giờ khám:</strong> {selectedAppointment.gioBatDau} - {selectedAppointment.gioKetThuc}</p>
-                                      <p><strong>Thời gian khám:</strong> {selectedAppointment.thoiGian} phút</p>
-                                      <p><strong>Trạng thái:</strong> <span className={getStatusBadge(selectedAppointment.tenTrangThai)}>{selectedAppointment.tenTrangThai}</span></p>
-                                      {selectedAppointment.ghiChu && (
-                                        <p><strong>Ghi chú:</strong> {selectedAppointment.ghiChu}</p>
-                                      )}
-                                      {selectedAppointment.maTrangThai === 5 && selectedAppointment.lydo && (
-                                        <p className="text-danger"><strong>Lý do hủy:</strong> {selectedAppointment.lydo}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
+              {activeTab === 'invoices' && userInfo?.maBenhNhan && (
+                <ProfileInvoices maBenhNhan={userInfo.maBenhNhan} />
               )}
             </animated.div>
           </div>
