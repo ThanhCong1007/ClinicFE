@@ -45,6 +45,8 @@ export const getAppointmentDetails = async (maLichHen: number) => {
 
   // Modify the response data to use real-time values
   const data = response.data;
+  console.log('API Response for appointment details:', data);
+  
   if (data) {
     const now = new Date();
     data.gioBatDau = format(now, 'HH:mm:ss');

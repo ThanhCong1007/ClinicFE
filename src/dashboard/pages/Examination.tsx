@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Row, Col, Form, Button, Card, Modal, Spin, Alert, Input, DatePicker, Select, notification, Descriptions, InputNumber } from 'antd';
+import { Row, Col, Form, Button, Card, Modal, Spin, Alert, Input, DatePicker, Select, notification, InputNumber } from 'antd';
 import { format, parseISO, isValid } from 'date-fns';
 import { getAppointmentDetails, createMedicalExam, fetchServices, getMedicalRecordById, updateMedicalRecord } from '../services/api';
 import { DrugSearch } from '../components/DrugSearch';
@@ -106,11 +106,24 @@ export default function Examination() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.appointment) setAppointment(parsed.appointment);
+        console.log('Restored from localStorage:', parsed);
+        if (parsed.appointment) {
+          const appointmentData = {
+            ...parsed.appointment,
+            hoTen: parsed.appointment.hoTen || parsed.appointment.tenBenhNhan || '',
+            soDienThoaiBenhNhan: parsed.appointment.soDienThoaiBenhNhan || parsed.appointment.soDienThoai || '',
+            ngaySinh: parsed.appointment.ngaySinh || parsed.appointment.ngaySinhBenhNhan || '',
+            ngayHen: parsed.appointment.ngayHen || '',
+            gioBatDau: parsed.appointment.gioBatDau || ''
+          };
+          setAppointment(appointmentData);
+        }
         if (parsed.medicalRecord) setMedicalRecord(parsed.medicalRecord);
         if (parsed.selectedDrugs) setSelectedDrugs(parsed.selectedDrugs);
         if (parsed.selectedServices) setSelectedServices(parsed.selectedServices);
-      } catch {}
+      } catch (error) {
+        console.error('Error parsing localStorage data:', error);
+      }
     }
   }, [storageKey]);
 
@@ -124,7 +137,6 @@ export default function Examination() {
               const parsed = JSON.parse(saved);
               if (parsed.appointment) {
                 setAppointment(parsed.appointment);
-                form.setFieldsValue(parsed.appointment);
                 setLoading(false);
                 return;
               }
@@ -157,25 +169,54 @@ export default function Examination() {
             coBenhAn: false
           };
           setAppointment(newAppointment);
-          form.setFieldsValue(newAppointment);
           setLoading(false);
           return;
         }
         const data = await getAppointmentDetails(parseInt(maLichHen));
         if (data) {
-          setAppointment(data);
-          form.setFieldsValue(data);
+          // Map dữ liệu từ API response sang đúng format
+          const appointmentData = {
+            maLichHen: data.maLichHen || parseInt(maLichHen),
+            maBenhNhan: data.maBenhNhan || data.maBenhNhan,
+            hoTen: data.hoTen || data.tenBenhNhan || data.hoTenBenhNhan || '',
+            ngaySinh: data.ngaySinh || data.ngaySinhBenhNhan || '',
+            soDienThoaiBenhNhan: data.soDienThoaiBenhNhan || data.soDienThoai || data.soDienThoaiBenhNhan || '',
+            maBacSi: data.maBacSi || 0,
+            tenBacSi: data.tenBacSi || '',
+            maDichVu: data.maDichVu || 0,
+            tenDichVu: data.tenDichVu || '',
+            ngayHen: data.ngayHen || data.ngayHen || '',
+            gioBatDau: data.gioBatDau || '',
+            gioKetThuc: data.gioKetThuc || '',
+            maTrangThai: data.maTrangThai || 2,
+            tenTrangThai: data.tenTrangThai || '',
+            ghiChuLichHen: data.ghiChuLichHen || null,
+            lyDoHen: data.lyDoHen || null,
+            thoiGian: data.thoiGian || 30,
+            maBenhAn: data.maBenhAn || null,
+            lyDoKham: data.lyDoKham || null,
+            chanDoan: data.chanDoan || null,
+            ghiChuDieuTri: data.ghiChuDieuTri || null,
+            ngayTaiKham: data.ngayTaiKham || null,
+            ngayTaoBenhAn: data.ngayTaoBenhAn || null,
+            coBenhAn: data.coBenhAn || false
+          };
+          
+          console.log('API Response:', data);
+          console.log('Mapped Appointment Data:', appointmentData);
+          
+          setAppointment(appointmentData);
+          
           if (data.lyDoKham || data.chanDoan || data.ghiChuDieuTri || data.ngayTaiKham) {
             const record = {
               lyDoKham: data.lyDoKham || '',
               chanDoan: data.chanDoan || '',
               ghiChuDieuTri: data.ghiChuDieuTri || '',
               ngayTaiKham: data.ngayTaiKham || '',
-              tienSuBenh: '',
-              diUng: ''
+              tienSuBenh: data.tienSuBenh || '',
+              diUng: data.diUng || ''
             };
             setMedicalRecord(record);
-            form.setFieldsValue(record);
           }
         }
       } catch (err) {
@@ -205,7 +246,19 @@ export default function Examination() {
     const result = { ...obj };
     fields.forEach(field => {
       if (result[field] && typeof result[field] === 'string' && result[field] !== '') {
-        result[field] = dayjs(result[field]);
+        try {
+          const dayjsObj = dayjs(result[field]);
+          if (dayjsObj.isValid()) {
+            result[field] = dayjsObj;
+          } else {
+            result[field] = null;
+          }
+        } catch (error) {
+          console.warn(`Invalid date format for field ${field}:`, result[field]);
+          result[field] = null;
+        }
+      } else {
+        result[field] = null;
       }
     });
     return result;
@@ -310,7 +363,7 @@ export default function Examination() {
       diUng: values.diUng,
       danhSachDichVu: selectedServices.map(s => ({ maDichVu: s.maDichVu, gia: s.gia })),
       danhSachThuoc: selectedDrugs.map(drug => ({
-        maThuoc: drug.rxcui,
+        maThuoc: drug.maThuoc,
         lieuDung: '', 
         tanSuat: '', 
         thoiDiem: '', 
@@ -318,7 +371,7 @@ export default function Examination() {
         soLuong: 1, 
         donViDung: 'viên', 
         ghiChu: '', 
-        lyDoDonThuoc: drug.name || ''
+        lyDoDonThuoc: drug.tenThuoc || ''
       })),
       ghiChuDonThuoc: ''
     };
@@ -345,10 +398,63 @@ export default function Examination() {
     );
   };
   
+  // Save appointment data to localStorage
+  const saveAppointmentToStorage = (appointmentData: any, medicalRecordData: any) => {
+    try {
+      const dataToSave = {
+        appointment: appointmentData,
+        medicalRecord: medicalRecordData,
+        selectedDrugs,
+        selectedServices
+      };
+      localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+      console.log('Saved to localStorage:', dataToSave);
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  };
+
+  // Save to localStorage when appointment or medicalRecord changes
+  useEffect(() => {
+    if (appointment) {
+      saveAppointmentToStorage(appointment, medicalRecord);
+    }
+  }, [appointment, medicalRecord, selectedDrugs, selectedServices]);
+
+  // Debug: Log appointment data changes
+  useEffect(() => {
+    console.log('Appointment state changed:', appointment);
+  }, [appointment]);
+
+  // Set form values when appointment data is available
+  useEffect(() => {
+    if (appointment && !loading) {
+      const formValues = {
+        hoTen: appointment.hoTen || '',
+        soDienThoaiBenhNhan: appointment.soDienThoaiBenhNhan || '',
+        ngaySinh: appointment.ngaySinh ? dayjs(appointment.ngaySinh) : null,
+        ngayHen: appointment.ngayHen ? dayjs(appointment.ngayHen) : null,
+        gioBatDau: appointment.gioBatDau || '',
+        lyDoKham: medicalRecord.lyDoKham || '',
+        chanDoan: medicalRecord.chanDoan || '',
+        ghiChuDieuTri: medicalRecord.ghiChuDieuTri || '',
+        ngayTaiKham: medicalRecord.ngayTaiKham ? dayjs(medicalRecord.ngayTaiKham) : null,
+        tienSuBenh: medicalRecord.tienSuBenh || '',
+        diUng: medicalRecord.diUng || ''
+      };
+      
+      console.log('Setting form values directly:', formValues);
+      form.setFieldsValue(formValues);
+    }
+  }, [appointment, medicalRecord, loading, form]);
+
   if (loading || reexamLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" tip="Đang tải dữ liệu..." />
+        <div style={{ textAlign: 'center' }}>
+          <Spin size="large" />
+          <div style={{ marginTop: 16 }}>Đang tải dữ liệu...</div>
+        </div>
       </div>
     );
   }
@@ -366,38 +472,46 @@ export default function Examination() {
         onValuesChange={(_, allValues) => {
           saveDraft(allValues, selectedServices);
         }}
-        initialValues={{...appointment, ...medicalRecord}}
+        initialValues={{}}
       >
         <Row gutter={24}>
           <Col span={16}>
             <Card title={isReexam ? 'Tái khám' : (maLichHen ? 'Khám bệnh theo lịch hẹn' : 'Khám bệnh vãng lai')} style={{ marginBottom: 24 }}>
-              {!maLichHen || isReexam ? (
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item name="hoTen" label="Họ và tên" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}>
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item name="soDienThoaiBenhNhan" label="Số điện thoại" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}>
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item name="ngaySinh" label="Ngày sinh">
-                      <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              ) : (
-                <Descriptions bordered column={2}>
-                  <Descriptions.Item label="Họ và tên">{appointment?.hoTen}</Descriptions.Item>
-                  <Descriptions.Item label="Số điện thoại">{appointment?.soDienThoaiBenhNhan}</Descriptions.Item>
-                  <Descriptions.Item label="Ngày hẹn">{appointment?.ngayHen}</Descriptions.Item>
-                  <Descriptions.Item label="Giờ hẹn">{appointment?.gioBatDau}</Descriptions.Item>
-                  <Descriptions.Item label="Dịch vụ">{appointment?.tenDichVu}</Descriptions.Item>
-                </Descriptions>
-              )}
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item name="hoTen" label="Họ và tên" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="soDienThoaiBenhNhan" label="Số điện thoại" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}>
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="ngaySinh" label="Ngày sinh">
+                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="ngayHen" label="Ngày hẹn">
+                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="gioBatDau" label="Giờ hẹn">
+                    <Input />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontWeight: 500, marginBottom: 8, color: 'rgba(0, 0, 0, 0.88)' }}>Dịch vụ</div>
+                    <div style={{ padding: '4px 11px', minHeight: '32px', border: '1px solid #d9d9d9', borderRadius: '6px', backgroundColor: '#fafafa' }}>
+                      {appointment?.tenDichVu || 'Chưa có dịch vụ'}
+                    </div>
+                  </div>
+                </Col>
+              </Row>
             </Card>
 
             <Card title="Thông tin khám bệnh" style={{ marginBottom: 24 }}>

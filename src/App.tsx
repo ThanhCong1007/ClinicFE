@@ -38,6 +38,12 @@ import NotFound from './features/404';
 // Dashboard components
 import DashboardLayout from './dashboard/DashboardLayout';
 
+// Contexts
+import { NotificationProvider, useNotification } from './contexts/NotificationContext';
+
+// Services
+import { setNotificationCallback } from './services/userService';
+
 // import 'tailwindcss/tailwind.css';
 
 // Component tạm thời cho trang chủ và các trang chưa có
@@ -75,6 +81,7 @@ function PlaceholderPage({ title }: { title: string }) {
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -89,8 +96,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       try {
         const user = JSON.parse(userData);
         if (user.tenVaiTro !== 'BACSI') {
-          alert('Bạn không có quyền truy cập vào trang này!');
-          navigate('/');
+          showNotification(
+            'Không có quyền truy cập',
+            'Bạn không có quyền truy cập vào trang này!',
+            'error',
+            () => navigate('/')
+          );
           return;
         }
         setIsAuthorized(true);
@@ -104,7 +115,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     };
 
     checkAuthorization();
-  }, [navigate]);
+  }, [navigate, showNotification]);
 
   if (isLoading) {
     return (
@@ -119,11 +130,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return isAuthorized ? <>{children}</> : null;
 }
 
-function App() {
+function AppContent() {
+  const { showNotification } = useNotification();
   const [loading, setLoading] = useState(true);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
+    // Set up notification callback for userService
+    setNotificationCallback(showNotification);
+
     // Xử lý spinner loading
     const timer = setTimeout(() => {
       setLoading(false);
@@ -144,7 +159,7 @@ function App() {
       clearTimeout(timer);
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [showNotification]);
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -154,93 +169,99 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className="app">
-        {/* Spinner */}
-        {loading && (
-          <div id="spinner" className="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-            <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}></div>
-          </div>
-        )}
+    <div className="app">
+      {/* Spinner */}
+      {loading && (
+        <div id="spinner" className="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+          <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}></div>
+        </div>
+      )}
 
-        <Navbar />
-        <Routes>
-          {/* Route chính */}
-          <Route path="/trang-chu" element={<HomePage />} />
-          <Route path="/" element={<Navigate to="/trang-chu" replace />} />
+      <Navbar />
+      <Routes>
+        {/* Route chính */}
+        <Route path="/trang-chu" element={<HomePage />} />
+        <Route path="/" element={<Navigate to="/trang-chu" replace />} />
 
-          {/* Dashboard routes */}
-          <Route path="/dashboard/*" element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          } />
+        {/* Dashboard routes */}
+        <Route path="/dashboard/*" element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        } />
 
-          {/* Routes cho phần Giới thiệu */}
-          <Route path="/gioi-thieu/thong-tin-phong-kham" element={<ThongTinPhongKham />} />
-          <Route path="/gioi-thieu/bac-si" element={<PlaceholderPage title="Đội ngũ bác sĩ" />} />
+        {/* Routes cho phần Giới thiệu */}
+        <Route path="/gioi-thieu/thong-tin-phong-kham" element={<ThongTinPhongKham />} />
+        <Route path="/gioi-thieu/bac-si" element={<PlaceholderPage title="Đội ngũ bác sĩ" />} />
 
-          {/* Routes cho phần Bọc răng sứ */}
-          <Route path="/dich-vu/boc-rang-su" element={<CosmeticPorcelainTeeth />} />
-          <Route path="/dich-vu/bang-gia-boc-rang-su" element={<PricingTable />} />
-          <Route path="/dich-vu/dan-su-venner" element={<PlaceholderPage title="Dán sứ Venner" />} />
+        {/* Routes cho phần Bọc răng sứ */}
+        <Route path="/dich-vu/boc-rang-su" element={<CosmeticPorcelainTeeth />} />
+        <Route path="/dich-vu/bang-gia-boc-rang-su" element={<PricingTable />} />
+        <Route path="/dich-vu/dan-su-venner" element={<PlaceholderPage title="Dán sứ Venner" />} />
 
-          {/* Routes cho phần Dịch vụ khác */}
-          <Route path="/dich-vu/nieng-rang-tham-my" element={<PlaceholderPage title="Niềng răng thẩm mỹ" />} />
-          <Route path="/dich-vu/tram-rang-tham-my" element={<PlaceholderPage title="Trám răng thẩm mỹ" />} />
-          <Route path="/dich-vu/cao-voi-rang" element={<PlaceholderPage title="Cạo vôi răng" />} />
+        {/* Routes cho phần Dịch vụ khác */}
+        <Route path="/dich-vu/nieng-rang-tham-my" element={<PlaceholderPage title="Niềng răng thẩm mỹ" />} />
+        <Route path="/dich-vu/tram-rang-tham-my" element={<PlaceholderPage title="Trám răng thẩm mỹ" />} />
+        <Route path="/dich-vu/cao-voi-rang" element={<PlaceholderPage title="Cạo vôi răng" />} />
 
-          {/* Routes cho các trang khác */}
-          <Route path="/lien-he" element={<LienHe />} />
-          <Route path="/dat-lich" element={<PlaceholderPage title="Đặt lịch hẹn" />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/thong-tin-tai-khoan" element={<UserProfile />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        {/* Routes cho các trang khác */}
+        <Route path="/lien-he" element={<LienHe />} />
+        <Route path="/dat-lich" element={<PlaceholderPage title="Đặt lịch hẹn" />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/thong-tin-tai-khoan" element={<UserProfile />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
 
-        {/* Only show Footer for non-dashboard routes */}
-        {!window.location.pathname.includes('/dashboard') && <Footer />}
+      {/* Only show Footer for non-dashboard routes */}
+      {!window.location.pathname.includes('/dashboard') && <Footer />}
 
-        {/* Back to Top Button */}
-        {!window.location.pathname.includes('/dashboard') && showBackToTop && (
-          <button
-            onClick={scrollToTop}
-            className="btn btn-lg btn-primary btn-lg-square rounded back-to-top"
-            style={{
-              position: 'fixed',
-              right: '30px',
-              bottom: '30px',
-              zIndex: 99,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <i className="fa fa-arrow-up"></i>
-          </button>
-        )}
+      {/* Back to Top Button */}
+      {!window.location.pathname.includes('/dashboard') && showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="btn btn-lg btn-primary btn-lg-square rounded back-to-top"
+          style={{
+            position: 'fixed',
+            right: '30px',
+            bottom: '30px',
+            zIndex: 99,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <i className="fa fa-arrow-up"></i>
+        </button>
+      )}
 
-        {/* Search Modal */}
-        <div className="modal fade" id="searchModal" tabIndex={-1}>
-          <div className="modal-dialog modal-fullscreen">
-            <div className="modal-content" style={{ background: 'rgba(9, 30, 62, .7)' }}>
-              <div className="modal-header border-0">
-                <button type="button" className="btn bg-white btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div className="modal-body d-flex align-items-center justify-content-center">
-                <div className="input-group" style={{ maxWidth: '600px' }}>
-                  <input type="text" className="form-control bg-transparent border-primary p-3" placeholder="Nhập từ khóa tìm kiếm" />
-                  <button className="btn btn-primary px-4"><i className="fa fa-search"></i></button>
-                </div>
+      {/* Search Modal */}
+      <div className="modal fade" id="searchModal" tabIndex={-1}>
+        <div className="modal-dialog modal-fullscreen">
+          <div className="modal-content" style={{ background: 'rgba(9, 30, 62, .7)' }}>
+            <div className="modal-header border-0">
+              <button type="button" className="btn bg-white btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body d-flex align-items-center justify-content-center">
+              <div className="input-group" style={{ maxWidth: '600px' }}>
+                <input type="text" className="form-control bg-transparent border-primary p-3" placeholder="Nhập từ khóa tìm kiếm" />
+                <button className="btn btn-primary px-4"><i className="fa fa-search"></i></button>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
       {/* <ChatWidget /> */}
-
     </Router>
-
   );
 }
 
