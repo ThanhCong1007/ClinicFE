@@ -3,6 +3,7 @@ import { Row, Col, Card, Table, Tag, Button, Modal, Statistic, notification } fr
 import { format } from 'date-fns';
 import axios from 'axios';
 import { getDoctorAppointments, cancelAppointment } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface Appointment {
   maLichHen: number;
@@ -40,6 +41,7 @@ const Dashboard = () => {
     newPatients: 0,
     pendingExaminations: 0
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -202,11 +204,18 @@ const Dashboard = () => {
       title: 'Thao tác',
       key: 'actions',
       render: (_: any, record: Appointment) => (
-        record.maTrangThai !== 5 && record.maTrangThai !== 4 && (
-          <Button danger size="small" onClick={() => handleCancelAppointment(record)}>
-            Hủy lịch
-          </Button>
-        )
+        <>
+          {(record.maTrangThai === 1 || record.maTrangThai === 2) && (
+            <Button type="primary" size="small" onClick={() => navigate(`/dashboard/examination/${record.maLichHen}`)} style={{ marginRight: 8 }}>
+              Khám bệnh
+            </Button>
+          )}
+          {record.maTrangThai !== 5 && record.maTrangThai !== 4 && (
+            <Button danger size="small" onClick={() => handleCancelAppointment(record)}>
+              Hủy lịch
+            </Button>
+          )}
+        </>
       )
     }
   ];
@@ -235,7 +244,7 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
-      <Card title="Danh sách lịch hẹn" bordered={false}>
+      <Card title="Danh sách lịch hẹn" variant="outlined">
         <Table
           columns={columns}
           dataSource={appointments}

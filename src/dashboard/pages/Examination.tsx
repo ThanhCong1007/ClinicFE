@@ -98,8 +98,26 @@ export default function Examination() {
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<{maDichVu: number, tenDichVu: string, gia: number}[]>([]);
+  const [examStartTime] = useState(format(new Date(), 'HH:mm:ss'));
   
   const [form] = Form.useForm();
+
+  // Initialize form with empty values to prevent connection warning
+  useEffect(() => {
+    form.setFieldsValue({
+      hoTen: '',
+      soDienThoaiBenhNhan: '',
+      ngaySinh: null,
+      ngayHen: null,
+      gioBatDau: examStartTime,
+      lyDoKham: '',
+      chanDoan: '',
+      ghiChuDieuTri: '',
+      ngayTaiKham: null,
+      tienSuBenh: '',
+      diUng: ''
+    });
+  }, [form, examStartTime]);
 
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
@@ -178,7 +196,7 @@ export default function Examination() {
           const appointmentData = {
             maLichHen: data.maLichHen || parseInt(maLichHen),
             maBenhNhan: data.maBenhNhan || data.maBenhNhan,
-            hoTen: data.hoTen || data.tenBenhNhan || data.hoTenBenhNhan || '',
+            hoTen: data.tenBenhNhan || data.hoTen || data.hoTenBenhNhan || '',
             ngaySinh: data.ngaySinh || data.ngaySinhBenhNhan || '',
             soDienThoaiBenhNhan: data.soDienThoaiBenhNhan || data.soDienThoai || data.soDienThoaiBenhNhan || '',
             maBacSi: data.maBacSi || 0,
@@ -434,7 +452,7 @@ export default function Examination() {
         soDienThoaiBenhNhan: appointment.soDienThoaiBenhNhan || '',
         ngaySinh: appointment.ngaySinh ? dayjs(appointment.ngaySinh) : null,
         ngayHen: appointment.ngayHen ? dayjs(appointment.ngayHen) : null,
-        gioBatDau: appointment.gioBatDau || '',
+        gioBatDau: examStartTime,
         lyDoKham: medicalRecord.lyDoKham || '',
         chanDoan: medicalRecord.chanDoan || '',
         ghiChuDieuTri: medicalRecord.ghiChuDieuTri || '',
@@ -444,9 +462,16 @@ export default function Examination() {
       };
       
       console.log('Setting form values directly:', formValues);
+      console.log('Form instance:', form);
+      console.log('Form is connected:', form.getFieldsValue());
       form.setFieldsValue(formValues);
+      
+      // Verify the values were set
+      setTimeout(() => {
+        console.log('Form values after set:', form.getFieldsValue());
+      }, 100);
     }
-  }, [appointment, medicalRecord, loading, form]);
+  }, [appointment, medicalRecord, loading, form, examStartTime]);
 
   if (loading || reexamLoading) {
     return (
@@ -499,18 +524,22 @@ export default function Examination() {
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="gioBatDau" label="Giờ hẹn">
-                    <Input />
+                  <Form.Item name="gioBatDau" label="Giờ khám">
+                    <Input 
+                      value={examStartTime}
+                      readOnly
+                      style={{ backgroundColor: '#f5f5f5' }}
+                    />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                {/* <Col span={12}>
                   <div style={{ marginBottom: 24 }}>
                     <div style={{ fontWeight: 500, marginBottom: 8, color: 'rgba(0, 0, 0, 0.88)' }}>Dịch vụ</div>
                     <div style={{ padding: '4px 11px', minHeight: '32px', border: '1px solid #d9d9d9', borderRadius: '6px', backgroundColor: '#fafafa' }}>
                       {appointment?.tenDichVu || 'Chưa có dịch vụ'}
                     </div>
                   </div>
-                </Col>
+                </Col> */}
               </Row>
             </Card>
 

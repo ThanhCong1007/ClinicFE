@@ -196,26 +196,26 @@ export default function Appointments() {
       okType: 'danger',
       cancelText: 'Không',
       onOk: async () => {
-    try {
-      const appointmentData = {
-        maBenhNhan: appointment.maBenhNhan,
-        maBacSi: appointment.maBacSi,
-        maDichVu: appointment.maDichVu,
-        ngayHen: appointment.ngayHen,
-        gioBatDau: appointment.gioBatDau,
-        gioKetThuc: appointment.gioKetThuc,
+        try {
+          const appointmentData = {
+            maBenhNhan: appointment.maBenhNhan,
+            maBacSi: appointment.maBacSi,
+            maDichVu: appointment.maDichVu,
+            ngayHen: appointment.ngayHen,
+            gioBatDau: appointment.gioBatDau,
+            gioKetThuc: appointment.gioKetThuc,
             maTrangThai: 5,
-        ghiChu: appointment.ghiChuLichHen
-      };
-      await cancelAppointment(appointment.maLichHen, appointmentData);
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const data = await getDoctorAppointments(userData.maBacSi);
-      setAppointments(data);
+            ghiChu: appointment.ghiChuLichHen
+          };
+          await cancelAppointment(appointment.maLichHen, appointmentData);
+          const userData = JSON.parse(localStorage.getItem('user') || '{}');
+          const data = await getDoctorAppointments(userData.maBacSi);
+          setAppointments(data);
           message.success('Hủy lịch hẹn thành công');
-    } catch (err) {
+        } catch (err) {
           message.error(err instanceof Error ? err.message : 'Có lỗi xảy ra khi hủy lịch hẹn');
         }
-    }
+      }
     });
   };
 
@@ -306,7 +306,7 @@ export default function Appointments() {
       key: 'actions',
       render: (_: any, record: Appointment) => (
         <>
-          {!record.coBenhAn && (record.maTrangThai === 1 || record.maTrangThai === 2) && (
+          {(record.maTrangThai === 1 || record.maTrangThai === 2) && (
             <Button type="primary" size="small" onClick={() => navigate(`/dashboard/examination/${record.maLichHen}`)} style={{ marginRight: 8 }}>
               Khám bệnh
             </Button>
@@ -318,7 +318,7 @@ export default function Appointments() {
           )}
         </>
       )
-  }
+    }
   ];
 
   return (
@@ -338,9 +338,9 @@ export default function Appointments() {
         </Col>
       </Row>
       <Input.Search
-          placeholder="Tìm kiếm theo tên, số điện thoại, dịch vụ..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+        placeholder="Tìm kiếm theo tên, số điện thoại, dịch vụ..."
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
         style={{ marginBottom: 16, maxWidth: 400 }}
         allowClear
       />
@@ -371,74 +371,74 @@ export default function Appointments() {
         <Row gutter={16}>
           <Col span={14}>
             <Card title="Thông tin bệnh nhân" style={{ marginBottom: 16 }}>
-                  {isWalkIn ? (
+              {isWalkIn ? (
                 <Form layout="vertical">
                   <Form.Item label="Họ và tên">
                     <Input
-                            value={selectedAppointment?.tenBenhNhan || ''}
+                      value={selectedAppointment?.tenBenhNhan || ''}
                       onChange={e => setSelectedAppointment(prev => prev ? { ...prev, tenBenhNhan: e.target.value } : null)}
-                          />
+                    />
                   </Form.Item>
                   <Form.Item label="Số điện thoại">
                     <Input
-                            value={selectedAppointment?.soDienThoaiBenhNhan || ''}
+                      value={selectedAppointment?.soDienThoaiBenhNhan || ''}
                       onChange={e => setSelectedAppointment(prev => prev ? { ...prev, soDienThoaiBenhNhan: e.target.value } : null)}
-                          />
+                    />
                   </Form.Item>
                 </Form>
-                  ) : (
+              ) : (
                 <div>
-                        <p><strong>Họ và tên:</strong> {selectedAppointment?.tenBenhNhan}</p>
-                        <p><strong>Số điện thoại:</strong> {selectedAppointment?.soDienThoaiBenhNhan}</p>
-                        <p><strong>Dịch vụ:</strong> {selectedAppointment?.tenDichVu}</p>
-                        <p><strong>Thời gian:</strong> {selectedAppointment?.gioBatDau} - {selectedAppointment?.gioKetThuc}</p>
+                  <p><strong>Họ và tên:</strong> {selectedAppointment?.tenBenhNhan}</p>
+                  <p><strong>Số điện thoại:</strong> {selectedAppointment?.soDienThoaiBenhNhan}</p>
+                  <p><strong>Dịch vụ:</strong> {selectedAppointment?.tenDichVu}</p>
+                  <p><strong>Thời gian:</strong> {selectedAppointment?.gioBatDau} - {selectedAppointment?.gioKetThuc}</p>
                 </div>
-                  )}
-              </Card>
+              )}
+            </Card>
             <Card title="Thông tin khám bệnh">
               <Form layout="vertical">
                 <Form.Item label="Lý do khám">
                   <Input
-                          value={medicalRecord.lyDoKham}
+                    value={medicalRecord.lyDoKham}
                     onChange={e => setMedicalRecord({ ...medicalRecord, lyDoKham: e.target.value })}
-                        />
+                  />
                 </Form.Item>
                 <Form.Item label="Tiền sử bệnh">
                   <Input.TextArea
-                          rows={3}
-                          value={medicalRecord.tienSuBenh}
+                    rows={3}
+                    value={medicalRecord.tienSuBenh}
                     onChange={e => setMedicalRecord({ ...medicalRecord, tienSuBenh: e.target.value })}
-                        />
+                  />
                 </Form.Item>
                 <Form.Item label="Dị ứng">
                   <Input
-                          value={medicalRecord.diUng}
+                    value={medicalRecord.diUng}
                     onChange={e => setMedicalRecord({ ...medicalRecord, diUng: e.target.value })}
-                        />
+                  />
                 </Form.Item>
                 <Form.Item label="Chẩn đoán">
                   <Input
-                          value={medicalRecord.chanDoan}
+                    value={medicalRecord.chanDoan}
                     onChange={e => setMedicalRecord({ ...medicalRecord, chanDoan: e.target.value })}
-                        />
+                  />
                 </Form.Item>
                 <Form.Item label="Ghi chú điều trị">
                   <Input.TextArea
-                          rows={3}
-                          value={medicalRecord.ghiChuDieuTri}
+                    rows={3}
+                    value={medicalRecord.ghiChuDieuTri}
                     onChange={e => setMedicalRecord({ ...medicalRecord, ghiChuDieuTri: e.target.value })}
-                        />
+                  />
                 </Form.Item>
                 <Form.Item label="Ngày tái khám">
                   <Input
-                          type="date"
-                          value={medicalRecord.ngayTaiKham}
+                    type="date"
+                    value={medicalRecord.ngayTaiKham}
                     onChange={e => setMedicalRecord({ ...medicalRecord, ngayTaiKham: e.target.value })}
-                        />
+                  />
                 </Form.Item>
               </Form>
-              </Card>
-            </Col>
+            </Card>
+          </Col>
           <Col span={10}>
             <Card title="Đơn thuốc">
               {/* Prescription Table (có thể chuyển sang antd Table nếu muốn) */}
@@ -452,51 +452,63 @@ export default function Appointments() {
                   { title: 'STT', dataIndex: 'stt', key: 'stt', width: 50 },
                   { title: 'Mã thuốc', dataIndex: 'maThuoc', key: 'maThuoc', width: 80 },
                   { title: 'Tên thuốc', dataIndex: 'tenThuoc', key: 'tenThuoc' },
-                  { title: 'Đơn vị', dataIndex: 'donVi', key: 'donVi', render: (text, record, idx) => <Input value={text} onChange={e => {
-                                const newList = [...prescriptions];
-                                newList[idx].donVi = e.target.value;
-                                setPrescriptions(newList);
-                  }} size="small" /> },
-                  { title: 'Số lượng', dataIndex: 'soLuong', key: 'soLuong', render: (text, record, idx) => <Input type="number" min={1} value={text} onChange={e => {
-                                const newList = [...prescriptions];
-                                newList[idx].soLuong = parseInt(e.target.value) || 1;
-                                newList[idx].tongTien = (newList[idx].soLuong * (newList[idx].giaBan || 0));
-                                setPrescriptions(newList);
-                  }} size="small" /> },
-                  { title: 'Đợt dùng thuốc', dataIndex: 'dotDungThuoc', key: 'dotDungThuoc', render: (text, record, idx) => <Input value={text} onChange={e => {
-                                const newList = [...prescriptions];
-                                newList[idx].dotDungThuoc = e.target.value;
-                                setPrescriptions(newList);
-                  }} size="small" /> },
-                  { title: 'Ghi chú', dataIndex: 'ghiChu', key: 'ghiChu', render: (text, record, idx) => <Input value={text} onChange={e => {
-                                const newList = [...prescriptions];
-                                newList[idx].ghiChu = e.target.value;
-                                setPrescriptions(newList);
-                  }} size="small" /> },
-                  { title: 'Giá bán', dataIndex: 'giaBan', key: 'giaBan', render: (text, record, idx) => <Input type="number" min={0} value={text} onChange={e => {
-                                const newList = [...prescriptions];
-                                newList[idx].giaBan = parseInt(e.target.value) || 0;
-                                newList[idx].tongTien = (newList[idx].soLuong * newList[idx].giaBan);
-                                setPrescriptions(newList);
-                  }} size="small" /> },
+                  {
+                    title: 'Đơn vị', dataIndex: 'donVi', key: 'donVi', render: (text, record, idx) => <Input value={text} onChange={e => {
+                      const newList = [...prescriptions];
+                      newList[idx].donVi = e.target.value;
+                      setPrescriptions(newList);
+                    }} size="small" />
+                  },
+                  {
+                    title: 'Số lượng', dataIndex: 'soLuong', key: 'soLuong', render: (text, record, idx) => <Input type="number" min={1} value={text} onChange={e => {
+                      const newList = [...prescriptions];
+                      newList[idx].soLuong = parseInt(e.target.value) || 1;
+                      newList[idx].tongTien = (newList[idx].soLuong * (newList[idx].giaBan || 0));
+                      setPrescriptions(newList);
+                    }} size="small" />
+                  },
+                  {
+                    title: 'Đợt dùng thuốc', dataIndex: 'dotDungThuoc', key: 'dotDungThuoc', render: (text, record, idx) => <Input value={text} onChange={e => {
+                      const newList = [...prescriptions];
+                      newList[idx].dotDungThuoc = e.target.value;
+                      setPrescriptions(newList);
+                    }} size="small" />
+                  },
+                  {
+                    title: 'Ghi chú', dataIndex: 'ghiChu', key: 'ghiChu', render: (text, record, idx) => <Input value={text} onChange={e => {
+                      const newList = [...prescriptions];
+                      newList[idx].ghiChu = e.target.value;
+                      setPrescriptions(newList);
+                    }} size="small" />
+                  },
+                  {
+                    title: 'Giá bán', dataIndex: 'giaBan', key: 'giaBan', render: (text, record, idx) => <Input type="number" min={0} value={text} onChange={e => {
+                      const newList = [...prescriptions];
+                      newList[idx].giaBan = parseInt(e.target.value) || 0;
+                      newList[idx].tongTien = (newList[idx].soLuong * newList[idx].giaBan);
+                      setPrescriptions(newList);
+                    }} size="small" />
+                  },
                   { title: 'Tổng tiền', dataIndex: 'tongTien', key: 'tongTien', render: (text) => <span>{text?.toLocaleString() || 0}</span> },
-                  { title: '', key: 'actions', width: 40, render: (_: any, record: any, idx: number) => (
-                    <Button danger size="small" onClick={() => setPrescriptions(prescriptions.filter((_, i) => i !== idx))}>Xóa</Button>
-                  ) }
+                  {
+                    title: '', key: 'actions', width: 40, render: (_: any, record: any, idx: number) => (
+                      <Button danger size="small" onClick={() => setPrescriptions(prescriptions.filter((_, i) => i !== idx))}>Xóa</Button>
+                    )
+                  }
                 ]}
                 summary={pageData => (
                   <Table.Summary.Row>
-                    <Table.Summary.Cell colSpan={8} align="right"><b>Tổng tiền:</b></Table.Summary.Cell>
-                    <Table.Summary.Cell colSpan={2} align="left" style={{ color: 'red', fontWeight: 600 }}>{prescriptions.reduce((sum, p) => sum + (p.tongTien || 0), 0).toLocaleString()}</Table.Summary.Cell>
+                    <Table.Summary.Cell index={0} colSpan={8} align="right"><b>Tổng tiền:</b></Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} colSpan={2} align="left">{prescriptions.reduce((sum, p) => sum + (p.tongTien || 0), 0).toLocaleString()}</Table.Summary.Cell>
                   </Table.Summary.Row>
                 )}
               />
               <Button type="dashed" block style={{ marginTop: 12 }} onClick={() => setPrescriptions([...prescriptions, { maThuoc: 0, tenThuoc: '', soLuong: 1, donVi: '', cachDung: '', ghiChu: '', giaBan: 0, tongTien: 0, dotDungThuoc: '' }])}>
                 Thêm thuốc mới
-                            </Button>
-              </Card>
-              </Col>
-            </Row>
+              </Button>
+            </Card>
+          </Col>
+        </Row>
       </Modal>
     </div>
   );
