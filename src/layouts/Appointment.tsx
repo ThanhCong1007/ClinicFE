@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Appointment.css';
+import { useNotification } from '../contexts/NotificationContext';
 
 // Type definitions
 interface Doctor {
@@ -26,6 +27,7 @@ interface TimeSlot {
 
 function Appointment() {
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
   
   // Form state
   const [formData, setFormData] = useState({
@@ -159,7 +161,7 @@ function Appointment() {
     // Check if user is authenticated
     if (!isAuthenticated()) {
       // Show notification to user
-      alert("Vui lòng đăng nhập để đặt lịch khám!");
+      showNotification('Thông báo', 'Vui lòng đăng nhập để đặt lịch khám!', 'info');
       
       // Save form data to localStorage before redirecting
       localStorage.setItem('appointmentFormData', JSON.stringify(formData));
@@ -176,7 +178,7 @@ function Appointment() {
     // Get user data and check for maBenhNhan
     const userData = getUserData();
     if (!userData || !userData.maBenhNhan) {
-      alert("Không tìm thấy thông tin bệnh nhân. Vui lòng liên hệ quản trị viên!");
+      showNotification('Lỗi', 'Không tìm thấy thông tin bệnh nhân. Vui lòng liên hệ quản trị viên!', 'error');
       return;
     }
 
@@ -208,7 +210,7 @@ function Appointment() {
       
       // Success! Clear saved form data
       localStorage.removeItem('appointmentFormData');
-      alert("Đặt lịch khám thành công!");
+      showNotification('Thành công', 'Đặt lịch khám thành công!', 'success');
       
     } catch (error:any) {
       console.error("Error registering appointment:", error);
@@ -216,7 +218,7 @@ function Appointment() {
       // Kiểm tra nếu lỗi 401 (Unauthorized)
       if (error.response && error.response.status === 401) {
         // Token expired or invalid, show notification first
-        alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục!");
+        showNotification('Lỗi', 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục!', 'error');
         
         // Save form data before redirecting
         localStorage.setItem('appointmentFormData', JSON.stringify(formData));
@@ -232,9 +234,9 @@ function Appointment() {
       
       // Các lỗi khác
       if (error.response && error.response.data && error.response.data.message) {
-        alert("Đã xảy ra lỗi: " + error.response.data.message);
+        showNotification('Lỗi', `Đã xảy ra lỗi: ${error.response.data.message}`, 'error');
       } else {
-        alert("Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau!");
+        showNotification('Lỗi', 'Đã xảy ra lỗi khi đặt lịch. Vui lòng thử lại sau!', 'error');
       }
     }
   };

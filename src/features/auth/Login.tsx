@@ -4,11 +4,13 @@ import React from 'react';
 import axios from 'axios';
 import { checkAndValidateToken } from '../../services/userService';
 import './Login.css';
+import { useNotification } from '../../contexts/NotificationContext';
 
 export default function Login() {
   const [isSignIn, setIsSignIn] = useState(true); // true for login, false for signup
   const navigate = useNavigate();
   const [redirectPath, setRedirectPath] = useState('/');
+  const { showNotification } = useNotification();
 
   // Check login status and redirect if already logged in
   useEffect(() => {
@@ -87,7 +89,7 @@ export default function Login() {
       localStorage.setItem('redirectedFromLogin', 'true');
 
       // Đăng nhập thành công, hiển thị thông báo
-      alert('Đăng nhập thành công!');
+      showNotification('Thành công', 'Đăng nhập thành công!', 'success');
       
       // Check if there's a redirect path saved and redirect to it
       const redirectTo = localStorage.getItem('redirectAfterLogin') || '/';
@@ -104,9 +106,9 @@ export default function Login() {
       
       // Hiển thị thông báo lỗi trong cửa sổ popup
       if (error.response && error.response.data && error.response.data.message) {
-        alert(`Đăng nhập thất bại: ${error.response.data.message}`);
+        showNotification('Lỗi', `Đăng nhập thất bại: ${error.response.data.message}`, 'error');
       } else {
-        alert('Thông tin đăng nhập không chính xác');
+        showNotification('Lỗi', 'Thông tin đăng nhập không chính xác', 'error');
       }
     }
   };
@@ -120,13 +122,13 @@ export default function Login() {
     const xacNhanMatKhau = formData.get("xacNhanMatKhau");
     
     if (matKhau !== xacNhanMatKhau) {
-      alert("Mật khẩu xác nhận không khớp với mật khẩu!");
+      showNotification('Lỗi', 'Mật khẩu xác nhận không khớp với mật khẩu!', 'error');
       return;
     }
     
     // Kiểm tra độ dài mật khẩu
     if (!matKhau || typeof matKhau !== 'string' || matKhau.length < 6) {
-      alert("Mật khẩu phải có ít nhất 6 ký tự!");
+      showNotification('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự!', 'error');
       return;
     }
 
@@ -148,7 +150,7 @@ export default function Login() {
         }
       });
 
-      alert(response.data.message || "Đăng ký thành công!");
+      showNotification('Thành công', response.data.message || "Đăng ký thành công!", 'success');
       // Chuyển về form đăng nhập sau khi đăng ký thành công
       setIsSignIn(true);
     } catch (error:any) {
@@ -160,21 +162,21 @@ export default function Login() {
         
         if (error.response.data) {
           if (error.response.data.message) {
-            alert(`Đăng ký thất bại: ${error.response.data.message}`);
+            showNotification('Lỗi', `Đăng ký thất bại: ${error.response.data.message}`, 'error');
           } else if (error.response.data.errors && error.response.data.errors.length > 0) {
             // Hiển thị lỗi validation chi tiết nếu có
             const errorMessages = error.response.data.errors.map((err:any) => err.defaultMessage).join('\n');
-            alert(`Đăng ký thất bại:\n${errorMessages}`);
+            showNotification('Lỗi', `Đăng ký thất bại:\n${errorMessages}`, 'error');
           } else {
-            alert(`Đăng ký thất bại. Mã lỗi: ${error.response.status}`);
+            showNotification('Lỗi', `Đăng ký thất bại. Mã lỗi: ${error.response.status}`, 'error');
           }
         } else {
-          alert(`Đăng ký thất bại. Mã lỗi: ${error.response.status}`);
+          showNotification('Lỗi', `Đăng ký thất bại. Mã lỗi: ${error.response.status}`, 'error');
         }
       } else if (error.request) {
-        alert("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối của bạn.");
+        showNotification('Lỗi', "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối của bạn.", 'error');
       } else {
-        alert("Đã có lỗi xảy ra trong quá trình đăng ký.");
+        showNotification('Lỗi', "Đã có lỗi xảy ra trong quá trình đăng ký.", 'error');
       }
     }
   };

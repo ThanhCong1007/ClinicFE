@@ -104,7 +104,14 @@ const ProfileInvoices: React.FC<ProfileInvoicesProps> = ({ maBenhNhan }) => {
       title: '',
       key: 'actions',
       render: (_: any, record: Invoice) => (
-        <Button icon={<EyeOutlined />} onClick={() => handleSelectInvoice(record.maHoaDon)} />
+        <>
+          <Button icon={<EyeOutlined />} onClick={() => handleSelectInvoice(record.maHoaDon)} style={{ marginRight: 8 }} />
+          {record.trangThai === 'CHUA_THANH_TOAN' && (
+            <Button type="primary" onClick={() => handlePayInvoice(record.maHoaDon)}>
+              Thanh toán VNPay
+            </Button>
+          )}
+        </>
       ),
     },
   ];
@@ -151,6 +158,39 @@ const ProfileInvoices: React.FC<ProfileInvoicesProps> = ({ maBenhNhan }) => {
       )}
     </Modal>
   );
+
+  // Thêm hàm thanh toán VNPay
+  const handlePayInvoice = async (maHoaDon: number) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Yêu cầu xác thực.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.post(
+        '/api/hoa-don/payment/create',
+        {
+          maHoaDon,
+          bankCode: 'NCB',
+          language: 'vn',
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (res.data && res.data.code === '00' && res.data.paymentUrl) {
+        window.location.href = res.data.paymentUrl;
+      } else {
+        setError(res.data?.message || 'Không thể tạo thanh toán VNPay');
+      }
+    } catch (e: any) {
+      setError('Không thể tạo thanh toán VNPay');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Card title="Danh sách hóa đơn" style={{ marginBottom: 24 }}>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Calendar, User, Clock, Edit, Trash2, Eye, Phone, Mail, MapPin, Heart, FileText, Bell, Settings, LogOut, ArrowLeft } from 'lucide-react';
 import { getUserProfile, updateUserProfile, getPatientAppointments, cancelAppointment, getAvailableTimeSlots, updateAppointment } from '../services/userService';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -10,6 +10,7 @@ import ProfileAppointments from '../components/profile/ProfileAppointments';
 import ProfileMedicalRecords from '../components/profile/ProfileMedicalRecords';
 import ProfileInvoices from '../components/profile/ProfileInvoices';
 import { UserInfo, Appointment, TimeSlot, Doctor, Service } from '../components/profile/types';
+import { useNotification } from '../contexts/NotificationContext';
 
 // Hàm chuẩn hóa userInfo
 const normalizeUserInfo = (info: any): UserInfo => ({
@@ -62,6 +63,33 @@ const UserProfile = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { showNotification } = useNotification();
+  const hasShownNotification = useRef(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const status = params.get('status');
+    const orderNumber = params.get('orderNumber');
+    const amount = params.get('amount');
+
+    if (status && !hasShownNotification.current) {
+      hasShownNotification.current = true;
+      if (status === '00') {
+        showNotification(
+          'Thanh toán thành công!',
+          `Hóa đơn ${orderNumber} với số tiền ${(Number(amount)/100).toLocaleString('vi-VN')}đ đã được thanh toán.`,
+          'success'
+        );
+      } else {
+        showNotification(
+          'Thanh toán thất bại!',
+          `Thanh toán cho hóa đơn ${orderNumber} đã thất bại. Vui lòng thử lại.`,
+          'error'
+        );
+      }
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate, showNotification]);
 
   // Animation for the main content
   const springProps = useSpring({
@@ -100,7 +128,7 @@ const UserProfile = () => {
       setIsEditing(false);
     } catch (error) {
       console.error('Error fetching appointment details:', error);
-      alert('Không thể tải thông tin chi tiết lịch hẹn');
+      showNotification('Lỗi', 'Không thể tải thông tin chi tiết lịch hẹn', 'error');
     }
   };
 
@@ -194,10 +222,10 @@ const UserProfile = () => {
 
         await updateUserProfile(token, userInfo);
         setIsEditingProfile(false);
-        alert('Cập nhật thông tin cá nhân thành công!');
+        showNotification('Thành công', 'Cập nhật thông tin cá nhân thành công!', 'success');
       } catch (err) {
         if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
-          alert(`Lỗi cập nhật thông tin: ${err.response.data.message}`);
+          showNotification('Lỗi', `Lỗi cập nhật thông tin: ${err.response.data.message}`, 'error');
         } else {
           setError(err instanceof Error ? err.message : 'Failed to update profile');
         }
@@ -218,10 +246,10 @@ const UserProfile = () => {
         if (userInfo.maBenhNhan) {
           fetchAppointments(userInfo.maBenhNhan);
         }
-        alert('Lịch hẹn đã được hủy thành công.');
+        showNotification('Thành công', 'Lịch hẹn đã được hủy thành công.', 'success');
       } catch (err) {
         if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
-          alert(`Lỗi hủy lịch hẹn: ${err.response.data.message}`);
+          showNotification('Lỗi', `Lỗi hủy lịch hẹn: ${err.response.data.message}`, 'error');
         } else {
           setError(err instanceof Error ? err.message : 'Failed to cancel appointment');
         }
@@ -330,7 +358,7 @@ const UserProfile = () => {
 
         // If the selected time slot is not found in the available slots or is already booked, show error
         if (!selectedTimeSlot || selectedTimeSlot.daDat) {
-          alert('Khung giờ này không còn trống hoặc không hợp lệ. Vui lòng chọn khung giờ khác.');
+          showNotification('Lỗi', 'Khung giờ này không còn trống hoặc không hợp lệ. Vui lòng chọn khung giờ khác.', 'error');
           return;
         }
       } else {
@@ -344,7 +372,7 @@ const UserProfile = () => {
          );
 
          if (!selectedTimeSlot) {
-           alert('Khung giờ ban đầu không còn hợp lệ với bác sĩ và ngày đã chọn. Vui lòng chọn khung giờ khác.');
+           showNotification('Lỗi', 'Khung giờ ban đầu không còn hợp lệ với bác sĩ và ngày đã chọn. Vui lòng chọn khung giờ khác.', 'error');
            return;
          }
          // If selectedTimeSlot is found here, it means the original slot is still a valid offering,
@@ -371,13 +399,13 @@ const UserProfile = () => {
       }
       
       setIsEditing(false);
-      alert('Cập nhật lịch hẹn thành công!');
+      showNotification('Thành công', 'Cập nhật lịch hẹn thành công!', 'success');
     } catch (error) {
       console.error('Error updating appointment:', error);
       if (axios.isAxiosError(error) && error.response?.data?.message) {
-        alert(`Lỗi cập nhật lịch hẹn: ${error.response.data.message}`);
+        showNotification('Lỗi', `Lỗi cập nhật lịch hẹn: ${error.response.data.message}`, 'error');
       } else {
-        alert('Không thể cập nhật lịch hẹn. Vui lòng thử lại sau.');
+        showNotification('Lỗi', 'Không thể cập nhật lịch hẹn. Vui lòng thử lại sau.', 'error');
       }
     }
   };
