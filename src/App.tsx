@@ -5,6 +5,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+// Admin CSS
+import './admin/src/index.css';
+import './admin/src/styles.css';
+
 // Component layout
 import Navbar from './components/layout/Navbar';
 import Header from './components/layout/Header';
@@ -37,6 +41,7 @@ import NotFound from './features/404';
 
 // Dashboard components
 import DashboardLayout from './dashboard/DashboardLayout';
+import AdminLayout from './admin/AdminLayout';
 
 // Contexts
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
@@ -95,7 +100,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
       try {
         const user = JSON.parse(userData);
-        if (user.tenVaiTro !== 'BACSI') {
+        if (user.tenVaiTro !== 'BACSI' && user.tenVaiTro !== 'ADMIN') {
           showNotification(
             'Không có quyền truy cập',
             'Bạn không có quyền truy cập vào trang này!',
@@ -177,7 +182,8 @@ function AppContent() {
         </div>
       )}
 
-      <Navbar />
+      {/* Only show Navbar for non-dashboard and non-admin routes */}
+      {!window.location.pathname.includes('/dashboard') && !window.location.pathname.includes('/admin') && <Navbar />}
       <Routes>
         {/* Route chính */}
         <Route path="/trang-chu" element={<HomePage />} />
@@ -187,6 +193,13 @@ function AppContent() {
         <Route path="/dashboard/*" element={
           <ProtectedRoute>
             <DashboardLayout />
+          </ProtectedRoute>
+        } />
+
+        {/* Admin routes */}
+        <Route path="/admin/*" element={
+          <ProtectedRoute>
+            <AdminLayout />
           </ProtectedRoute>
         } />
 
@@ -212,11 +225,11 @@ function AppContent() {
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-      {/* Only show Footer for non-dashboard routes */}
-      {!window.location.pathname.includes('/dashboard') && <Footer />}
+      {/* Only show Footer for non-dashboard and non-admin routes */}
+      {!window.location.pathname.includes('/dashboard') && !window.location.pathname.includes('/admin') && <Footer />}
 
       {/* Back to Top Button */}
-      {!window.location.pathname.includes('/dashboard') && showBackToTop && (
+      {!window.location.pathname.includes('/dashboard') && !window.location.pathname.includes('/admin') && showBackToTop && (
         <button
           onClick={scrollToTop}
           className="btn btn-lg btn-primary btn-lg-square rounded back-to-top"

@@ -1,0 +1,125 @@
+/*!
+
+=========================================================
+* Admin Dashboard - Bootstrap Version
+=========================================================
+
+* Custom styles for admin dashboard using Bootstrap
+* Removed Tailwind CSS to avoid conflicts
+
+=========================================================
+
+*/
+
+/* Custom admin styles */
+.admin-dashboard {
+  background-color: #f8f9fa;
+}
+
+.admin-sidebar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  width: 260px;
+  transition: all 0.3s ease;
+}
+
+.admin-sidebar.collapsed {
+  width: 70px;
+}
+
+.admin-main-content {
+  margin-left: 260px;
+  transition: all 0.3s ease;
+}
+
+.admin-main-content.expanded {
+  margin-left: 70px;
+}
+
+.admin-navbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.admin-card {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.admin-card:hover {
+  transform: translateY(-5px);
+}
+
+.admin-stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.admin-stat-card .icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.2);
+}
+
+.admin-chart-container {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.admin-table-responsive {
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.admin-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 10px;
+}
+
+.admin-btn-primary:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-2px);
+}
+
+/* Dark mode styles */
+.admin-dark-mode {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+.admin-dark-mode .admin-card {
+  background-color: #2d2d2d;
+  color: #ffffff;
+}
+
+.admin-dark-mode .admin-navbar {
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .admin-sidebar.show {
+    transform: translateX(0);
+  }
+  
+  .admin-main-content {
+    margin-left: 0;
+  }
+}
