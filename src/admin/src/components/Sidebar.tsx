@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       <div className="p-3">
         <div className="d-flex align-items-center mb-4">
           <img 
-            src="/public/image/logo.png" 
+            src="/image/logo.png" 
             alt="Logo" 
             className="me-2"
             style={{ width: '32px', height: '32px' }}
@@ -128,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         <div className="mt-auto p-3">
           <div className="text-center">
             <img 
-              src="/public/image/help-icon.svg" 
+              src="/image/help-icon.svg" 
               alt="Help" 
               className="mb-3"
               style={{ width: '50%' }}

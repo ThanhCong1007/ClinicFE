@@ -9,7 +9,7 @@ const Profile: React.FC = () => {
     phone: '+1 (555) 123-4567',
     location: 'San Francisco, CA',
     bio: 'Full-stack developer with 5+ years of experience in React, Node.js, and cloud technologies.',
-    avatar: '/public/image/profile-avatar.jpg'
+    avatar: '/image/profile-avatar.jpg'
   };
 
   return (

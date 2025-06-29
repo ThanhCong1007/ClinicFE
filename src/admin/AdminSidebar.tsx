@@ -67,7 +67,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       <div className="p-3">
         <div className="d-flex align-items-center mb-4">
           <img 
-            src="/public/image/logo-ct.png" 
+            src="/image/logo-ct.png" 
             alt="Logo" 
             className="me-2"
             style={{ width: '32px', height: '32px' }}
@@ -128,7 +128,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
         <div className="mt-auto p-3">
           <div className="text-center">
             <img 
-              src="/public/image/shapes/waves-gray.svg" 
+              src="/image/shapes/waves-gray.svg" 
               alt="Help" 
               className="mb-3"
               style={{ width: '50%' }}

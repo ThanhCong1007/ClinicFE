@@ -14,21 +14,21 @@ const Carousel: React.FC = () => {
   const slides: CarouselItem[] = [
     {
       id: 1,
-      image: '/public/image/carousel-1.jpg',
+      image: '/image/carousel-1.jpg',
       icon: 'fas fa-camera',
       title: 'Get started with Argon',
       description: "There's nothing I really wanted to do in life that I wasn't able to get good at."
     },
     {
       id: 2,
-      image: '/public/image/carousel-2.jpg',
+      image: '/image/carousel-2.jpg',
       icon: 'fas fa-lightbulb',
       title: 'Faster way to create web pages',
       description: "That's my skill. I'm not really specifically talented at anything except for the ability to learn."
     },
     {
       id: 3,
-      image: '/public/image/carousel-3.jpg',
+      image: '/image/carousel-3.jpg',
       icon: 'fas fa-trophy',
       title: 'Share with us your design tips!',
       description: "Don't be afraid to be wrong because you can't learn anything from a compliment."

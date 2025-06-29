@@ -14,7 +14,7 @@ const SalesTable: React.FC = () => {
     {
       id: 1,
       country: 'United States',
-      flag: '/public/image/flags/US.png',
+      flag: '/image/flags/US.png',
       sales: 2500,
       value: '$230,900',
       bounce: '29.9%'
@@ -22,7 +22,7 @@ const SalesTable: React.FC = () => {
     {
       id: 2,
       country: 'Germany',
-      flag: '/public/image/flags/DE.png',
+      flag: '/image/flags/DE.png',
       sales: 3900,
       value: '$440,000',
       bounce: '40.22%'
@@ -30,7 +30,7 @@ const SalesTable: React.FC = () => {
     {
       id: 3,
       country: 'Great Britain',
-      flag: '/public/image/flags/GB.png',
+      flag: '/image/flags/GB.png',
       sales: 1400,
       value: '$190,700',
       bounce: '23.44%'
@@ -38,7 +38,7 @@ const SalesTable: React.FC = () => {
     {
       id: 4,
       country: 'Brasil',
-      flag: '/public/image/flags/BR.png',
+      flag: '/image/flags/BR.png',
       sales: 562,
       value: '$143,960',
       bounce: '32.14%'

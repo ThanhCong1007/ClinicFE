@@ -8,21 +8,21 @@ const VirtualReality: React.FC = () => {
       id: 'office',
       name: 'Virtual Office',
       description: 'Experience a modern virtual office environment',
-      image: '/public/image/vr-office.jpg',
+      image: '/image/vr-office.jpg',
       features: ['3D Environment', 'Interactive Objects', 'Real-time Collaboration']
     },
     {
       id: 'meeting',
       name: 'Virtual Meeting Room',
       description: 'Host meetings in immersive virtual spaces',
-      image: '/public/image/vr-meeting.jpg',
+      image: '/image/vr-meeting.jpg',
       features: ['Video Conferencing', 'Screen Sharing', 'Whiteboard Tools']
     },
     {
       id: 'training',
       name: 'Training Simulator',
       description: 'Learn and practice in virtual training environments',
-      image: '/public/image/vr-training.jpg',
+      image: '/image/vr-training.jpg',
       features: ['Interactive Tutorials', 'Progress Tracking', 'Skill Assessment']
     }
   ];

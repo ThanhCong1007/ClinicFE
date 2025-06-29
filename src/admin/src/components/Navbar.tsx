@@ -27,21 +27,21 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onToggleDarkMode, dark
   const notifications = [
     {
       id: 1,
-      avatar: '/public/image/team-2.jpg',
+      avatar: '/image/team-2.jpg',
       title: 'New message from Laur',
       time: '13 minutes ago',
       icon: 'fas fa-user'
     },
     {
       id: 2,
-      avatar: '/public/image/spotify-logo.svg',
+      avatar: '/image/spotify-logo.svg',
       title: 'New album by Travis Scott',
       time: '1 day',
       icon: 'fas fa-music'
     },
     {
       id: 3,
-      avatar: '/public/image/credit-card.svg',
+      avatar: '/image/credit-card.svg',
       title: 'Payment successfully completed',
       time: '2 days',
       icon: 'fas fa-credit-card'
