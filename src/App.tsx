@@ -135,6 +135,67 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return isAuthorized ? <>{children}</> : null;
 }
 
+// Public Route Component - Chỉ cho phép người dùng chưa đăng nhập truy cập
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const { showNotification } = useNotification();
+  const [isLoading, setIsLoading] = useState(true);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      
+      if (token && user) {
+        try {
+          // Kiểm tra nhanh xem có phải là JSON hợp lệ không
+          JSON.parse(user);
+          // Nếu có token và user data, chuyển hướng về trang chủ
+          setShouldRedirect(true);
+          const savedRedirectPath = localStorage.getItem('redirectAfterLogin');
+          const redirectTo = savedRedirectPath || '/';
+          
+          if (savedRedirectPath) {
+            localStorage.removeItem('redirectAfterLogin');
+          }
+          
+          // Hiển thị thông báo sau khi chuyển hướng
+          setTimeout(() => {
+            showNotification('Thông báo', 'Bạn đã đăng nhập rồi!', 'info');
+          }, 100);
+          
+          navigate(redirectTo);
+        } catch (error) {
+          // User data không hợp lệ, xóa và cho phép truy cập
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('maNguoiDung');
+          localStorage.removeItem('maBenhNhan');
+          localStorage.removeItem('maBacSi');
+          localStorage.removeItem('tenDangNhap');
+          localStorage.removeItem('hoTen');
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkAuthStatus();
+  }, [navigate]); // Loại bỏ showNotification khỏi dependency array
+
+  if (isLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return shouldRedirect ? null : <>{children}</>;
+}
+
 function AppContent() {
   const { showNotification } = useNotification();
   const [loading, setLoading] = useState(true);
@@ -183,7 +244,7 @@ function AppContent() {
       )}
 
       {/* Only show Navbar for non-dashboard and non-admin routes */}
-      {!window.location.pathname.includes('/dashboard') && !window.location.pathname.includes('/admin') && <Navbar />}
+      {!window.location.pathname.includes('/admin') && <Navbar />}
       <Routes>
         {/* Route chính */}
         <Route path="/trang-chu" element={<HomePage />} />
@@ -220,7 +281,11 @@ function AppContent() {
         {/* Routes cho các trang khác */}
         <Route path="/lien-he" element={<LienHe />} />
         <Route path="/dat-lich" element={<PlaceholderPage title="Đặt lịch hẹn" />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        } />
         <Route path="/thong-tin-tai-khoan" element={<UserProfile />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

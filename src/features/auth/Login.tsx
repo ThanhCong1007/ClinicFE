@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import React from 'react';
 import axios from 'axios';
-import { checkAndValidateToken } from '../../services/userService';
 import './Login.css';
 import { useNotification } from '../../contexts/NotificationContext';
 
@@ -12,24 +11,13 @@ export default function Login() {
   const [redirectPath, setRedirectPath] = useState('/');
   const { showNotification } = useNotification();
 
-  // Check login status and redirect if already logged in
+  // Lấy redirect path nếu có
   useEffect(() => {
-    const checkToken = async () => {
-      const isValid = await checkAndValidateToken();
-      if (isValid) {
-        // Token is valid, redirect to homepage
-        navigate('/');
-      } else {
-        // User is not logged in, get the redirect path if any
-        const savedRedirectPath = localStorage.getItem('redirectAfterLogin');
-        if (savedRedirectPath) {
-          setRedirectPath(savedRedirectPath);
-        }
-      }
-    };
-
-    checkToken();
-  }, [navigate]); // Add navigate to the dependency array
+    const savedRedirectPath = localStorage.getItem('redirectAfterLogin');
+    if (savedRedirectPath) {
+      setRedirectPath(savedRedirectPath);
+    }
+  }, []);
 
   const toggleForm = () => {
     setIsSignIn(!isSignIn);

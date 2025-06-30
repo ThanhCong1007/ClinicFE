@@ -133,24 +133,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               className="mb-3"
               style={{ width: '50%' }}
             />
-            <h6 className="text-white mb-1">Need help?</h6>
-            <p className="text-white-50 small mb-3">Please check our docs</p>
-            <a 
-              href="https://www.creative-tim.com/learning-lab/tailwind/html/quick-start/argon-dashboard/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="btn btn-sm btn-outline-light w-100 mb-2"
-            >
-              Documentation
-            </a>
-            <a 
-              href="https://www.creative-tim.com/product/argon-dashboard-pro-tailwind" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="btn btn-sm btn-primary w-100"
-            >
-              Upgrade to pro
-            </a>
           </div>
         </div>
       )}
