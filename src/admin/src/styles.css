@@ -123,3 +123,8 @@
     margin-left: 0;
   }
 }
+
+.no-border {
+  border-left: none !important;
+  border-right: none !important;
+}

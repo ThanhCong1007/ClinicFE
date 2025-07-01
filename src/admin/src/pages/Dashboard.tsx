@@ -48,20 +48,20 @@ const Dashboard: React.FC = () => {
   return (
     <div>
       {/* Stats Cards */}
-      <div className="row mb-4">
+      {/* <div className="row mb-4">
         {stats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
-      </div>
+      </div> */}
 
       {/* Charts and Carousel Row */}
       <div className="row mb-4">
-        <div className="col-lg-8 mb-4">
+        {/* <div className="col-lg-8 mb-4"> */}
           <SalesChart />
-        </div>
-        <div className="col-lg-4 mb-4">
+        {/* </div> */}
+        {/* <div className="col-lg-4 mb-4">
           <Carousel />
-        </div>
+        </div> */}
       </div>
 
       {/* Tables and Categories Row */}

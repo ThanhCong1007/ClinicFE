@@ -35,6 +35,14 @@ export interface DeactivateResponse {
   message: string;
 }
 
+// Định nghĩa interface cho doanh thu tổng thể
+export interface RevenueSummary {
+  nhan: string;
+  doanhThu: number;
+  soHoaDon: number;
+  loaiThongKe: string;
+}
+
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
@@ -166,6 +174,25 @@ export const adminApi = {
       return response.data;
     } catch (error) {
       console.error('Error deactivating user:', error);
+      throw error;
+    }
+  },
+
+  // Fetch tổng kết doanh thu tổng thể
+  getRevenueSummary: async (
+    loaiThongKe: 'THANG' | 'QUY' | 'NAM',
+    nam: number,
+    thang?: number,
+    quy?: number
+  ): Promise<RevenueSummary[]> => {
+    try {
+      const params: any = { loaiThongKe, nam };
+      if (thang) params.thang = thang;
+      if (quy) params.quy = quy;
+      const response: AxiosResponse<RevenueSummary[]> = await apiClient.get('/api/admin/doanh-thu/tong-ket', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching revenue summary:', error);
       throw error;
     }
   },

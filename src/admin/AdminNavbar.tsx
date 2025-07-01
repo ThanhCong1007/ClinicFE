@@ -89,10 +89,6 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ onToggleSidebar, onToggleDark
 
           <ul className="navbar-nav">
             <li className="nav-item me-3">
-              <Link to="/admin/sign-in" className="nav-link text-white">
-                <i className="fas fa-user me-1"></i>
-                <span className="d-none d-sm-inline">Sign In</span>
-              </Link>
             </li>
 
             <li className="nav-item me-3">
