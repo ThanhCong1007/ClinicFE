@@ -14,7 +14,6 @@ export default function DashboardLayout() {
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/patients" element={<Patients />} />
           <Route path="/examination" element={<Examination />} />
-          <Route path="/examination/:maLichHen" element={<Examination />} />
         </Routes>
       </ErrorBoundary>
     </div>

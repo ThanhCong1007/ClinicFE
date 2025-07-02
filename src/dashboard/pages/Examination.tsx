@@ -8,6 +8,7 @@ import type { Drug } from '../components/DrugSearch';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { remove as removeDiacritics } from 'diacritics';
+import NotFound from '../../features/404';
 
 const { Option } = Select;
 
@@ -119,31 +120,61 @@ export default function Examination() {
     });
   }, [form, examStartTime]);
 
+  // Thêm hàm chuẩn hóa dữ liệu
+  function normalizeAppointmentData(data: any): Appointment {
+    return {
+      maLichHen: data.maLichHen ?? null,
+      maBenhNhan: data.maBenhNhan ?? null,
+      hoTen: data.hoTen || data.tenBenhNhan || '',
+      ngaySinh: data.ngaySinh || data.ngaySinhBenhNhan || '',
+      soDienThoaiBenhNhan: data.soDienThoaiBenhNhan || data.soDienThoai || '',
+      maBacSi: data.maBacSi ?? 0,
+      tenBacSi: data.tenBacSi || '',
+      maDichVu: data.maDichVu ?? 0,
+      tenDichVu: data.tenDichVu || '',
+      ngayHen: data.ngayHen || '',
+      gioBatDau: data.gioBatDau || '',
+      gioKetThuc: data.gioKetThuc || '',
+      maTrangThai: data.maTrangThai ?? 0,
+      tenTrangThai: data.tenTrangThai || '',
+      ghiChuLichHen: data.ghiChuLichHen || '',
+      lyDoHen: data.lyDoHen || '',
+      thoiGian: data.thoiGian ?? 0,
+      maBenhAn: data.maBenhAn ?? null,
+      lyDoKham: data.lyDoKham || '',
+      chanDoan: data.chanDoan || '',
+      ghiChuDieuTri: data.ghiChuDieuTri || '',
+      ngayTaiKham: data.ngayTaiKham || '',
+      ngayTaoBenhAn: data.ngayTaoBenhAn || '',
+      coBenhAn: data.coBenhAn ?? false,
+    };
+  }
+
+  // Ưu tiên lấy dữ liệu từ location.state
   useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        console.log('Restored from localStorage:', parsed);
-        if (parsed.appointment) {
-          const appointmentData = {
-            ...parsed.appointment,
-            hoTen: parsed.appointment.hoTen || parsed.appointment.tenBenhNhan || '',
-            soDienThoaiBenhNhan: parsed.appointment.soDienThoaiBenhNhan || parsed.appointment.soDienThoai || '',
-            ngaySinh: parsed.appointment.ngaySinh || parsed.appointment.ngaySinhBenhNhan || '',
-            ngayHen: parsed.appointment.ngayHen || '',
-            gioBatDau: parsed.appointment.gioBatDau || ''
-          };
-          setAppointment(appointmentData);
-        }
-        if (parsed.medicalRecord) setMedicalRecord(parsed.medicalRecord);
-        if (parsed.selectedDrugs) setSelectedDrugs(parsed.selectedDrugs);
-        if (parsed.selectedServices) setSelectedServices(parsed.selectedServices);
-      } catch (error) {
-        console.error('Error parsing localStorage data:', error);
+    let found = false;
+    if (location.state && (location.state as any).appointment) {
+      setAppointment(normalizeAppointmentData((location.state as any).appointment));
+      found = true;
+      setLoading(false);
+    } else {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.appointment) {
+            setAppointment(normalizeAppointmentData(parsed.appointment));
+            found = true;
+            setLoading(false);
+          }
+        } catch {}
       }
     }
-  }, [storageKey]);
+    if (!found) {
+      setError('404');
+      setLoading(false);
+    }
+  }, [location.state, storageKey]);
 
   useEffect(() => {
     const fetchAppointment = async () => {
@@ -154,7 +185,7 @@ export default function Examination() {
             try {
               const parsed = JSON.parse(saved);
               if (parsed.appointment) {
-                setAppointment(parsed.appointment);
+                setAppointment(normalizeAppointmentData(parsed.appointment));
                 setLoading(false);
                 return;
               }
@@ -192,39 +223,7 @@ export default function Examination() {
         }
         const data = await getAppointmentDetails(parseInt(maLichHen));
         if (data) {
-          // Map dữ liệu từ API response sang đúng format
-          const appointmentData = {
-            maLichHen: data.maLichHen || parseInt(maLichHen),
-            maBenhNhan: data.maBenhNhan || data.maBenhNhan,
-            hoTen: data.tenBenhNhan || data.hoTen || data.hoTenBenhNhan || '',
-            ngaySinh: data.ngaySinh || data.ngaySinhBenhNhan || '',
-            soDienThoaiBenhNhan: data.soDienThoaiBenhNhan || data.soDienThoai || data.soDienThoaiBenhNhan || '',
-            maBacSi: data.maBacSi || 0,
-            tenBacSi: data.tenBacSi || '',
-            maDichVu: data.maDichVu || 0,
-            tenDichVu: data.tenDichVu || '',
-            ngayHen: data.ngayHen || data.ngayHen || '',
-            gioBatDau: data.gioBatDau || '',
-            gioKetThuc: data.gioKetThuc || '',
-            maTrangThai: data.maTrangThai || 2,
-            tenTrangThai: data.tenTrangThai || '',
-            ghiChuLichHen: data.ghiChuLichHen || null,
-            lyDoHen: data.lyDoHen || null,
-            thoiGian: data.thoiGian || 30,
-            maBenhAn: data.maBenhAn || null,
-            lyDoKham: data.lyDoKham || null,
-            chanDoan: data.chanDoan || null,
-            ghiChuDieuTri: data.ghiChuDieuTri || null,
-            ngayTaiKham: data.ngayTaiKham || null,
-            ngayTaoBenhAn: data.ngayTaoBenhAn || null,
-            coBenhAn: data.coBenhAn || false
-          };
-          
-          console.log('API Response:', data);
-          console.log('Mapped Appointment Data:', appointmentData);
-          
-          setAppointment(appointmentData);
-          
+          setAppointment(normalizeAppointmentData(data));
           if (data.lyDoKham || data.chanDoan || data.ghiChuDieuTri || data.ngayTaiKham) {
             const record = {
               lyDoKham: data.lyDoKham || '',
@@ -439,12 +438,7 @@ export default function Examination() {
     }
   }, [appointment, medicalRecord, selectedDrugs, selectedServices]);
 
-  // Debug: Log appointment data changes
-  useEffect(() => {
-    console.log('Appointment state changed:', appointment);
-  }, [appointment]);
-
-  // Set form values when appointment data is available
+  // Đảm bảo set form values dùng đúng field đã chuẩn hóa
   useEffect(() => {
     if (appointment && !loading) {
       const formValues = {
@@ -460,18 +454,13 @@ export default function Examination() {
         tienSuBenh: medicalRecord.tienSuBenh || '',
         diUng: medicalRecord.diUng || ''
       };
-      
-      console.log('Setting form values directly:', formValues);
-      console.log('Form instance:', form);
-      console.log('Form is connected:', form.getFieldsValue());
       form.setFieldsValue(formValues);
-      
-      // Verify the values were set
-      setTimeout(() => {
-        console.log('Form values after set:', form.getFieldsValue());
-      }, 100);
     }
   }, [appointment, medicalRecord, loading, form, examStartTime]);
+
+  if (error === '404') {
+    return <NotFound />;
+  }
 
   if (loading || reexamLoading) {
     return (
