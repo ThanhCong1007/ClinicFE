@@ -1,4 +1,4 @@
-import About from '../user/features/about/About';
+import About from '../../user/features/about/About';
 
 function GioiThieu() {
     return (

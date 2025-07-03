@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { checkAndValidateToken, logout as logoutUser } from '../user/services/userService';
+import { checkAndValidateToken, logout as logoutUser } from '../../user/services/userService';
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);

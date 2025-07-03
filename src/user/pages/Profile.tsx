@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Calendar, User, Clock, Edit, Trash2, Eye, Phone, Mail, MapPin, Heart, FileText, Bell, Settings, LogOut, ArrowLeft } from 'lucide-react';
 import { getUserProfile, updateUserProfile, getPatientAppointments, cancelAppointment, getAvailableTimeSlots, updateAppointment } from '../services/userService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { useSpring, animated } from '@react-spring/web';
+import { useSpring } from '@react-spring/web';
 import ProfileSidebar from '../components/profile/ProfileSidebar';
 import ProfileInfoCard from '../components/profile/ProfileInfoCard';
 import ProfileAppointments from '../components/profile/ProfileAppointments';
@@ -464,7 +463,7 @@ const UserProfile = () => {
             </div>
 
             {/* Main Content */}
-            <animated.div className="col-lg-9" style={springProps}>
+            <div className="col-lg-9">
               {activeTab === 'profile' && userInfo && (
                 <ProfileInfoCard
                   userInfo={userInfo}
@@ -513,7 +512,7 @@ const UserProfile = () => {
               {activeTab === 'invoices' && userInfo?.maBenhNhan && (
                 <ProfileInvoices maBenhNhan={userInfo.maBenhNhan} />
               )}
-            </animated.div>
+            </div>
           </div>
         </div>
       </div>
