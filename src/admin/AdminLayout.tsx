@@ -10,7 +10,7 @@ import SignIn from './src/pages/SignIn';
 import SignUp from './src/pages/SignUp';
 import VirtualReality from './src/pages/VirtualReality';
 import RTL from './src/pages/RTL';
-import ErrorBoundary from '../components/ErrorBoundary';
+import ErrorBoundary from '../user/components/ErrorBoundary';
 
 export default function AdminLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

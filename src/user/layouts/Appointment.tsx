@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Appointment.css';
-import { useNotification } from '../contexts/NotificationContext';
+import { useNotification } from '../../user/contexts/NotificationContext';
 
 // Type definitions
 interface Doctor {
@@ -165,7 +165,8 @@ function Appointment() {
       
       // Save form data to localStorage before redirecting
       localStorage.setItem('appointmentFormData', JSON.stringify(formData));
-      localStorage.setItem('redirectAfterLogin', '/appointment');
+      localStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search + window.location.hash);
+      localStorage.setItem('scrollPosition', window.scrollY.toString());
       localStorage.setItem('redirectedFromLogin', 'true');
       
       // Redirect to login page after a short delay so the alert is visible
@@ -222,7 +223,8 @@ function Appointment() {
         
         // Save form data before redirecting
         localStorage.setItem('appointmentFormData', JSON.stringify(formData));
-        localStorage.setItem('redirectAfterLogin', '/appointment');
+        localStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search + window.location.hash);
+        localStorage.setItem('scrollPosition', window.scrollY.toString());
         localStorage.setItem('redirectedFromLogin', 'true');
         
         // Redirect to login page after a short delay

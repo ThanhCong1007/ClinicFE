@@ -81,14 +81,21 @@ export default function Login() {
       
       // Check if there's a redirect path saved and redirect to it
       const redirectTo = localStorage.getItem('redirectAfterLogin') || '/';
-      
-      // Clear the redirect path from localStorage
+      const scrollPosition = localStorage.getItem('scrollPosition');
       if (redirectTo !== '/') {
         localStorage.removeItem('redirectAfterLogin');
       }
+      if (scrollPosition) {
+        localStorage.removeItem('scrollPosition');
+      }
       
       // Navigate to the specified path
-      navigate(redirectTo); 
+      navigate(redirectTo);
+      setTimeout(() => {
+        if (scrollPosition) {
+          window.scrollTo(0, parseInt(scrollPosition, 10));
+        }
+      }, 100);
     } catch (error:any) {
       console.error('Lỗi đăng nhập:', error);
       

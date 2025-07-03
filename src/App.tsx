@@ -10,44 +10,44 @@ import './admin/src/index.css';
 import './admin/src/styles.css';
 
 // Component layout
-import Navbar from './components/layout/Navbar';
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
+import Navbar from './user/components/layout/Navbar';
+import Header from './user/components/layout/Header';
+import Footer from './user/components/layout/Footer';
 
 // Widgets
-import Search from './components/widgets/Search';
-import Carousel from './components/widgets/Carousel';
-import Banner from './components/widgets/Banner';
-import ChatWidget from './components/widgets/ChatWidget';
+import Search from './user/components/widgets/Search';
+import Carousel from './user/components/widgets/Carousel';
+import Banner from './user/components/widgets/Banner';
+import ChatWidget from './user/components/widgets/ChatWidget';
 
 // Features
-import About from './features/about/About';
-import Team from './features/about/Team';
-import Contact from './features/contact/Contact';
-import Pricing from './features/pricing/Pricing';
-import Login from './features/auth/Login';
+import About from './user/features/about/About';
+import Team from './user/features/about/Team';
+import Contact from './user/features/contact/Contact';
+import Pricing from './user/features/pricing/Pricing';
+import Login from './user/features/auth/Login';
 
 // Layout/section
-import Appointment from './layouts/Appointment';
+import Appointment from './user/layouts/Appointment';
 
 // Pages
-import UserProfile from './pages/Profile';
-import GioiThieu from './pages/GioiThieu';
-import ThongTinPhongKham from './pages/GioiThieu/ThongTinPhongKham';
-import LienHe from './pages/LienHe/LienHe';
-import PricingTable from './pages/BocRangSu/PricingTable';
-import CosmeticPorcelainTeeth from './pages/BocRangSu/CosmeticPorcelainTeeth';
-import NotFound from './features/404';
+import UserProfile from './user/pages/Profile';
+import GioiThieu from './user/pages/GioiThieu';
+import ThongTinPhongKham from './user/pages/GioiThieu/ThongTinPhongKham';
+import LienHe from './user/pages/LienHe/LienHe';
+import PricingTable from './user/pages/BocRangSu/PricingTable';
+import CosmeticPorcelainTeeth from './user/pages/BocRangSu/CosmeticPorcelainTeeth';
+import NotFound from './user/features/404';
 
 // Dashboard components
 import DashboardLayout from './dashboard/DashboardLayout';
 import AdminLayout from './admin/AdminLayout';
 
 // Contexts
-import { NotificationProvider, useNotification } from './contexts/NotificationContext';
+import { NotificationProvider, useNotification } from './user/contexts/NotificationContext';
 
 // Services
-import { setNotificationCallback } from './services/userService';
+import { setNotificationCallback } from './user/services/userService';
 
 // import 'tailwindcss/tailwind.css';
 

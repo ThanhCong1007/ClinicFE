@@ -8,7 +8,7 @@ import type { Drug } from '../components/DrugSearch';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { remove as removeDiacritics } from 'diacritics';
-import NotFound from '../../features/404';
+import NotFound from '../../user/features/404';
 
 const { Option } = Select;
 

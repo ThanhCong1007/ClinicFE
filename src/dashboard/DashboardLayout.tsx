@@ -3,7 +3,7 @@ import Dashboard from './pages/Dashboard';
 import Appointments from './pages/Appointments';
 import Patients from './pages/Patients';
 import Examination from './pages/Examination';
-import ErrorBoundary from '../components/ErrorBoundary';
+import ErrorBoundary from '../user/components/ErrorBoundary';
 
 export default function DashboardLayout() {
   return (

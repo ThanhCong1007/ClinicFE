@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import NotificationModal from '../components/widgets/NotificationModal';
+import NotificationModal from '../../user/components/widgets/NotificationModal';
 
 interface NotificationContextType {
   showNotification: (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info', onConfirm?: () => void) => void;
