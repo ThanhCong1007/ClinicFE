@@ -27,10 +27,8 @@ import Contact from './user/features/contact/Contact';
 import Pricing from './user/features/pricing/Pricing';
 import Login from './user/features/auth/Login';
 
-// Layout/section
 import Appointment from './user/layouts/Appointment';
 
-// Pages
 import UserProfile from './user/pages/Profile';
 import GioiThieu from './user/pages/GioiThieu';
 import ThongTinPhongKham from './user/pages/GioiThieu/ThongTinPhongKham';
@@ -39,17 +37,13 @@ import PricingTable from './user/pages/BocRangSu/PricingTable';
 import CosmeticPorcelainTeeth from './user/pages/BocRangSu/CosmeticPorcelainTeeth';
 import NotFound from './user/features/404';
 
-// Dashboard components
 import DashboardLayout from './dashboard/DashboardLayout';
 import AdminLayout from './admin/AdminLayout';
 
-// Contexts
 import { NotificationProvider, useNotification } from './user/contexts/NotificationContext';
 
-// Services
 import { setNotificationCallback } from './user/services/userService';
 
-// import 'tailwindcss/tailwind.css';
 
 // Component tạm thời cho trang chủ và các trang chưa có
 function HomePage() {

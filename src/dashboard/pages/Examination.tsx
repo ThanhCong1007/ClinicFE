@@ -74,6 +74,8 @@ interface MedicalExamData {
   danhSachDichVu?: { maDichVu: number; gia: number }[];
   danhSachThuoc?: Prescription[];
   ghiChuDonThuoc?: string;
+  gioBatDau: string;
+  gioKetThuc: string;
 }
 
 export default function Examination() {
@@ -98,10 +100,17 @@ export default function Examination() {
   });
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [selectedServices, setSelectedServices] = useState<{maDichVu: number, tenDichVu: string, gia: number}[]>([]);
+  const [selectedServices, setSelectedServices] = useState<{ maDichVu: number, tenDichVu: string, gia: number }[]>([]);
   const [examStartTime] = useState(format(new Date(), 'HH:mm:ss'));
-  
+
   const [form] = Form.useForm();
+
+  // Add state for available slots
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotError, setSlotError] = useState<string | null>(null);
+  const [selectedReexamDate, setSelectedReexamDate] = useState<string | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   // Initialize form with empty values to prevent connection warning
   useEffect(() => {
@@ -167,11 +176,38 @@ export default function Examination() {
             found = true;
             setLoading(false);
           }
-        } catch {}
+        } catch { }
       }
     }
     if (!found) {
-      setError('404');
+      // Tạo appointment mặc định (khám vãng lai)
+      const newAppointment = {
+        maLichHen: null,
+        maBenhNhan: null,
+        hoTen: '',
+        ngaySinh: '',
+        soDienThoaiBenhNhan: '',
+        maBacSi: 0,
+        tenBacSi: '',
+        maDichVu: 0,
+        tenDichVu: '',
+        ngayHen: format(new Date(), 'yyyy-MM-dd'),
+        gioBatDau: format(new Date(), 'HH:mm'),
+        gioKetThuc: format(new Date(new Date().getTime() + 30 * 60000), 'HH:mm'),
+        maTrangThai: 2,
+        tenTrangThai: '',
+        ghiChuLichHen: '',
+        lyDoHen: null,
+        thoiGian: 30,
+        maBenhAn: null,
+        lyDoKham: null,
+        chanDoan: null,
+        ghiChuDieuTri: null,
+        ngayTaiKham: null,
+        ngayTaoBenhAn: null,
+        coBenhAn: false
+      };
+      setAppointment(newAppointment);
       setLoading(false);
     }
   }, [location.state, storageKey]);
@@ -189,7 +225,7 @@ export default function Examination() {
                 setLoading(false);
                 return;
               }
-            } catch {}
+            } catch { }
           }
           const newAppointment = {
             maLichHen: null,
@@ -359,12 +395,14 @@ export default function Examination() {
         const normalized = normalizeDateFields(formValues, dateFields);
         form.setFieldsValue(normalized);
         setSelectedServices(Array.isArray(draftServices) ? draftServices : []);
-      } catch {}
+      } catch { }
     }
   }, [form]);
 
   const handleSubmit = async (values: any) => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    // Lấy khung giờ đã chọn
+    const selectedSlotObj = availableSlots.find(slot => slot.gioBatDau === values.gioTaiKham);
     const examData: MedicalExamData = {
       maLichHen: isReexam ? null : (maLichHen ? parseInt(maLichHen) : null),
       maBacSi: userData.maBacSi,
@@ -390,31 +428,42 @@ export default function Examination() {
         ghiChu: '', 
         lyDoDonThuoc: drug.tenThuoc || ''
       })),
-      ghiChuDonThuoc: ''
+      ghiChuDonThuoc: '',
+      gioBatDau: values.gioTaiKham || '',
+      gioKetThuc: selectedSlotObj?.gioKetThuc || '',
     };
 
     try {
+      let createdRecord;
       if (appointment?.maBenhAn) {
         await updateMedicalRecord(appointment.maBenhAn, examData);
         notification.success({ message: 'Thành công', description: 'Cập nhật bệnh án thành công!' });
+        createdRecord = { maBenhAn: appointment.maBenhAn };
       } else {
-        await createMedicalExam(examData);
+        const result = await createMedicalExam(examData);
         notification.success({ message: 'Thành công', description: 'Tạo bệnh án thành công!' });
+        createdRecord = result;
       }
-      localStorage.removeItem('draft_examination'); // Xóa draft khi submit thành công
+      localStorage.removeItem('draft_examination');
       localStorage.removeItem(storageKey);
+      // Fetch full details from backend after creation
+      if (createdRecord?.maBenhAn) {
+        const detail = await getMedicalRecordById(createdRecord.maBenhAn);
+        // You can use 'detail' for further logic or navigation if needed
+        // For now, just navigate away
+      }
       navigate('/dashboard/appointments');
     } catch (err) {
       notification.error({ message: 'Lỗi', description: err instanceof Error ? err.message : 'Có lỗi xảy ra' });
     }
   };
-  
+
   const handleServicePriceChange = (maDichVu: number, newPrice: number) => {
-    setSelectedServices(prev => 
+    setSelectedServices(prev =>
       prev.map(s => s.maDichVu === maDichVu ? { ...s, gia: newPrice } : s)
     );
   };
-  
+
   // Save appointment data to localStorage
   const saveAppointmentToStorage = (appointmentData: any, medicalRecordData: any) => {
     try {
@@ -458,6 +507,21 @@ export default function Examination() {
     }
   }, [appointment, medicalRecord, loading, form, examStartTime]);
 
+  // Fetch available slots when doctor and re-exam date change
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    if (userData.maBacSi && selectedReexamDate) {
+      setLoadingSlots(true);
+      setSlotError(null);
+      axios.get(`/api/public/bac-si/${userData.maBacSi}/lich-trong?ngayHen=${selectedReexamDate}`)
+        .then(res => setAvailableSlots(res.data))
+        .catch(() => setSlotError('Không thể tải khung giờ trống.'))
+        .finally(() => setLoadingSlots(false));
+    } else {
+      setAvailableSlots([]);
+    }
+  }, [selectedReexamDate]);
+
   if (error === '404') {
     return <NotFound />;
   }
@@ -476,7 +540,7 @@ export default function Examination() {
   if (error) {
     return <Alert message="Lỗi" description={error} type="error" showIcon style={{ margin: 24 }} />;
   }
-  
+
   return (
     <div style={{ padding: 24 }}>
       <Form
@@ -514,7 +578,7 @@ export default function Examination() {
                 </Col>
                 <Col span={12}>
                   <Form.Item name="gioBatDau" label="Giờ khám">
-                    <Input 
+                    <Input
                       value={examStartTime}
                       readOnly
                       style={{ backgroundColor: '#f5f5f5' }}
@@ -561,8 +625,41 @@ export default function Examination() {
                 </Col>
                 <Col span={12}>
                   <Form.Item name="ngayTaiKham" label="Ngày tái khám">
-                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                    <DatePicker
+                      style={{ width: '100%' }}
+                      format="DD/MM/YYYY"
+                      onChange={(date) => {
+                        if (date && dayjs(date).isValid()) setSelectedReexamDate(dayjs(date).format('YYYY-MM-DD'));
+                        else setSelectedReexamDate(null);
+                        // Reset slot when date changes
+                        setSelectedSlot(null);
+                        form.setFieldsValue({ gioTaiKham: null });
+                      }}
+                    />
                   </Form.Item>
+                  </Col>
+                  <Col span={12}> 
+                  {/* Box for selecting available slots */}
+                  <Form.Item label="Khung giờ tái khám" name="gioTaiKham">
+                    <Select
+                      placeholder="Chọn khung giờ"
+                      value={selectedSlot}
+                      onChange={value => {
+                        setSelectedSlot(value);
+                        form.setFieldsValue({ gioTaiKham: value });
+                      }}
+                      disabled={loadingSlots || availableSlots.length === 0}
+                      allowClear
+                    >
+                      {availableSlots.map((slot: any) => (
+                        <Select.Option key={slot.gioBatDau} value={slot.gioBatDau}>
+                          {slot.gioBatDau} - {slot.gioKetThuc}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                  {loadingSlots && <Spin size="small" />}
+                  {slotError && <Alert type="error" message={slotError} />}
                 </Col>
               </Row>
             </Card>
@@ -589,7 +686,7 @@ export default function Examination() {
                       const existed = selectedServices.find(s => s.maDichVu === maDichVu);
                       const service = services.find(s => s.maDichVu === maDichVu);
                       return existed ? existed : (service ? { maDichVu: service.maDichVu, tenDichVu: service.tenDichVu, gia: service.gia } : null);
-                    }).filter(Boolean) as {maDichVu: number, tenDichVu: string, gia: number}[];
+                    }).filter(Boolean) as { maDichVu: number, tenDichVu: string, gia: number }[];
                     setSelectedServices(newServices);
                     saveDraft(form.getFieldsValue(), newServices);
                   }}
@@ -631,11 +728,11 @@ export default function Examination() {
                   </div>
                 </div>
               )}
-              
+
               <h5 style={{ marginTop: 24 }}>Đơn thuốc</h5>
               <DrugSearch onDrugsChange={setSelectedDrugs} storageKey={storageKey} />
             </Card>
-            
+
             <Row gutter={16}>
               <Col span={12}>
                 <Button type="primary" htmlType="submit" block loading={loading}>
