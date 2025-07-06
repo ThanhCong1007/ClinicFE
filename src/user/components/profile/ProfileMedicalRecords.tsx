@@ -49,8 +49,14 @@ const ProfileMedicalRecords: React.FC<ProfileMedicalRecordsProps> = ({ maBenhNha
     axios.get(`/api/benh-an/chi-tiet/${maBenhAn}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => setSelectedRecord(res.data.data))
-      .catch(() => setError('Không thể tải chi tiết bệnh án'))
+      .then(res => {
+        console.log('API trả về:', res.data);
+        setSelectedRecord(res.data);
+      })
+      .catch((err) => {
+        setError('Không thể tải chi tiết bệnh án');
+        console.error('Lỗi fetch chi tiết bệnh án:', err);
+      })
       .finally(() => setDetailLoading(false));
   };
 
@@ -99,6 +105,9 @@ const ProfileMedicalRecords: React.FC<ProfileMedicalRecordsProps> = ({ maBenhNha
   ];
 
   // Modal for detail
+  if (selectedRecord) {
+    console.log('selectedRecord:', selectedRecord);
+  }
   const detailModal = (
     <Modal
       open={!!selectedRecord}
@@ -133,6 +142,21 @@ const ProfileMedicalRecords: React.FC<ProfileMedicalRecordsProps> = ({ maBenhNha
                   { title: 'Giá', dataIndex: 'gia', key: 'gia', render: (gia: number) => gia.toLocaleString('vi-VN') + 'đ' },
                 ]}
               />
+            </Card>
+          )}
+          {/* Ảnh bệnh án */}
+          {selectedRecord.danhSachAnhBenhAn && selectedRecord.danhSachAnhBenhAn.length > 0 && (
+            <Card title="Ảnh bệnh án" size="small" style={{ marginTop: 16 }}>
+              {selectedRecord.danhSachAnhBenhAn.map((img: any, idx: number) => (
+                <div key={img.url + idx} style={{ display: 'inline-block', marginRight: 16 }}>
+                  <img
+                    src={img.url}
+                    alt={img.moTa}
+                    style={{ width: 180, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                  />
+                  <div style={{ textAlign: 'center', fontSize: 12 }}>{img.moTa}</div>
+                </div>
+              ))}
             </Card>
           )}
           {/* Đơn thuốc */}

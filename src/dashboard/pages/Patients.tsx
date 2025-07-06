@@ -4,6 +4,7 @@ import debounce from 'lodash/debounce';
 import { Row, Col, Input, List, Spin, Alert, Card, Empty, Pagination, Descriptions, Table, Button, Tag } from 'antd';
 import { format } from 'date-fns';
 import NotificationModal from '../components/NotificationModal';
+import { useNavigate } from 'react-router-dom';
 
 interface MedicalRecord {
   maBenhAn: string;
@@ -48,6 +49,8 @@ export default function Patients() {
   // Client-side pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const PATIENTS_PER_PAGE = 10;
+
+  const navigate = useNavigate();
 
   const processRecordsToPatients = (records: MedicalRecord[]) => {
     const patientsMap: Patients = {};
@@ -195,7 +198,7 @@ export default function Patients() {
         <Button
           type="primary"
           size="small"
-          onClick={() => window.open(`/dashboard/examination?reexam=${record.maBenhAn}`, '_blank')}
+          onClick={() => navigate('/dashboard/examination', { state: { maBenhAn: record.maBenhAn } })}
         >
           Xem chi tiết
         </Button>

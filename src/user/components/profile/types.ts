@@ -105,6 +105,13 @@ export interface MedicalRecordDetail extends MedicalRecord {
   danhSachThuoc?: MedicalPrescription[];
   moTaChanDoan?: string;
   ghiChuDonThuoc?: string;
+  danhSachAnhBenhAn?: Array<{
+    maBenhAn: number;
+    maAnh: number;
+    url: string;
+    moTa: string;
+    file?: any;
+  }>;
 }
 
 // Component Props types

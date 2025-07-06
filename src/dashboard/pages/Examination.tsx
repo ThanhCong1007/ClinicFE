@@ -85,6 +85,8 @@ export default function Examination() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const reexamId = searchParams.get('reexam');
+  const maBenhAnFromState = location.state?.maBenhAn;
+  const effectiveMaBenhAn = maBenhAnFromState || reexamId;
   const [isReexam, setIsReexam] = useState(!!reexamId);
   const [reexamLoading, setReexamLoading] = useState(false);
   const storageKey = `exam_${maLichHen || 'walk-in'}`;
@@ -111,7 +113,10 @@ export default function Examination() {
   const [slotError, setSlotError] = useState<string | null>(null);
   const [selectedReexamDate, setSelectedReexamDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [selectedImages, setSelectedImages] = useState<{ file: File, mota: string }[]>([]);
+  const [selectedImages, setSelectedImages] = useState<Array<{ file?: File, url?: string, mota: string }>>([]);
+
+  // Tạo state riêng cho ảnh từ backend
+  const [backendImages, setBackendImages] = useState<Array<{ url: string, mota: string }>>([]);
 
   // Xác định currentDraftId ưu tiên theo maLichHen, sau đó maBenhNhan, cuối cùng là walk-in
   const getCurrentDraftId = () => {
@@ -304,6 +309,14 @@ export default function Examination() {
               };
               setMedicalRecord(record);
             }
+            if (Array.isArray(data.danhSachAnhBenhAn)) {
+              setBackendImages(data.danhSachAnhBenhAn.map((img: any) => ({
+                url: img.url,
+                mota: img.moTa || ''
+              })));
+            } else {
+              setBackendImages([]);
+            }
           }
         }
       } catch (err) {
@@ -359,9 +372,9 @@ export default function Examination() {
   }
 
   useEffect(() => {
-    if (reexamId) {
+    if (effectiveMaBenhAn) {
       setReexamLoading(true);
-      getMedicalRecordById(Number(reexamId))
+      getMedicalRecordById(Number(effectiveMaBenhAn))
         .then(data => {
           const reexamAppointment = {
             maLichHen: data.maLichHen,
@@ -413,11 +426,17 @@ export default function Examination() {
           if (Array.isArray(data.danhSachThuoc)) {
             setSelectedDrugs(data.danhSachThuoc);
           }
+          if (Array.isArray(data.danhSachAnhBenhAn)) {
+            setBackendImages(data.danhSachAnhBenhAn.map((img: any) => ({
+              url: img.url,
+              mota: img.moTa || ''
+            })));
+          }
         })
         .catch(err => setError(err.message))
         .finally(() => setReexamLoading(false));
     }
-  }, [reexamId, form]);
+  }, [effectiveMaBenhAn, form]);
 
   // Khôi phục selectedImages từ localStorage khi currentDraftId thay đổi
   useEffect(() => {
@@ -440,10 +459,14 @@ export default function Examination() {
         localStorage.removeItem(imageDraftKey);
         return;
       }
-      const arr = await Promise.all(selectedImages.map(async (img) => {
-        const base64 = await fileToBase64(img.file);
-        return { mota: img.mota, base64, name: img.file.name, type: img.file.type };
-      }));
+      const arr = await Promise.all(
+        selectedImages
+          .filter(img => img.file && img.file instanceof File)
+          .map(async (img) => {
+            const base64 = await fileToBase64(img.file as File);
+            return { mota: img.mota, base64, name: img.file!.name, type: img.file!.type };
+          })
+      );
       localStorage.setItem(imageDraftKey, JSON.stringify(arr));
     };
     saveImages();
@@ -466,7 +489,11 @@ export default function Examination() {
     // Lấy khung giờ đã chọn
     const selectedSlotObj = availableSlots.find(slot => slot.gioBatDau === values.gioTaiKham);
     
-    // Chuẩn bị dữ liệu theo format mới của API
+    // Khi submit, chỉ upload ảnh mới (có file)
+    const filesToUpload = selectedImages
+      .map(img => img.file)
+      .filter((file): file is File => file instanceof File);
+    const danhSachAnhBenhAn = selectedImages.map(img => ({ mota: img.mota }));
     const examData = {
       maBenhNhan: appointment?.maBenhNhan || null,
       maLichHen: isReexam ? null : (maLichHen ? parseInt(maLichHen) : null),
@@ -485,7 +512,7 @@ export default function Examination() {
       gioKetThuc: selectedSlotObj?.gioKetThuc || '',
       tienSuBenh: values.tienSuBenh,
       diUng: values.diUng,
-      danhSachAnhBenhAn: selectedImages.map(img => ({ mota: img.mota })),
+      danhSachAnhBenhAn,
       danhSachDichVu: selectedServices.map(s => ({ maDichVu: s.maDichVu, gia: s.gia })),
       danhSachThuoc: selectedDrugs.map(drug => ({
         maThuoc: drug.maThuoc,
@@ -503,7 +530,7 @@ export default function Examination() {
 
     try {
       console.log('Submitting exam data:', examData);
-      console.log('Selected images:', selectedImages.length);
+      console.log('Selected images:', filesToUpload.length);
       
       let createdRecord;
       if (appointment?.maBenhAn) {
@@ -511,7 +538,7 @@ export default function Examination() {
         notification.success({ message: 'Thành công', description: 'Cập nhật bệnh án thành công!' });
         createdRecord = { maBenhAn: appointment.maBenhAn };
       } else {
-        const result = await createMedicalExam(examData, selectedImages.map(img => img.file));
+        const result = await createMedicalExam(examData, filesToUpload);
         notification.success({ message: 'Thành công', description: 'Tạo bệnh án thành công!' });
         createdRecord = result;
       }
@@ -652,6 +679,9 @@ export default function Examination() {
     return <Alert message="Lỗi" description={error} type="error" showIcon style={{ margin: 24 }} />;
   }
 
+  // Trước khi render ảnh từ backendImages
+  console.log('backendImages:', backendImages);
+
   return (
     <div style={{ padding: 24 }}>
       <Form
@@ -765,35 +795,60 @@ export default function Examination() {
                         maxWidth: 700
                       }}
                     >
-                      {selectedImages.map((img, idx) => (
-                        <div key={img.file.name + idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 320 }}>
+                      {/* Ảnh từ backend */}
+                      {backendImages.map((img, idx) => (
+                        <div key={img.url + idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 320 }}>
                           <div style={{ position: 'relative', width: 320, height: 180, marginBottom: 4 }}>
                             <img
-                              src={URL.createObjectURL(img.file)}
-                              alt={img.file.name}
+                              src={img.url}
+                              alt={img.url}
                               style={{ width: 320, height: 180, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
                             />
-                            <span
-                              style={{ position: 'absolute', top: 2, right: 2, cursor: 'pointer', background: '#fff', borderRadius: '50%', padding: 2, border: '1px solid #ccc' }}
-                              onClick={() => setSelectedImages(prev => prev.filter((_, i) => i !== idx))}
-                              title="Xóa ảnh"
-                            >
-                              ×
-                            </span>
                           </div>
                           <Input
                             style={{ width: 320, fontSize: 14 }}
-                            placeholder="Nhập mô tả ảnh"
+                            placeholder="Mô tả ảnh"
                             value={img.mota}
-                            onChange={e => {
-                              const value = e.target.value;
-                              setSelectedImages(prev => prev.map((item, i) => i === idx ? { ...item, mota: value } : item));
-                            }}
+                            disabled
                           />
                         </div>
                       ))}
-                      {/* Nút upload */}
-                      {selectedImages.length < 8 && (
+                      {/* Ảnh upload mới */}
+                      {selectedImages.map((img, idx) => {
+                        const key = img.file && img.file instanceof File && img.file.name ? img.file.name + idx : idx;
+                        const src = img.file && img.file instanceof File ? URL.createObjectURL(img.file) : '';
+                        const alt = img.file && img.file instanceof File && img.file.name ? img.file.name : '';
+                        return (
+                          <div key={key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 320 }}>
+                            <div style={{ position: 'relative', width: 320, height: 180, marginBottom: 4 }}>
+                              <img
+                                src={src}
+                                alt={alt}
+                                style={{ width: 320, height: 180, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                              />
+                              <span
+                                style={{ position: 'absolute', top: 2, right: 2, cursor: 'pointer', background: '#fff', borderRadius: '50%', padding: 2, border: '1px solid #ccc' }}
+                                onClick={() => setSelectedImages(prev => prev.filter((_, i) => i !== idx))}
+                                title="Xóa ảnh"
+                              >
+                                ×
+                              </span>
+                            </div>
+                            <Input
+                              style={{ width: 320, fontSize: 14 }}
+                              placeholder="Nhập mô tả ảnh"
+                              value={img.mota}
+                              onChange={e => {
+                                const value = e.target.value;
+                                setSelectedImages(prev => prev.map((item, i) => i === idx ? { ...item, mota: value } : item));
+                              }}
+                              disabled={!!img.url}
+                            />
+                          </div>
+                        );
+                      })}
+                      {/* Nút upload giữ nguyên logic */}
+                      {selectedImages.filter(img => img.file && img.file instanceof File).length < 8 && (
                         <Upload
                           showUploadList={false}
                           beforeUpload={(file) => {
