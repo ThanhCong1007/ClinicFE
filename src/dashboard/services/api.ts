@@ -1,6 +1,36 @@
 import axios from 'axios';
 import { format } from 'date-fns';
 
+// Thêm interceptor để xử lý token
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Thêm interceptor để xử lý response
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token hết hạn hoặc không hợp lệ
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Có thể redirect về trang login ở đây nếu cần
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Lấy danh sách thuốc
 export const fetchDrugs = async () => {
   const response = await axios.get('/api/public/Thuoc');
@@ -15,32 +45,16 @@ export const fetchServices = async () => {
 
 // Lấy lịch hẹn của bác sĩ
 export const getDoctorAppointments = async (maBacSi: number) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
   const response = await axios.get(
-    `http://localhost:8080/api/tham-kham/bac-si/${maBacSi}/lich-hen-benh-an`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
+    `http://localhost:8080/api/tham-kham/bac-si/${maBacSi}/lich-hen-benh-an`
   );
   return response.data;
 };
 
 // Lấy chi tiết lịch hẹn
 export const getAppointmentDetails = async (maLichHen: number) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
   const response = await axios.get(
-    `http://localhost:8080/api/tham-kham/lich-hen/${maLichHen}/chi-tiet`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
+    `http://localhost:8080/api/tham-kham/lich-hen/${maLichHen}/chi-tiet`
   );
 
   // Modify the response data to use real-time values
@@ -58,50 +72,46 @@ export const getAppointmentDetails = async (maLichHen: number) => {
 
 // Lấy danh sách bệnh án của bệnh nhân
 export const getPatientMedicalRecords = async (maBenhNhan: number) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
   const response = await axios.get(
-    `http://localhost:8080/api/tham-kham/benh-nhan/${maBenhNhan}/benh-an`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
+    `http://localhost:8080/api/tham-kham/benh-nhan/${maBenhNhan}/benh-an`
   );
   return response.data;
 };
 
 // Tạo mới bệnh án
-export const createMedicalExam = async (examData: any) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
+export const createMedicalExam = async (examData: any, images: File[] = []) => {
+  try {
+    const formData = new FormData();
+    // Đảm bảo trường 'data' là application/json
+    const jsonBlob = new Blob([JSON.stringify(examData)], { type: 'application/json' });
+    formData.append('data', jsonBlob);
+    // Thêm các file ảnh với key 'images'
+    images.forEach((image) => {
+      formData.append('images', image);
+    });
 
-  const response = await axios.post(
-    'http://localhost:8080/api/tham-kham/kham',
-    examData,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+    const response = await axios.post(
+      'http://localhost:8080/api/tham-kham/kham',
+      formData,
+      {
+        headers: {
+          'Accept': 'application/json'
+        }
       }
-    }
-  );
-  return response.data;
+    );
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
 };
 
 // Hủy lịch hẹn
 export const cancelAppointment = async (maLichHen: number, appointmentData: any) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-
   const response = await axios.put(
     `http://localhost:8080/api/appointments/${maLichHen}/cancel`,
     appointmentData,
     {
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     }
@@ -111,20 +121,14 @@ export const cancelAppointment = async (maLichHen: number, appointmentData: any)
 
 // Lấy chi tiết bệnh án theo mã bệnh án (tái khám)
 export const getMedicalRecordById = async (maBenhAn: number) => {
-  const token = localStorage.getItem('token');
-  const response = await axios.get(`/api/tham-kham/benh-an/${maBenhAn}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
+  const response = await axios.get(`/api/tham-kham/benh-an/${maBenhAn}`);
   return response.data;
 };
 
 // Cập nhật bệnh án (tái khám)
 export const updateMedicalRecord = async (maBenhAn: number, data: any) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
   const response = await axios.put(`/api/tham-kham/benh-an/${maBenhAn}`, data, {
     headers: {
-      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     }
   });
@@ -133,24 +137,12 @@ export const updateMedicalRecord = async (maBenhAn: number, data: any) => {
 
 // Lấy danh sách bệnh án của bác sĩ
 export const getMedicalRecordsByDoctor = async (maBacSi: number, page: number, size: number, keyword: string = '') => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-  const response = await axios.get(`http://localhost:8080/api/benh-an/bac-si/${maBacSi}?page=${page}&size=${size}&keyword=${keyword}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
+  const response = await axios.get(`http://localhost:8080/api/benh-an/bac-si/${maBacSi}?page=${page}&size=${size}&keyword=${keyword}`);
   return response.data; // Trả về toàn bộ dữ liệu phản hồi (bao gồm phân trang)
 };
 
 // Lấy chi tiết bệnh án
 export const getMedicalRecordDetail = async (maBenhAn: number) => {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('Không tìm thấy token xác thực');
-  const response = await axios.get(`http://localhost:8080/api/benh-an/chi-tiet/${maBenhAn}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
+  const response = await axios.get(`http://localhost:8080/api/benh-an/chi-tiet/${maBenhAn}`);
   return response.data.data; // chỉ trả về object chi tiết bệnh án
 }; 

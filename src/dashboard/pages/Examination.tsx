@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Row, Col, Form, Button, Card, Modal, Spin, Alert, Input, DatePicker, Select, notification, InputNumber } from 'antd';
+import { Row, Col, Form, Button, Card, Modal, Spin, Alert, Input, DatePicker, Select, notification, InputNumber, Upload, message } from 'antd';
+import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { format, parseISO, isValid } from 'date-fns';
 import { getAppointmentDetails, createMedicalExam, fetchServices, getMedicalRecordById, updateMedicalRecord } from '../services/api';
 import { DrugSearch } from '../components/DrugSearch';
@@ -87,7 +88,6 @@ export default function Examination() {
   const [isReexam, setIsReexam] = useState(!!reexamId);
   const [reexamLoading, setReexamLoading] = useState(false);
   const storageKey = `exam_${maLichHen || 'walk-in'}`;
-  const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [medicalRecord, setMedicalRecord] = useState({
@@ -111,6 +111,36 @@ export default function Examination() {
   const [slotError, setSlotError] = useState<string | null>(null);
   const [selectedReexamDate, setSelectedReexamDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<{ file: File, mota: string }[]>([]);
+
+  // Xác định currentDraftId ưu tiên theo maLichHen, sau đó maBenhNhan, cuối cùng là walk-in
+  const getCurrentDraftId = () => {
+    if (location.state && (location.state as any).appointment) {
+      const appt = (location.state as any).appointment;
+      if (appt.maLichHen) return `lichhen_${appt.maLichHen}`;
+      if (appt.maBenhNhan) return `benhnhan_${appt.maBenhNhan}`;
+    }
+    // Nếu không có, thử lấy từ localStorage draft_examination_* gần nhất
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('draft_examination_'));
+    if (keys.length > 0) {
+      const lastKey = keys[keys.length - 1];
+      const match = lastKey.match(/draft_examination_(.+)$/);
+      if (match) return match[1];
+    }
+    return 'walk-in';
+  };
+
+  // Cập nhật currentDraftId khi location.state thay đổi
+  useEffect(() => {
+    const newDraftId = getCurrentDraftId();
+    setCurrentDraftId(newDraftId);
+  }, [location.state]);
+
+  const [currentDraftId, setCurrentDraftId] = useState(getCurrentDraftId());
+
+  // Key cho localStorage
+  const draftKey = useMemo(() => `draft_examination_${currentDraftId}`, [currentDraftId]);
+  const imageDraftKey = useMemo(() => `draft_images_${currentDraftId}`, [currentDraftId]);
 
   // Initialize form with empty values to prevent connection warning
   useEffect(() => {
@@ -118,6 +148,9 @@ export default function Examination() {
       hoTen: '',
       soDienThoaiBenhNhan: '',
       ngaySinh: null,
+      gioiTinh: null,
+      email: '',
+      diaChi: '',
       ngayHen: null,
       gioBatDau: examStartTime,
       lyDoKham: '',
@@ -159,117 +192,118 @@ export default function Examination() {
     };
   }
 
-  // Ưu tiên lấy dữ liệu từ location.state
-  useEffect(() => {
-    let found = false;
+  // Khởi tạo appointment với dữ liệu từ location.state hoặc trống
+  const getInitialAppointment = () => {
     if (location.state && (location.state as any).appointment) {
-      setAppointment(normalizeAppointmentData((location.state as any).appointment));
-      found = true;
-      setLoading(false);
-    } else {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.appointment) {
-            setAppointment(normalizeAppointmentData(parsed.appointment));
-            found = true;
-            setLoading(false);
-          }
-        } catch { }
+      return (location.state as any).appointment;
+    }
+    return {
+      maLichHen: null,
+      maBenhNhan: null,
+      hoTen: '',
+      ngaySinh: '',
+      soDienThoaiBenhNhan: '',
+      maBacSi: 0,
+      tenBacSi: '',
+      maDichVu: 0,
+      tenDichVu: '',
+      ngayHen: format(new Date(), 'yyyy-MM-dd'),
+      gioBatDau: format(new Date(), 'HH:mm'),
+      gioKetThuc: format(new Date(new Date().getTime() + 30 * 60000), 'HH:mm'),
+      maTrangThai: 2,
+      tenTrangThai: '',
+      ghiChuLichHen: '',
+      lyDoHen: null,
+      thoiGian: 30,
+      maBenhAn: null,
+      lyDoKham: null,
+      chanDoan: null,
+      ghiChuDieuTri: null,
+      ngayTaiKham: null,
+      ngayTaoBenhAn: null,
+      coBenhAn: false
+    };
+  };
+  const [appointment, setAppointment] = useState(getInitialAppointment());
+
+  // Khôi phục dữ liệu từ localStorage khi currentDraftId thay đổi
+  useEffect(() => {
+    const draft = localStorage.getItem(draftKey);
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        console.log('Restoring draft data for:', currentDraftId, parsed);
+        
+        // Khôi phục appointment nếu không có từ location.state
+        if (!(location.state && (location.state as any).appointment) && parsed.appointment) {
+          setAppointment(parsed.appointment);
+        }
+        
+        // Khôi phục selectedServices
+        if (parsed.selectedServices) {
+          setSelectedServices(parsed.selectedServices);
+        }
+        
+        // Khôi phục selectedDrugs
+        if (parsed.selectedDrugs) {
+          setSelectedDrugs(parsed.selectedDrugs);
+        }
+        
+        // Khôi phục form values
+        const { selectedServices: draftServices, appointment: draftAppointment, selectedDrugs: draftDrugs, ...formValues } = parsed;
+        const dateFields = ['ngaySinh', 'ngayTaiKham', 'ngayHen', 'ngayTaoBenhAn', 'ngayTao'];
+        const normalized = normalizeDateFields(formValues, dateFields);
+        form.setFieldsValue(normalized);
+        
+        // Khôi phục medicalRecord
+        if (parsed.lyDoKham || parsed.chanDoan || parsed.ghiChuDieuTri || parsed.ngayTaiKham || parsed.tienSuBenh || parsed.diUng) {
+          setMedicalRecord({
+            lyDoKham: parsed.lyDoKham || '',
+            chanDoan: parsed.chanDoan || '',
+            ghiChuDieuTri: parsed.ghiChuDieuTri || '',
+            ngayTaiKham: parsed.ngayTaiKham || '',
+            tienSuBenh: parsed.tienSuBenh || '',
+            diUng: parsed.diUng || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error restoring draft data:', error);
       }
+    } else {
+      // Nếu không có draft, reset về trạng thái ban đầu
+      console.log('No draft found for:', currentDraftId);
     }
-    if (!found) {
-      // Tạo appointment mặc định (khám vãng lai)
-      const newAppointment = {
-        maLichHen: null,
-        maBenhNhan: null,
-        hoTen: '',
-        ngaySinh: '',
-        soDienThoaiBenhNhan: '',
-        maBacSi: 0,
-        tenBacSi: '',
-        maDichVu: 0,
-        tenDichVu: '',
-        ngayHen: format(new Date(), 'yyyy-MM-dd'),
-        gioBatDau: format(new Date(), 'HH:mm'),
-        gioKetThuc: format(new Date(new Date().getTime() + 30 * 60000), 'HH:mm'),
-        maTrangThai: 2,
-        tenTrangThai: '',
-        ghiChuLichHen: '',
-        lyDoHen: null,
-        thoiGian: 30,
-        maBenhAn: null,
-        lyDoKham: null,
-        chanDoan: null,
-        ghiChuDieuTri: null,
-        ngayTaiKham: null,
-        ngayTaoBenhAn: null,
-        coBenhAn: false
-      };
-      setAppointment(newAppointment);
-      setLoading(false);
+  }, [currentDraftId, draftKey, form, location.state]);
+
+  // Đảm bảo appointment từ location.state được ưu tiên
+  useEffect(() => {
+    if (location.state && (location.state as any).appointment) {
+      const appt = (location.state as any).appointment;
+      console.log('Setting appointment from location.state:', appt);
+      setAppointment(appt);
+      setLoading(false); // Đảm bảo loading kết thúc khi có dữ liệu từ location.state
     }
-  }, [location.state, storageKey]);
+  }, [location.state]);
 
   useEffect(() => {
     const fetchAppointment = async () => {
       try {
-        if (!maLichHen) {
-          const saved = localStorage.getItem(storageKey);
-          if (saved) {
-            try {
-              const parsed = JSON.parse(saved);
-              if (parsed.appointment) {
-                setAppointment(normalizeAppointmentData(parsed.appointment));
-                setLoading(false);
-                return;
-              }
-            } catch { }
-          }
-          const newAppointment = {
-            maLichHen: null,
-            maBenhNhan: null,
-            hoTen: '',
-            ngaySinh: '',
-            soDienThoaiBenhNhan: '',
-            maBacSi: 0,
-            tenBacSi: '',
-            maDichVu: 0,
-            tenDichVu: '',
-            ngayHen: format(new Date(), 'yyyy-MM-dd'),
-            gioBatDau: format(new Date(), 'HH:mm'),
-            gioKetThuc: format(new Date(new Date().getTime() + 30 * 60000), 'HH:mm'),
-            maTrangThai: 2,
-            tenTrangThai: '',
-            ghiChuLichHen: '',
-            lyDoHen: null,
-            thoiGian: 30,
-            maBenhAn: null,
-            lyDoKham: null,
-            chanDoan: null,
-            ghiChuDieuTri: null,
-            ngayTaiKham: null,
-            ngayTaoBenhAn: null,
-            coBenhAn: false
-          };
-          setAppointment(newAppointment);
-          setLoading(false);
-          return;
-        }
-        const data = await getAppointmentDetails(parseInt(maLichHen));
-        if (data) {
-          setAppointment(normalizeAppointmentData(data));
-          if (data.lyDoKham || data.chanDoan || data.ghiChuDieuTri || data.ngayTaiKham) {
-            const record = {
-              lyDoKham: data.lyDoKham || '',
-              chanDoan: data.chanDoan || '',
-              ghiChuDieuTri: data.ghiChuDieuTri || '',
-              ngayTaiKham: data.ngayTaiKham || '',
-              tienSuBenh: data.tienSuBenh || '',
-              diUng: data.diUng || ''
-            };
-            setMedicalRecord(record);
+        // Chỉ fetch từ API nếu có maLichHen và không có appointment từ location.state
+        if (maLichHen && !(location.state && (location.state as any).appointment)) {
+          const data = await getAppointmentDetails(parseInt(maLichHen));
+          if (data) {
+            setAppointment(normalizeAppointmentData(data));
+            if (data.lyDoKham || data.chanDoan || data.ghiChuDieuTri || data.ngayTaiKham) {
+              const record = {
+                lyDoKham: data.lyDoKham || '',
+                chanDoan: data.chanDoan || '',
+                ghiChuDieuTri: data.ghiChuDieuTri || '',
+                ngayTaiKham: data.ngayTaiKham || '',
+                tienSuBenh: data.tienSuBenh || '',
+                diUng: data.diUng || ''
+              };
+              setMedicalRecord(record);
+            }
           }
         }
       } catch (err) {
@@ -279,7 +313,14 @@ export default function Examination() {
       }
     };
     fetchAppointment();
-  }, [maLichHen, form]);
+  }, [maLichHen, location.state]);
+
+  // Đảm bảo loading state được set đúng khi không có dữ liệu cần fetch
+  useEffect(() => {
+    if (!maLichHen && !(location.state && (location.state as any).appointment)) {
+      setLoading(false);
+    }
+  }, [maLichHen, location.state]);
 
   const fetchServicesList = async () => {
     try {
@@ -378,74 +419,107 @@ export default function Examination() {
     }
   }, [reexamId, form]);
 
-  // Hàm lưu draft form + dịch vụ
-  const saveDraft = (formValues: any, services: any) => {
-    localStorage.setItem('draft_examination', JSON.stringify({ ...formValues, selectedServices: services }));
-  };
-
-  // Khi khôi phục draft, tách selectedServices khỏi draft và set lại state
+  // Khôi phục selectedImages từ localStorage khi currentDraftId thay đổi
   useEffect(() => {
-    const draft = localStorage.getItem('draft_examination');
+    const draft = localStorage.getItem(imageDraftKey);
     if (draft) {
-      try {
-        const values = JSON.parse(draft);
-        const { selectedServices: draftServices, ...formValues } = values;
-        // Chuyển các trường ngày sang dayjs trước khi setFieldsValue
-        const dateFields = ['ngaySinh', 'ngayTaiKham', 'ngayHen', 'ngayTaoBenhAn', 'ngayTao'];
-        const normalized = normalizeDateFields(formValues, dateFields);
-        form.setFieldsValue(normalized);
-        setSelectedServices(Array.isArray(draftServices) ? draftServices : []);
-      } catch { }
+      const arr = JSON.parse(draft);
+      Promise.all(arr.map(async (img: any) => {
+        const file = await base64ToFile(img.base64, img.name, img.type);
+        return { file, mota: img.mota };
+      })).then(setSelectedImages);
+    } else {
+      setSelectedImages([]);
     }
-  }, [form]);
+  }, [imageDraftKey]);
+
+  // Lưu selectedImages vào localStorage khi thay đổi
+  useEffect(() => {
+    const saveImages = async () => {
+      if (selectedImages.length === 0) {
+        localStorage.removeItem(imageDraftKey);
+        return;
+      }
+      const arr = await Promise.all(selectedImages.map(async (img) => {
+        const base64 = await fileToBase64(img.file);
+        return { mota: img.mota, base64, name: img.file.name, type: img.file.type };
+      }));
+      localStorage.setItem(imageDraftKey, JSON.stringify(arr));
+    };
+    saveImages();
+  }, [selectedImages, imageDraftKey]);
+
+  // Lưu draft_examination cũng theo key draftKey
+  const saveDraft = (formValues: any, services: any) => {
+    const draftData = {
+      ...formValues,
+      appointment: appointment,
+      selectedServices: services,
+      selectedDrugs: selectedDrugs
+    };
+    console.log('Saving draft data for:', currentDraftId, draftData);
+    localStorage.setItem(draftKey, JSON.stringify(draftData));
+  };
 
   const handleSubmit = async (values: any) => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
     // Lấy khung giờ đã chọn
     const selectedSlotObj = availableSlots.find(slot => slot.gioBatDau === values.gioTaiKham);
-    const examData: MedicalExamData = {
+    
+    // Chuẩn bị dữ liệu theo format mới của API
+    const examData = {
+      maBenhNhan: appointment?.maBenhNhan || null,
       maLichHen: isReexam ? null : (maLichHen ? parseInt(maLichHen) : null),
       maBacSi: userData.maBacSi,
-      maBenhNhan: appointment?.maBenhNhan || null,
-      hoTen: values.hoTen,
       ngaySinh: values.ngaySinh ? format(new Date(values.ngaySinh), 'yyyy-MM-dd') : '',
+      hoTen: values.hoTen,
+      gioiTinh: values.gioiTinh || null,
       soDienThoai: values.soDienThoaiBenhNhan,
+      email: values.email || '',
+      diaChi: values.diaChi || '',
       lyDoKham: values.lyDoKham,
       chanDoan: values.chanDoan,
       ghiChuDieuTri: values.ghiChuDieuTri,
       ngayTaiKham: values.ngayTaiKham ? format(new Date(values.ngayTaiKham), 'yyyy-MM-dd') : '',
+      gioBatDau: values.gioTaiKham || '',
+      gioKetThuc: selectedSlotObj?.gioKetThuc || '',
       tienSuBenh: values.tienSuBenh,
       diUng: values.diUng,
+      danhSachAnhBenhAn: selectedImages.map(img => ({ mota: img.mota })),
       danhSachDichVu: selectedServices.map(s => ({ maDichVu: s.maDichVu, gia: s.gia })),
       danhSachThuoc: selectedDrugs.map(drug => ({
         maThuoc: drug.maThuoc,
-        lieuDung: '', 
-        tanSuat: '', 
-        thoiDiem: '', 
-        thoiGianDieuTri: 7, 
-        soLuong: 1, 
-        donViDung: 'viên', 
-        ghiChu: '', 
-        lyDoDonThuoc: drug.tenThuoc || ''
+        lieuDung: '500',
+        tanSuat: 'Kháng sinh fluoroquinolone',
+        thoiDiem: '',
+        thoiGianDieuTri: 7,
+        soLuong: 1,
+        donViDung: 'mg',
+        ghiChu: '',
+        lyDoDonThuoc: drug.tenThuoc || 'Kháng sinh fluoroquinolone'
       })),
-      ghiChuDonThuoc: '',
-      gioBatDau: values.gioTaiKham || '',
-      gioKetThuc: selectedSlotObj?.gioKetThuc || '',
+      ghiChuDonThuoc: 'Bệnh nhân cần tuân thủ đúng liều lượng và thời gian dùng thuốc'
     };
 
     try {
+      console.log('Submitting exam data:', examData);
+      console.log('Selected images:', selectedImages.length);
+      
       let createdRecord;
       if (appointment?.maBenhAn) {
         await updateMedicalRecord(appointment.maBenhAn, examData);
         notification.success({ message: 'Thành công', description: 'Cập nhật bệnh án thành công!' });
         createdRecord = { maBenhAn: appointment.maBenhAn };
       } else {
-        const result = await createMedicalExam(examData);
+        const result = await createMedicalExam(examData, selectedImages.map(img => img.file));
         notification.success({ message: 'Thành công', description: 'Tạo bệnh án thành công!' });
         createdRecord = result;
       }
-      localStorage.removeItem('draft_examination');
+      
+      localStorage.removeItem(imageDraftKey);
       localStorage.removeItem(storageKey);
+      localStorage.removeItem(draftKey);
+      
       // Fetch full details from backend after creation
       if (createdRecord?.maBenhAn) {
         const detail = await getMedicalRecordById(createdRecord.maBenhAn);
@@ -453,8 +527,25 @@ export default function Examination() {
         // For now, just navigate away
       }
       navigate('/dashboard/appointments');
-    } catch (err) {
-      notification.error({ message: 'Lỗi', description: err instanceof Error ? err.message : 'Có lỗi xảy ra' });
+    } catch (err: any) {
+      console.error('Submit error:', err);
+      
+      // Kiểm tra xem có phải lỗi token không
+      if (err.message && err.message.includes('Phiên đăng nhập đã hết hạn')) {
+        notification.error({ 
+          message: 'Phiên đăng nhập hết hạn', 
+          description: 'Vui lòng đăng nhập lại để tiếp tục' 
+        });
+        // Redirect về trang login
+        navigate('/dashboard/signin');
+        return;
+      }
+      
+      // Các lỗi khác
+      notification.error({ 
+        message: 'Lỗi', 
+        description: err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu bệnh án' 
+      });
     }
   };
 
@@ -494,6 +585,9 @@ export default function Examination() {
         hoTen: appointment.hoTen || '',
         soDienThoaiBenhNhan: appointment.soDienThoaiBenhNhan || '',
         ngaySinh: appointment.ngaySinh ? dayjs(appointment.ngaySinh) : null,
+        gioiTinh: null, // Có thể lấy từ appointment nếu có
+        email: '', // Có thể lấy từ appointment nếu có
+        diaChi: '', // Có thể lấy từ appointment nếu có
         ngayHen: appointment.ngayHen ? dayjs(appointment.ngayHen) : null,
         gioBatDau: examStartTime,
         lyDoKham: medicalRecord.lyDoKham || '',
@@ -503,6 +597,7 @@ export default function Examination() {
         tienSuBenh: medicalRecord.tienSuBenh || '',
         diUng: medicalRecord.diUng || ''
       };
+      console.log('Setting form values from appointment/medicalRecord:', formValues);
       form.setFieldsValue(formValues);
     }
   }, [appointment, medicalRecord, loading, form, examStartTime]);
@@ -521,6 +616,22 @@ export default function Examination() {
       setAvailableSlots([]);
     }
   }, [selectedReexamDate]);
+
+  // Helper: convert File to base64
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  // Helper: convert base64 to File
+  function base64ToFile(base64: string, name: string, type: string): Promise<File> {
+    return fetch(base64)
+      .then(res => res.arrayBuffer())
+      .then(buf => new File([buf], name, { type }));
+  }
 
   if (error === '404') {
     return <NotFound />;
@@ -569,6 +680,24 @@ export default function Examination() {
                 <Col span={12}>
                   <Form.Item name="ngaySinh" label="Ngày sinh">
                     <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="gioiTinh" label="Giới tính">
+                    <Select placeholder="Chọn giới tính" allowClear>
+                      <Option value="Nam">Nam</Option>
+                      <Option value="Nữ">Nữ</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="email" label="Email">
+                    <Input type="email" placeholder="example@email.com" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="diaChi" label="Địa chỉ">
+                    <Input.TextArea rows={2} placeholder="Nhập địa chỉ" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -621,6 +750,78 @@ export default function Examination() {
                 <Col span={24}>
                   <Form.Item name="ghiChuDieuTri" label="Ghi chú điều trị" rules={[{ required: true, message: 'Vui lòng nhập ghi chú' }]}>
                     <Input.TextArea rows={4} />
+                  </Form.Item>
+                </Col>
+                <Col span={24}>
+                  <Form.Item label="Ảnh bệnh án">
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 340px)',
+                        gap: 24,
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-start',
+                        width: '100%',
+                        maxWidth: 700
+                      }}
+                    >
+                      {selectedImages.map((img, idx) => (
+                        <div key={img.file.name + idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 320 }}>
+                          <div style={{ position: 'relative', width: 320, height: 180, marginBottom: 4 }}>
+                            <img
+                              src={URL.createObjectURL(img.file)}
+                              alt={img.file.name}
+                              style={{ width: 320, height: 180, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                            />
+                            <span
+                              style={{ position: 'absolute', top: 2, right: 2, cursor: 'pointer', background: '#fff', borderRadius: '50%', padding: 2, border: '1px solid #ccc' }}
+                              onClick={() => setSelectedImages(prev => prev.filter((_, i) => i !== idx))}
+                              title="Xóa ảnh"
+                            >
+                              ×
+                            </span>
+                          </div>
+                          <Input
+                            style={{ width: 320, fontSize: 14 }}
+                            placeholder="Nhập mô tả ảnh"
+                            value={img.mota}
+                            onChange={e => {
+                              const value = e.target.value;
+                              setSelectedImages(prev => prev.map((item, i) => i === idx ? { ...item, mota: value } : item));
+                            }}
+                          />
+                        </div>
+                      ))}
+                      {/* Nút upload */}
+                      {selectedImages.length < 8 && (
+                        <Upload
+                          showUploadList={false}
+                          beforeUpload={(file) => {
+                            const isImage = file.type.startsWith('image/');
+                            if (!isImage) {
+                              message.error('Chỉ có thể upload file ảnh!');
+                              return false;
+                            }
+                            const isLt5M = file.size / 1024 / 1024 < 5;
+                            if (!isLt5M) {
+                              message.error('Ảnh phải nhỏ hơn 5MB!');
+                              return false;
+                            }
+                            setSelectedImages(prev => [...prev, { file, mota: '' }]);
+                            return false;
+                          }}
+                          multiple
+                        >
+                          <div style={{ width: 320, height: 180, border: '1px dashed #d9d9d9', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                            <UploadOutlined style={{ fontSize: 32, color: '#999' }} />
+                            <div style={{ marginTop: 8, color: '#666', fontSize: 14 }}>Upload</div>
+                          </div>
+                        </Upload>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#666', marginTop: 8 }}>
+                      Có thể upload tối đa 8 ảnh, mỗi ảnh dưới 5MB
+                    </div>
                   </Form.Item>
                 </Col>
                 <Col span={12}>

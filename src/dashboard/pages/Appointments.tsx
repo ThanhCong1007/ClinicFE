@@ -307,7 +307,7 @@ export default function Appointments() {
       render: (_: any, record: Appointment) => (
         <>
           {(record.maTrangThai === 1 || record.maTrangThai === 2) && (
-            <Button type="primary" size="small" onClick={() => navigate(`/dashboard/examination/${record.maLichHen}`)} style={{ marginRight: 8 }}>
+            <Button type="primary" size="small" onClick={() => navigate('/dashboard/examination', { state: { appointment: record } })} style={{ marginRight: 8 }}>
               Khám bệnh
             </Button>
           )}

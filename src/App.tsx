@@ -36,6 +36,7 @@ import LienHe from './user/pages/LienHe/LienHe';
 import PricingTable from './user/pages/BocRangSu/PricingTable';
 import CosmeticPorcelainTeeth from './user/pages/BocRangSu/CosmeticPorcelainTeeth';
 import NotFound from './user/features/404';
+import BocRangSuKim from './user/pages/BocRangSuKim';
 
 import DashboardLayout from './dashboard/DashboardLayout';
 import AdminLayout from './admin/AdminLayout';
@@ -265,7 +266,8 @@ function AppContent() {
         {/* Routes cho phần Bọc răng sứ */}
         <Route path="/dich-vu/boc-rang-su" element={<CosmeticPorcelainTeeth />} />
         <Route path="/dich-vu/bang-gia-boc-rang-su" element={<PricingTable />} />
-        <Route path="/dich-vu/dan-su-venner" element={<PlaceholderPage title="Dán sứ Venner" />} />
+        <Route path="/dich-vu/dan-su-venner" element={<BocRangSuKim />} />
+        <Route path="/dich-vu/boc-rang-su-kim" element={<BocRangSuKim />} />
 
         {/* Routes cho phần Dịch vụ khác */}
         <Route path="/dich-vu/nieng-rang-tham-my" element={<PlaceholderPage title="Niềng răng thẩm mỹ" />} />
