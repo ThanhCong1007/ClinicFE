@@ -79,6 +79,14 @@ interface MedicalExamData {
   gioKetThuc: string;
 }
 
+interface MedicalRecordImage {
+  maBenhAn: number;
+  maAnh: number;
+  url: string;
+  moTa: string;
+  file?: any;
+}
+
 export default function Examination() {
   const { maLichHen } = useParams();
   const navigate = useNavigate();
@@ -116,7 +124,7 @@ export default function Examination() {
   const [selectedImages, setSelectedImages] = useState<Array<{ file?: File, url?: string, mota: string }>>([]);
 
   // Tạo state riêng cho ảnh từ backend
-  const [backendImages, setBackendImages] = useState<Array<{ url: string, mota: string }>>([]);
+  const [backendImages, setBackendImages] = useState<MedicalRecordImage[]>([]);
 
   // Xác định currentDraftId ưu tiên theo maLichHen, sau đó maBenhNhan, cuối cùng là walk-in
   const getCurrentDraftId = () => {
@@ -311,8 +319,11 @@ export default function Examination() {
             }
             if (Array.isArray(data.danhSachAnhBenhAn)) {
               setBackendImages(data.danhSachAnhBenhAn.map((img: any) => ({
+                maBenhAn: img.maBenhAn,
+                maAnh: img.maAnh,
                 url: img.url,
-                mota: img.moTa || ''
+                moTa: img.moTa || '',
+                file: img.file
               })));
             } else {
               setBackendImages([]);
@@ -428,8 +439,11 @@ export default function Examination() {
           }
           if (Array.isArray(data.danhSachAnhBenhAn)) {
             setBackendImages(data.danhSachAnhBenhAn.map((img: any) => ({
+              maBenhAn: img.maBenhAn,
+              maAnh: img.maAnh,
               url: img.url,
-              mota: img.moTa || ''
+              moTa: img.moTa || '',
+              file: img.file
             })));
           }
         })
@@ -784,6 +798,22 @@ export default function Examination() {
                 </Col>
                 <Col span={24}>
                   <Form.Item label="Ảnh bệnh án">
+                    {/* Hiển thị ảnh từ url (backendImages) giống logic bên ProfileMedicalRecords */}
+                    {backendImages && backendImages.length > 0 && (
+                      <Card title="Ảnh bệnh án" size="small" style={{ marginBottom: 16 }}>
+                        {backendImages.map((img, idx) => (
+                          <div key={img.url + idx} style={{ display: 'inline-block', marginRight: 16 }}>
+                            <img
+                              src={img.url}
+                              alt={img.moTa}
+                              style={{ width: 180, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                            />
+                            <div style={{ textAlign: 'center', fontSize: 12 }}>{img.moTa}</div>
+                          </div>
+                        ))}
+                      </Card>
+                    )}
+                    {/* Phần upload và selectedImages giữ nguyên bên dưới */}
                     <div
                       style={{
                         display: 'grid',
@@ -795,24 +825,6 @@ export default function Examination() {
                         maxWidth: 700
                       }}
                     >
-                      {/* Ảnh từ backend */}
-                      {backendImages.map((img, idx) => (
-                        <div key={img.url + idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 320 }}>
-                          <div style={{ position: 'relative', width: 320, height: 180, marginBottom: 4 }}>
-                            <img
-                              src={img.url}
-                              alt={img.url}
-                              style={{ width: 320, height: 180, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
-                            />
-                          </div>
-                          <Input
-                            style={{ width: 320, fontSize: 14 }}
-                            placeholder="Mô tả ảnh"
-                            value={img.mota}
-                            disabled
-                          />
-                        </div>
-                      ))}
                       {/* Ảnh upload mới */}
                       {selectedImages.map((img, idx) => {
                         const key = img.file && img.file instanceof File && img.file.name ? img.file.name + idx : idx;

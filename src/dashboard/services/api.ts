@@ -121,7 +121,7 @@ export const cancelAppointment = async (maLichHen: number, appointmentData: any)
 
 // Lấy chi tiết bệnh án theo mã bệnh án (tái khám)
 export const getMedicalRecordById = async (maBenhAn: number) => {
-  const response = await axios.get(`/api/tham-kham/benh-an/${maBenhAn}`);
+  const response = await axios.get(`/api/benh-an/chi-tiet/${maBenhAn}`);
   return response.data;
 };
 

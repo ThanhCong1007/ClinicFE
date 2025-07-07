@@ -76,18 +76,6 @@ function Navbar() {
         return bocRangSuPaths.some(path => location.pathname.includes(path));
     };
 
-    // Kiểm tra URL thuộc về menu "Dịch vụ khác"
-    const isOtherServiceActive = () => {
-        if (isBocRangSuActive()) return false;
-        
-        const otherServicePaths = [
-            '/dich-vu/nieng-rang-tham-my',
-            '/dich-vu/tram-rang-tham-my',
-            '/dich-vu/cao-voi-rang'
-        ];
-        return otherServicePaths.some(path => location.pathname.includes(path)) || 
-               (location.pathname.includes('/dich-vu') && !isBocRangSuActive());
-    };
 
     // Xử lý đăng xuất
     const handleLogout = () => {
@@ -172,14 +160,6 @@ function Navbar() {
                         >
                             <i className="fas fa-users me-1"></i>
                             Bệnh Nhân
-                        </Link>
-                        <Link 
-                            to="/dashboard/medical-records"
-                            className={`nav-item nav-link ${activeLink === '/dashboard/medical-records' ? 'active' : ''}`}
-                            onClick={() => handleNavLinkClick('/dashboard/medical-records')}
-                        >
-                            <i className="fas fa-file-medical me-1"></i>
-                            Hồ Sơ
                         </Link>
                         <button 
                             onClick={handleLogout}
@@ -284,13 +264,6 @@ function Navbar() {
                         </div>
                         
                         <div className="nav-item dropdown">
-                            <Link 
-                                to="#"
-                                className={`nav-link dropdown-toggle ${isOtherServiceActive() ? 'active' : ''}`}
-                                data-bs-toggle="dropdown"
-                            >
-                                Dịch vụ khác
-                            </Link>
                             <div className="dropdown-menu m-0">
                                 <Link 
                                     to="/dich-vu/nieng-rang-tham-my"
