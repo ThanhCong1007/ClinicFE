@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Row, Col, Card, Table, Tag, Button, Modal, Statistic, notification } from 'antd';
 import { format } from 'date-fns';
 import axios from 'axios';
-import { getDoctorAppointments, cancelAppointment } from '../services/api';
+import { getDoctorAppointments, cancelAppointment, getAppointmentDetails } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 interface Appointment {
@@ -41,6 +41,7 @@ const Dashboard = () => {
     newPatients: 0,
     pendingExaminations: 0
   });
+  const [fetchingExam, setFetchingExam] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -143,6 +144,18 @@ const Dashboard = () => {
     });
   };
 
+  const handleStartExam = async (maLichHen: number) => {
+    setFetchingExam(true);
+    try {
+      const detail = await getAppointmentDetails(maLichHen);
+      navigate('/dashboard/examination', { state: { appointment: detail } });
+    } catch (err) {
+      notification.error({ message: 'Lỗi', description: 'Không thể lấy chi tiết lịch hẹn' });
+    } finally {
+      setFetchingExam(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -206,7 +219,7 @@ const Dashboard = () => {
       render: (_: any, record: Appointment) => (
         <>
           {(record.maTrangThai === 1 || record.maTrangThai === 2) && (
-            <Button type="primary" size="small" onClick={() => navigate('/dashboard/examination', { state: { appointment: record } })} style={{ marginRight: 8 }}>
+            <Button type="primary" size="small" onClick={() => handleStartExam(record.maLichHen)} loading={fetchingExam} style={{ marginRight: 8 }}>
               Khám bệnh
             </Button>
           )}

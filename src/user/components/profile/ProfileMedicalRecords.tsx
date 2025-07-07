@@ -18,6 +18,8 @@ const ProfileMedicalRecords: React.FC<ProfileMedicalRecordsProps> = ({ maBenhNha
   const [error, setError] = useState<string | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<MedicalRecordDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
 
   useEffect(() => {
     if (!maBenhNhan) return;
@@ -146,18 +148,50 @@ const ProfileMedicalRecords: React.FC<ProfileMedicalRecordsProps> = ({ maBenhNha
           )}
           {/* Ảnh bệnh án */}
           {selectedRecord.danhSachAnhBenhAn && selectedRecord.danhSachAnhBenhAn.length > 0 && (
-            <Card title="Ảnh bệnh án" size="small" style={{ marginTop: 16 }}>
-              {selectedRecord.danhSachAnhBenhAn.map((img: any, idx: number) => (
-                <div key={img.url + idx} style={{ display: 'inline-block', marginRight: 16 }}>
-                  <img
-                    src={img.url}
-                    alt={img.moTa}
-                    style={{ width: 180, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
-                  />
-                  <div style={{ textAlign: 'center', fontSize: 12 }}>{img.moTa}</div>
+            <>
+              <Card title="Ảnh bệnh án" size="small" style={{ marginTop: 16 }}>
+                {selectedRecord.danhSachAnhBenhAn.map((img: any, idx: number) => (
+                  <div key={img.url + idx} style={{ display: 'inline-block', marginRight: 16, cursor: 'pointer' }} onClick={() => { setPreviewIndex(idx); setPreviewVisible(true); }}>
+                    <img
+                      src={img.url}
+                      alt={img.moTa}
+                      style={{ width: 320, height: 240, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                    />
+                    <div style={{ textAlign: 'center', fontSize: 12 }}>{img.moTa}</div>
+                  </div>
+                ))}
+              </Card>
+              {/* Preview Modal for images */}
+              <Modal
+                open={previewVisible}
+                onCancel={() => setPreviewVisible(false)}
+                footer={null}
+                centered
+                width={800}
+                bodyStyle={{ textAlign: 'center', background: '#111' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <button
+                    style={{ fontSize: 32, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', marginRight: 24 }}
+                    onClick={() => setPreviewIndex((previewIndex - 1 + (selectedRecord.danhSachAnhBenhAn?.length || 0)) % (selectedRecord.danhSachAnhBenhAn?.length || 1))}
+                    disabled={!selectedRecord.danhSachAnhBenhAn || selectedRecord.danhSachAnhBenhAn.length <= 1}
+                  >&lt;</button>
+                  <div>
+                    <img
+                      src={selectedRecord.danhSachAnhBenhAn?.[previewIndex]?.url}
+                      alt={selectedRecord.danhSachAnhBenhAn?.[previewIndex]?.moTa}
+                      style={{ maxWidth: 700, maxHeight: 500, borderRadius: 12, border: '2px solid #fff', background: '#222' }}
+                    />
+                    <div style={{ color: '#fff', marginTop: 8 }}>{selectedRecord.danhSachAnhBenhAn?.[previewIndex]?.moTa}</div>
+                  </div>
+                  <button
+                    style={{ fontSize: 32, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', marginLeft: 24 }}
+                    onClick={() => setPreviewIndex((previewIndex + 1) % (selectedRecord.danhSachAnhBenhAn?.length || 1))}
+                    disabled={!selectedRecord.danhSachAnhBenhAn || selectedRecord.danhSachAnhBenhAn.length <= 1}
+                  >&gt;</button>
                 </div>
-              ))}
-            </Card>
+              </Modal>
+            </>
           )}
           {/* Đơn thuốc */}
           {selectedRecord.danhSachThuoc && selectedRecord.danhSachThuoc.length > 0 && (
@@ -187,7 +221,7 @@ const ProfileMedicalRecords: React.FC<ProfileMedicalRecordsProps> = ({ maBenhNha
   );
 
   return (
-    <Card title="Danh sách bệnh án" style={{ marginBottom: 24 }}>
+    <Card title="Danh sách bệnh án" style={{ marginBottom: 32 }}>
       {loading ? <Spin /> : error ? <div style={{ color: 'red' }}>{error}</div> : (
         <Table
           columns={columns}

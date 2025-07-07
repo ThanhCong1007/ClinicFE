@@ -74,6 +74,7 @@ export default function Appointments() {
     diUng: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
+  const [fetchingExam, setFetchingExam] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -93,40 +94,16 @@ export default function Appointments() {
     fetchAppointments();
   }, []);
 
-  const handleStartExam = (appointment: Appointment | null, walkIn: boolean = false) => {
-    if (walkIn) {
-      const walkInAppointment: Appointment = {
-        maLichHen: 0,
-        maBenhNhan: 0,
-        tenBenhNhan: '',
-        soDienThoaiBenhNhan: '',
-        maBacSi: 0,
-        tenBacSi: '',
-        maDichVu: 0,
-        tenDichVu: 'Khám vãng lai',
-        ngayHen: format(new Date(), 'yyyy-MM-dd'),
-        gioBatDau: format(new Date(), 'HH:mm'),
-        gioKetThuc: format(new Date(new Date().getTime() + 30 * 60000), 'HH:mm'),
-        maTrangThai: 2,
-        tenTrangThai: 'Đã xác nhận',
-        ghiChuLichHen: 'Khám vãng lai',
-        lyDoHen: null,
-        thoiGian: 30,
-        maBenhAn: null,
-        lyDoKham: null,
-        chanDoan: null,
-        ghiChuDieuTri: null,
-        ngayTaiKham: null,
-        ngayTaoBenhAn: null,
-        coBenhAn: false
-      };
-      setSelectedAppointment(walkInAppointment);
-      setIsWalkIn(true);
-    } else {
-      setSelectedAppointment(appointment);
-      setIsWalkIn(false);
+  const handleStartExam = async (record: Appointment) => {
+    setFetchingExam(true);
+    try {
+      const detail = await getAppointmentDetails(record.maLichHen);
+      navigate('/dashboard/examination', { state: { appointment: detail } });
+    } catch (err) {
+      message.error('Không thể lấy chi tiết lịch hẹn');
+    } finally {
+      setFetchingExam(false);
     }
-    setShowExamModal(true);
   };
 
   const handleExamSubmit = async () => {
@@ -307,7 +284,7 @@ export default function Appointments() {
       render: (_: any, record: Appointment) => (
         <>
           {(record.maTrangThai === 1 || record.maTrangThai === 2) && (
-            <Button type="primary" size="small" onClick={() => navigate('/dashboard/examination', { state: { appointment: record } })} style={{ marginRight: 8 }}>
+            <Button type="primary" size="small" onClick={() => handleStartExam(record)} loading={fetchingExam} style={{ marginRight: 8 }}>
               Khám bệnh
             </Button>
           )}

@@ -126,6 +126,11 @@ export default function Examination() {
   // Tạo state riêng cho ảnh từ backend
   const [backendImages, setBackendImages] = useState<MedicalRecordImage[]>([]);
 
+  // State for image preview
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [previewType, setPreviewType] = useState<'backend' | 'uploaded'>('backend');
+
   // Xác định currentDraftId ưu tiên theo maLichHen, sau đó maBenhNhan, cuối cùng là walk-in
   const getCurrentDraftId = () => {
     if (location.state && (location.state as any).appointment) {
@@ -294,9 +299,29 @@ export default function Examination() {
       const appt = (location.state as any).appointment;
       console.log('Setting appointment from location.state:', appt);
       setAppointment(appt);
+      // Nếu có mã lịch hẹn thì không phải vãng lai
+      if (appt.maLichHen) setIsReexam(false);
+      // Điền đầy đủ thông tin lên form
+      const formValues = {
+        hoTen: appt.tenBenhNhan || appt.hoTen || '',
+        soDienThoaiBenhNhan: appt.soDienThoaiBenhNhan || '',
+        ngaySinh: appt.ngaySinh ? dayjs(appt.ngaySinh) : null,
+        gioiTinh: appt.gioiTinh || null,
+        email: appt.email || '',
+        diaChi: appt.diaChi || '',
+        ngayHen: appt.ngayHen ? dayjs(appt.ngayHen) : null,
+        gioBatDau: appt.gioBatDau || '',
+        lyDoKham: appt.lyDoKham || '',
+        chanDoan: appt.chanDoan || '',
+        ghiChuDieuTri: appt.ghiChuDieuTri || '',
+        ngayTaiKham: appt.ngayTaiKham ? dayjs(appt.ngayTaiKham) : null,
+        tienSuBenh: appt.tienSuBenh || '',
+        diUng: appt.diUng || ''
+      };
+      form.setFieldsValue(formValues);
       setLoading(false); // Đảm bảo loading kết thúc khi có dữ liệu từ location.state
     }
-  }, [location.state]);
+  }, [location.state, form]);
 
   useEffect(() => {
     const fetchAppointment = async () => {
@@ -623,12 +648,12 @@ export default function Examination() {
   useEffect(() => {
     if (appointment && !loading) {
       const formValues = {
-        hoTen: appointment.hoTen || '',
+        hoTen: appointment.tenBenhNhan || appointment.hoTen || '',
         soDienThoaiBenhNhan: appointment.soDienThoaiBenhNhan || '',
         ngaySinh: appointment.ngaySinh ? dayjs(appointment.ngaySinh) : null,
-        gioiTinh: null, // Có thể lấy từ appointment nếu có
-        email: '', // Có thể lấy từ appointment nếu có
-        diaChi: '', // Có thể lấy từ appointment nếu có
+        gioiTinh: appointment.gioiTinh || null,
+        email: appointment.email || '',
+        diaChi: appointment.diaChi || '',
         ngayHen: appointment.ngayHen ? dayjs(appointment.ngayHen) : null,
         gioBatDau: examStartTime,
         lyDoKham: medicalRecord.lyDoKham || '',
@@ -709,7 +734,7 @@ export default function Examination() {
       >
         <Row gutter={24}>
           <Col span={16}>
-            <Card title={isReexam ? 'Tái khám' : (maLichHen ? 'Khám bệnh theo lịch hẹn' : 'Khám bệnh vãng lai')} style={{ marginBottom: 24 }}>
+            <Card title={appointment?.maLichHen ? 'Khám bệnh theo lịch hẹn' : 'Khám bệnh vãng lai'} style={{ marginBottom: 24 }}>
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item name="hoTen" label="Họ và tên" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}>
@@ -800,18 +825,68 @@ export default function Examination() {
                   <Form.Item label="Ảnh bệnh án">
                     {/* Hiển thị ảnh từ url (backendImages) giống logic bên ProfileMedicalRecords */}
                     {backendImages && backendImages.length > 0 && (
-                      <Card title="Ảnh bệnh án" size="small" style={{ marginBottom: 16 }}>
-                        {backendImages.map((img, idx) => (
-                          <div key={img.url + idx} style={{ display: 'inline-block', marginRight: 16 }}>
-                            <img
-                              src={img.url}
-                              alt={img.moTa}
-                              style={{ width: 180, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
-                            />
-                            <div style={{ textAlign: 'center', fontSize: 12 }}>{img.moTa}</div>
+                      <>
+                        <Card size="small" style={{ marginBottom: 16 }}>
+                          {backendImages.map((img, idx) => (
+                            <div key={img.url + idx} style={{ display: 'inline-block', marginRight: 16, cursor: 'pointer' }} onClick={() => { setPreviewIndex(idx); setPreviewType('backend'); setPreviewVisible(true); }}>
+                              <img
+                                src={img.url}
+                                alt={img.moTa}
+                                style={{ width: 180, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                              />
+                              <div style={{ textAlign: 'center', fontSize: 12 }}>{img.moTa}</div>
+                            </div>
+                          ))}
+                        </Card>
+                        <Modal
+                          open={previewVisible}
+                          onCancel={() => setPreviewVisible(false)}
+                          footer={null}
+                          centered
+                          width={800}
+                          bodyStyle={{ textAlign: 'center', background: '#111' }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button
+                              style={{ fontSize: 32, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', marginRight: 24 }}
+                              onClick={() => {
+                                if (previewType === 'backend') setPreviewIndex((previewIndex - 1 + backendImages.length) % backendImages.length);
+                                else setPreviewIndex((previewIndex - 1 + selectedImages.length) % selectedImages.length);
+                              }}
+                              disabled={previewType === 'backend' ? backendImages.length <= 1 : selectedImages.length <= 1}
+                            >&lt;</button>
+                            <div>
+                              {previewType === 'backend' ? (
+                                <>
+                                  <img
+                                    src={backendImages[previewIndex].url}
+                                    alt={backendImages[previewIndex].moTa}
+                                    style={{ maxWidth: 700, maxHeight: 500, borderRadius: 12, border: '2px solid #fff', background: '#222' }}
+                                  />
+                                  <div style={{ color: '#fff', marginTop: 8 }}>{backendImages[previewIndex].moTa}</div>
+                                </>
+                              ) : (
+                                <>
+                                  <img
+                                    src={selectedImages[previewIndex].file ? URL.createObjectURL(selectedImages[previewIndex].file) : ''}
+                                    alt={selectedImages[previewIndex].mota}
+                                    style={{ maxWidth: 700, maxHeight: 500, borderRadius: 12, border: '2px solid #fff', background: '#222' }}
+                                  />
+                                  <div style={{ color: '#fff', marginTop: 8 }}>{selectedImages[previewIndex].mota}</div>
+                                </>
+                              )}
+                            </div>
+                            <button
+                              style={{ fontSize: 32, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', marginLeft: 24 }}
+                              onClick={() => {
+                                if (previewType === 'backend') setPreviewIndex((previewIndex + 1) % backendImages.length);
+                                else setPreviewIndex((previewIndex + 1) % selectedImages.length);
+                              }}
+                              disabled={previewType === 'backend' ? backendImages.length <= 1 : selectedImages.length <= 1}
+                            >&gt;</button>
                           </div>
-                        ))}
-                      </Card>
+                        </Modal>
+                      </>
                     )}
                     {/* Phần upload và selectedImages giữ nguyên bên dưới */}
                     <div
@@ -836,7 +911,8 @@ export default function Examination() {
                               <img
                                 src={src}
                                 alt={alt}
-                                style={{ width: 320, height: 180, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                                style={{ width: 320, height: 180, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee', cursor: 'pointer' }}
+                                onClick={() => { setPreviewIndex(idx); setPreviewType('uploaded'); setPreviewVisible(true); }}
                               />
                               <span
                                 style={{ position: 'absolute', top: 2, right: 2, cursor: 'pointer', background: '#fff', borderRadius: '50%', padding: 2, border: '1px solid #ccc' }}
