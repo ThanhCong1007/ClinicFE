@@ -121,7 +121,7 @@ export default function Examination() {
   const [slotError, setSlotError] = useState<string | null>(null);
   const [selectedReexamDate, setSelectedReexamDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [selectedImages, setSelectedImages] = useState<Array<{ file?: File, url?: string, mota: string }>>([]);
+  const [selectedImages, setSelectedImages] = useState<Array<{ file?: File, url?: string, moTa: string }>>([]);
 
   // Tạo state riêng cho ảnh từ backend
   const [backendImages, setBackendImages] = useState<MedicalRecordImage[]>([]);
@@ -503,7 +503,7 @@ export default function Examination() {
           .filter(img => img.file && img.file instanceof File)
           .map(async (img) => {
             const base64 = await fileToBase64(img.file as File);
-            return { mota: img.mota, base64, name: img.file!.name, type: img.file!.type };
+            return { moTa: img.moTa, base64, name: img.file!.name, type: img.file!.type };
           })
       );
       localStorage.setItem(imageDraftKey, JSON.stringify(arr));
@@ -519,7 +519,6 @@ export default function Examination() {
       selectedServices: services,
       selectedDrugs: selectedDrugs
     };
-    console.log('Saving draft data for:', currentDraftId, draftData);
     localStorage.setItem(draftKey, JSON.stringify(draftData));
   };
 
@@ -532,7 +531,7 @@ export default function Examination() {
     const filesToUpload = selectedImages
       .map(img => img.file)
       .filter((file): file is File => file instanceof File);
-    const danhSachAnhBenhAn = selectedImages.map(img => ({ mota: img.mota }));
+    const danhSachAnhBenhAn = selectedImages.map(img => ({ moTa: img.moTa }));
     const examData = {
       maBenhNhan: appointment?.maBenhNhan || null,
       maLichHen: isReexam ? null : (maLichHen ? parseInt(maLichHen) : null),
@@ -573,7 +572,7 @@ export default function Examination() {
       
       let createdRecord;
       if (appointment?.maBenhAn) {
-        await updateMedicalRecord(appointment.maBenhAn, examData);
+        await updateMedicalRecord(appointment.maBenhAn, examData, filesToUpload);
         notification.success({ message: 'Thành công', description: 'Cập nhật bệnh án thành công!' });
         createdRecord = { maBenhAn: appointment.maBenhAn };
       } else {
@@ -718,8 +717,6 @@ export default function Examination() {
     return <Alert message="Lỗi" description={error} type="error" showIcon style={{ margin: 24 }} />;
   }
 
-  // Trước khi render ảnh từ backendImages
-  console.log('backendImages:', backendImages);
 
   return (
     <div style={{ padding: 24 }}>
@@ -869,10 +866,10 @@ export default function Examination() {
                                 <>
                                   <img
                                     src={selectedImages[previewIndex].file ? URL.createObjectURL(selectedImages[previewIndex].file) : ''}
-                                    alt={selectedImages[previewIndex].mota}
+                                    alt={selectedImages[previewIndex].moTa}
                                     style={{ maxWidth: 700, maxHeight: 500, borderRadius: 12, border: '2px solid #fff', background: '#222' }}
                                   />
-                                  <div style={{ color: '#fff', marginTop: 8 }}>{selectedImages[previewIndex].mota}</div>
+                                  <div style={{ color: '#fff', marginTop: 8 }}>{selectedImages[previewIndex].moTa}</div>
                                 </>
                               )}
                             </div>
@@ -925,7 +922,7 @@ export default function Examination() {
                             <Input
                               style={{ width: 320, fontSize: 14 }}
                               placeholder="Nhập mô tả ảnh"
-                              value={img.mota}
+                              value={img.moTa}
                               onChange={e => {
                                 const value = e.target.value;
                                 setSelectedImages(prev => prev.map((item, i) => i === idx ? { ...item, mota: value } : item));
@@ -950,7 +947,7 @@ export default function Examination() {
                               message.error('Ảnh phải nhỏ hơn 5MB!');
                               return false;
                             }
-                            setSelectedImages(prev => [...prev, { file, mota: '' }]);
+                            setSelectedImages(prev => [...prev, { file, moTa: '' }]);
                             return false;
                           }}
                           multiple

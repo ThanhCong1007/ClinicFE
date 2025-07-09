@@ -125,14 +125,31 @@ export const getMedicalRecordById = async (maBenhAn: number) => {
   return response.data;
 };
 
-// Cập nhật bệnh án (tái khám)
-export const updateMedicalRecord = async (maBenhAn: number, data: any) => {
-  const response = await axios.put(`/api/tham-kham/benh-an/${maBenhAn}`, data, {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  });
-  return response.data;
+// Cập nhật bệnh án (tái khám) - multipart/form-data
+export const updateMedicalRecord = async (maBenhAn: number, data: any, images: File[] = []) => {
+  try {
+    const formData = new FormData();
+    // Đảm bảo trường 'data' là application/json
+    const jsonBlob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    formData.append('data', jsonBlob);
+    // Thêm các file ảnh với key 'images'
+    images.forEach((image) => {
+      formData.append('images', image);
+    });
+
+    const response = await axios.put(
+      `http://localhost:8080/api/tham-kham/benh-an/${maBenhAn}`,
+      formData,
+      {
+        headers: {
+          'Accept': 'application/json'
+        }
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    throw error;
+  }
 };
 
 // Lấy danh sách bệnh án của bác sĩ
