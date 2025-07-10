@@ -3,12 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Login.css';
 import { useNotification } from '../../contexts/NotificationContext';
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import React from 'react';
 
 export default function Login() {
   const [isSignIn, setIsSignIn] = useState(true); // true for login, false for signup
   const navigate = useNavigate();
   const [redirectPath, setRedirectPath] = useState('/');
   const { showNotification } = useNotification();
+
+  const [showForgot, setShowForgot] = useState(false);
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [countdown, setCountdown] = useState(300); // 5 phút
+  const [otpSent, setOtpSent] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
+  const [loadingForgot, setLoadingForgot] = useState(false);
 
   // Lấy redirect path nếu có
   useEffect(() => {
@@ -17,6 +31,65 @@ export default function Login() {
       setRedirectPath(savedRedirectPath);
     }
   }, []);
+
+  // Đếm ngược OTP
+  React.useEffect(() => {
+    let timer: number;
+    if (otpSent && countdown > 0) {
+      timer = window.setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [otpSent, countdown]);
+
+  const handleOtpInput = (value: string, idx: number) => {
+    if (!/^[0-9]?$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[idx] = value;
+    setOtp(newOtp);
+    // Tự động chuyển focus
+    if (value && idx < 5) {
+      const next = document.getElementById(`otp-${idx + 1}`);
+      if (next) (next as HTMLInputElement).focus();
+    }
+  };
+
+  const handleSendOtp = async () => {
+    setLoadingForgot(true);
+    setForgotError(null);
+    setForgotSuccess(null);
+    try {
+      const res = await fetch('http://localhost:8080/api/auth/gui-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ soDienThoai: phone }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Gửi OTP thất bại');
+      }
+      setOtpSent(true);
+      setStep('otp');
+      setCountdown(300);
+      setForgotSuccess('Đã gửi mã OTP về số điện thoại!');
+    } catch (err: any) {
+      setForgotError(err.message);
+    } finally {
+      setLoadingForgot(false);
+    }
+  };
+
+  const handleCloseForgot = () => {
+    setShowForgot(false);
+    setStep('phone');
+    setPhone('');
+    setOtp(['', '', '', '', '', '']);
+    setNewPassword('');
+    setConfirmPassword('');
+    setCountdown(300);
+    setOtpSent(false);
+    setForgotError(null);
+    setForgotSuccess(null);
+  };
 
   const toggleForm = () => {
     setIsSignIn(!isSignIn);
@@ -175,6 +248,35 @@ export default function Login() {
     }
   };
 
+  const handleResetPassword = async () => {
+    setLoadingForgot(true);
+    setForgotError(null);
+    setForgotSuccess(null);
+    try {
+      const res = await fetch('http://localhost:8080/api/auth/dat-lai-mat-khau', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          soDienThoai: phone,
+          otp: otp.join(''),
+          matKhauMoi: newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Đặt lại mật khẩu thất bại');
+      }
+      setForgotSuccess(data.message || 'Mật khẩu đã được đặt lại thành công');
+      setTimeout(() => {
+        handleCloseForgot();
+      }, 2000);
+    } catch (err: any) {
+      setForgotError(err.message);
+    } finally {
+      setLoadingForgot(false);
+    }
+  };
+
   return (
     <>
       {isSignIn ? (
@@ -212,7 +314,7 @@ export default function Login() {
                     />
                     <div className="d-flex justify-content-between mt-1" style={{ fontSize: '16px', fontStyle: 'italic', transform: 'translateY(7%)' }}>
                       <a href="#" onClick={(e) => { e.preventDefault(); toggleForm(); }} className="m-0 text-dark px-1">Chưa có tài khoản ?</a>
-                      <a href="#" className="m-0 text-dark px-1">Quên mật khẩu</a>
+                      <a href="#" className="m-0 text-dark px-1" onClick={e => {e.preventDefault(); setShowForgot(true);}}>Quên mật khẩu</a>
                     </div>
                     <button
                       className="btn btn-dark w-100 py-3"
@@ -335,6 +437,106 @@ export default function Login() {
           </div>
         </div>
       )}
+
+      <Modal show={showForgot} onHide={handleCloseForgot} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Quên mật khẩu</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {forgotError && <div className="alert alert-danger">{forgotError}</div>}
+          {forgotSuccess && <div className="alert alert-success">{forgotSuccess}</div>}
+          {step === 'phone' && (
+            <Form>
+              <Form.Group className="mb-3">
+                <Form.Label>Nhập số điện thoại đã đăng ký</Form.Label>
+                <Form.Control
+                  type="tel"
+                  placeholder="Số điện thoại"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  maxLength={15}
+                />
+              </Form.Group>
+              <Button variant="primary" className="w-100" onClick={handleSendOtp} disabled={loadingForgot || !phone}>
+                {loadingForgot ? 'Đang gửi...' : 'Gửi mã OTP'}
+              </Button>
+            </Form>
+          )}
+          {step === 'otp' && (
+            <Form>
+              <div className="mb-3 text-center">
+                <div>Nhập mã OTP đã gửi về số điện thoại</div>
+                <div className="d-flex justify-content-center gap-2 my-2">
+                  {otp.map((v, i) => (
+                    <Form.Control
+                      key={i}
+                      id={`otp-${i}`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={v}
+                      onChange={e => handleOtpInput(e.target.value, i)}
+                      style={{
+                        width: 40,
+                        height: 40,
+                        textAlign: 'center',
+                        fontSize: 20,
+                        borderRadius: 0,
+                        border: '1px solid #ced4da',
+                        lineHeight: '40px',
+                        padding: 0,
+                        fontFamily: 'inherit',
+                      }}
+                      autoFocus={i === 0}
+                    />
+                  ))}
+                </div>
+                <div className="text-muted" style={{ fontSize: 14 }}>
+                  Mã OTP sẽ hết hạn sau: <b>{Math.floor(countdown/60)}:{(countdown%60).toString().padStart(2,'0')}</b>
+                </div>
+              </div>
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label>Mật khẩu mới</Form.Label>
+                    <Form.Control
+                      type="password"
+                      placeholder="Nhập mật khẩu mới"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label>Xác nhận mật khẩu</Form.Label>
+                    <Form.Control
+                      type="password"
+                      placeholder="Nhập lại mật khẩu"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Button
+                variant="primary"
+                className="w-100"
+                onClick={handleResetPassword}
+                disabled={
+                  loadingForgot ||
+                  otp.some(x => !x) ||
+                  !newPassword ||
+                  !confirmPassword ||
+                  newPassword !== confirmPassword
+                }
+              >
+                {loadingForgot ? 'Đang xác nhận...' : 'Xác nhận'}
+              </Button>
+            </Form>
+          )}
+        </Modal.Body>
+      </Modal>
     </>
   );
 }

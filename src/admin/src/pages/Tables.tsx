@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi, User, UsersResponse } from '../services/api';
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 
 type TabType = 'admin' | 'user' | 'doctor';
 
@@ -18,18 +19,95 @@ const Tables: React.FC = () => {
   });
   const itemsPerPage = 10;
 
+  const initialFormState = {
+    tenDangNhap: '',
+    matKhau: '',
+    email: '',
+    hoTen: '',
+    soDienThoai: '',
+    vaiTro: 'ADMIN',
+    ngaySinh: '',
+    gioiTinh: '',
+    diaChi: '',
+    tienSuBenh: '',
+    diUng: '',
+  };
+
+  const FORM_STORAGE_KEY = 'admin_add_user_form';
+
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState(initialFormState);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+
+  // Load form from localStorage if exists
+  useEffect(() => {
+    const saved = localStorage.getItem(FORM_STORAGE_KEY);
+    if (saved) {
+      setForm(JSON.parse(saved));
+    }
+  }, [showModal]);
+
+  // Save form to localStorage on change
+  useEffect(() => {
+    if (showModal) {
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(form));
+    }
+  }, [form, showModal]);
+
+  const handleOpenModal = () => {
+    setShowModal(true);
+  };
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setForm(initialFormState);
+    setFormError(null);
+    localStorage.removeItem(FORM_STORAGE_KEY);
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<any>) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError(null);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      const res = await fetch('http://localhost:8080/api/admin/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ ...form, vaiTro: form.vaiTro }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Registration failed');
+      }
+      handleCloseModal();
+      setSuccess('User created successfully!');
+      fetchUsers();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err: any) {
+      setFormError(err.message || 'Failed to create user');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
   // Fetch users from API
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response: UsersResponse = await adminApi.getUsers();
-      setUsers(response.users);
-      setPagination({
-        totalItems: response.totalItems,
-        totalPages: response.totalPages,
-        currentPage: response.currentPage,
-      });
+      const response = await adminApi.getUsers();
+      setUsers(response);
+      // Bỏ setPagination vì không còn dữ liệu phân trang từ API
     } catch (err) {
       setError('Failed to fetch users. Please try again.');
       console.error('Error fetching users:', err);
@@ -238,7 +316,7 @@ const Tables: React.FC = () => {
                   </div>
                 </div>
                 <div className="col-md-6 text-end">
-                  <button className="btn btn-primary admin-btn-primary">
+                  <button className="btn btn-primary admin-btn-primary" onClick={handleOpenModal}>
                     <i className="fas fa-plus me-2"></i>
                     {tabInfo.addButtonText}
                   </button>
@@ -385,6 +463,97 @@ const Tables: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <Modal show={showModal} onHide={handleCloseModal} size="lg" centered>
+        <Form onSubmit={handleSubmit}>
+          <Modal.Header closeButton>
+            <Modal.Title>Thêm mới {activeTab === 'admin' ? 'Quản trị viên' : activeTab === 'doctor' ? 'Bác sĩ' : 'Người dùng'}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {formError && <div className="alert alert-danger">{formError}</div>}
+            <Row className="g-3">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Họ và tên</Form.Label>
+                  <Form.Control name="hoTen" value={form.hoTen} onChange={handleFormChange} required placeholder="Nhập họ và tên" />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Tên đăng nhập</Form.Label>
+                  <Form.Control name="tenDangNhap" value={form.tenDangNhap} onChange={handleFormChange} required placeholder="Nhập tên đăng nhập" />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Mật khẩu</Form.Label>
+                  <Form.Control name="matKhau" type="password" value={form.matKhau} onChange={handleFormChange} required placeholder="Nhập mật khẩu" />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control name="email" type="email" value={form.email} onChange={handleFormChange} required placeholder="Nhập email" />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Số điện thoại</Form.Label>
+                  <Form.Control name="soDienThoai" value={form.soDienThoai} onChange={handleFormChange} required placeholder="Nhập số điện thoại" />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Vai trò</Form.Label>
+                  <Form.Select name="vaiTro" value={form.vaiTro} onChange={handleFormChange} required>
+                    <option value="ADMIN">Quản trị viên</option>
+                    <option value="BACSI">Bác sĩ</option>
+                    <option value="USER">Người dùng</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Ngày sinh</Form.Label>
+                  <Form.Control name="ngaySinh" type="date" value={form.ngaySinh} onChange={handleFormChange} required />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Giới tính</Form.Label>
+                  <Form.Select name="gioiTinh" value={form.gioiTinh} onChange={handleFormChange} required>
+                    <option value="">Chọn giới tính</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label>Địa chỉ</Form.Label>
+                  <Form.Control name="diaChi" value={form.diaChi} onChange={handleFormChange} required placeholder="Nhập địa chỉ" />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Tiền sử bệnh</Form.Label>
+                  <Form.Control name="tienSuBenh" value={form.tienSuBenh} onChange={handleFormChange} placeholder="Nhập tiền sử bệnh (nếu có)" />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Dị ứng</Form.Label>
+                  <Form.Control name="diUng" value={form.diUng} onChange={handleFormChange} placeholder="Nhập dị ứng (nếu có)" />
+                </Form.Group>
+              </Col>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseModal} disabled={formLoading}>Hủy</Button>
+            <Button variant="primary" type="submit" disabled={formLoading}>{formLoading ? 'Đang lưu...' : 'Lưu'}</Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
     </div>
   );
 };

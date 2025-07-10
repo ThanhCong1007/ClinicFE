@@ -86,10 +86,10 @@ apiClient.interceptors.response.use(
 
 // Admin API Services
 export const adminApi = {
-  // Get all users with pagination
-  getUsers: async (): Promise<UsersResponse> => {
+  // Get all users (now returns User[] directly)
+  getUsers: async (): Promise<User[]> => {
     try {
-      const response: AxiosResponse<UsersResponse> = await apiClient.get('/api/admin/users');
+      const response: AxiosResponse<User[]> = await apiClient.get('/api/admin/users');
       return response.data;
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -97,10 +97,10 @@ export const adminApi = {
     }
   },
 
-  // Get users with pagination parameters
-  getUsersWithPagination: async (page: number = 0, size: number = 10): Promise<UsersResponse> => {
+  // Get users with pagination parameters (now returns User[] directly)
+  getUsersWithPagination: async (page: number = 0, size: number = 10): Promise<User[]> => {
     try {
-      const response: AxiosResponse<UsersResponse> = await apiClient.get('/api/admin/users', {
+      const response: AxiosResponse<User[]> = await apiClient.get('/api/admin/users', {
         params: {
           page,
           size,
