@@ -173,7 +173,7 @@ export default function Login() {
       
       // Hiển thị thông báo lỗi trong cửa sổ popup
       if (error.response && error.response.data && error.response.data.message) {
-        showNotification('Lỗi', `Đăng nhập thất bại: ${error.response.data.message}`, 'error');
+        showNotification('Lỗi', `Đăng nhập thất bại`, 'error');
       } else {
         showNotification('Lỗi', 'Thông tin đăng nhập không chính xác', 'error');
       }

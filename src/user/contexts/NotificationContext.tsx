@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import NotificationModal from '../../user/components/widgets/NotificationModal';
+import NotificationToast from '../../dashboard/components/NotificationModal';
 
 interface NotificationContextType {
-  showNotification: (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info', onConfirm?: () => void) => void;
+  showNotification: (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
   hideNotification: () => void;
 }
 
@@ -26,7 +26,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     title: string;
     message: string;
     type: 'success' | 'error' | 'warning' | 'info';
-    onConfirm?: () => void;
   }>({
     isOpen: false,
     title: '',
@@ -37,16 +36,17 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const showNotification = (
     title: string, 
     message: string, 
-    type: 'success' | 'error' | 'warning' | 'info' = 'info',
-    onConfirm?: () => void
+    type: 'success' | 'error' | 'warning' | 'info' = 'info'
   ) => {
     setNotification({
       isOpen: true,
       title,
       message,
       type,
-      onConfirm
     });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, isOpen: false }));
+    }, 4000);
   };
 
   const hideNotification = () => {
@@ -59,14 +59,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   return (
     <NotificationContext.Provider value={{ showNotification, hideNotification }}>
       {children}
-      <NotificationModal
-        isOpen={notification.isOpen}
+      <NotificationToast
+        show={notification.isOpen}
+        onClose={hideNotification}
         title={notification.title}
         message={notification.message}
-        type={notification.type}
-        onClose={hideNotification}
-        onConfirm={notification.onConfirm}
-        showConfirmButton={!!notification.onConfirm}
+        type={notification.type === 'warning' ? 'info' : notification.type}
       />
     </NotificationContext.Provider>
   );
