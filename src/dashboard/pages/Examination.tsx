@@ -38,6 +38,10 @@ interface Appointment {
   ngayTaiKham: string | null;
   ngayTaoBenhAn: string | null;
   coBenhAn: boolean;
+  tienSuBenh: string | null;
+  diUng: string | null;
+  diaChi: string | null;
+  gioiTinh: string | null;
 }
 
 interface Prescription {
@@ -207,6 +211,10 @@ export default function Examination() {
       ngayTaiKham: data.ngayTaiKham || '',
       ngayTaoBenhAn: data.ngayTaoBenhAn || '',
       coBenhAn: data.coBenhAn ?? false,
+      tienSuBenh: data.tienSuBenh || '',
+      diUng: data.diUng || '',
+      diaChi: data.diaChi || '',
+      gioiTinh: data.gioiTinh || ''
     };
   }
 
@@ -239,7 +247,11 @@ export default function Examination() {
       ghiChuDieuTri: null,
       ngayTaiKham: null,
       ngayTaoBenhAn: null,
-      coBenhAn: false
+      coBenhAn: false,
+      tienSuBenh: null,
+      diUng: null,
+      diaChi: null,
+      gioiTinh: null
     };
   };
   const [appointment, setAppointment] = useState(getInitialAppointment());
@@ -318,6 +330,18 @@ export default function Examination() {
         tienSuBenh: appt.tienSuBenh || '',
         diUng: appt.diUng || ''
       };
+      
+      // Cập nhật medicalRecord nếu có dữ liệu
+      if (appt.tienSuBenh || appt.diUng || appt.lyDoKham || appt.chanDoan || appt.ghiChuDieuTri || appt.ngayTaiKham) {
+        setMedicalRecord({
+          lyDoKham: appt.lyDoKham || '',
+          chanDoan: appt.chanDoan || '',
+          ghiChuDieuTri: appt.ghiChuDieuTri || '',
+          ngayTaiKham: appt.ngayTaiKham || '',
+          tienSuBenh: appt.tienSuBenh || '',
+          diUng: appt.diUng || ''
+        });
+      }
       form.setFieldsValue(formValues);
       setLoading(false); // Đảm bảo loading kết thúc khi có dữ liệu từ location.state
     }
@@ -330,18 +354,39 @@ export default function Examination() {
         if (maLichHen && !(location.state && (location.state as any).appointment)) {
           const data = await getAppointmentDetails(parseInt(maLichHen));
           if (data) {
-            setAppointment(normalizeAppointmentData(data));
-            if (data.lyDoKham || data.chanDoan || data.ghiChuDieuTri || data.ngayTaiKham) {
-              const record = {
-                lyDoKham: data.lyDoKham || '',
-                chanDoan: data.chanDoan || '',
-                ghiChuDieuTri: data.ghiChuDieuTri || '',
-                ngayTaiKham: data.ngayTaiKham || '',
-                tienSuBenh: data.tienSuBenh || '',
-                diUng: data.diUng || ''
-              };
-              setMedicalRecord(record);
-            }
+            const normalizedData = normalizeAppointmentData(data);
+            setAppointment(normalizedData);
+            
+            // Luôn tạo medicalRecord nếu có dữ liệu từ API
+            const record = {
+              lyDoKham: data.lyDoKham || '',
+              chanDoan: data.chanDoan || '',
+              ghiChuDieuTri: data.ghiChuDieuTri || '',
+              ngayTaiKham: data.ngayTaiKham || '',
+              tienSuBenh: data.tienSuBenh || '',
+              diUng: data.diUng || ''
+            };
+            setMedicalRecord(record);
+            
+            // Điền dữ liệu vào form
+            const formValues = {
+              hoTen: normalizedData.hoTen || '',
+              soDienThoaiBenhNhan: normalizedData.soDienThoaiBenhNhan || '',
+              ngaySinh: normalizedData.ngaySinh ? dayjs(normalizedData.ngaySinh) : null,
+              gioiTinh: normalizedData.gioiTinh || null,
+              email: data.email || '',
+              diaChi: normalizedData.diaChi || '',
+              ngayHen: normalizedData.ngayHen ? dayjs(normalizedData.ngayHen) : null,
+              gioBatDau: normalizedData.gioBatDau || '',
+              lyDoKham: record.lyDoKham || '',
+              chanDoan: record.chanDoan || '',
+              ghiChuDieuTri: record.ghiChuDieuTri || '',
+              ngayTaiKham: record.ngayTaiKham ? dayjs(record.ngayTaiKham) : null,
+              tienSuBenh: record.tienSuBenh || '',
+              diUng: record.diUng || ''
+            };
+            form.setFieldsValue(formValues);
+            
             if (Array.isArray(data.danhSachAnhBenhAn)) {
               setBackendImages(data.danhSachAnhBenhAn.map((img: any) => ({
                 maBenhAn: img.maBenhAn,
@@ -436,7 +481,11 @@ export default function Examination() {
             ghiChuDieuTri: data.ghiChuDieuTri || '',
             ngayTaiKham: data.ngayTaiKham || '',
             ngayTaoBenhAn: data.ngayTao || '',
-            coBenhAn: true
+            coBenhAn: true,
+            tienSuBenh: data.tienSuBenh || '',
+            diUng: data.diUng || '',
+            diaChi: data.diaChi || '',
+            gioiTinh: data.gioiTinh || ''
           };
           setAppointment(reexamAppointment);
           const record = {

@@ -66,6 +66,12 @@ export const getAppointmentDetails = async (maLichHen: number) => {
     data.gioBatDau = format(now, 'HH:mm:ss');
     data.gioKetThuc = '';
     data.thoiGian = 30;
+    // Đảm bảo các trường dữ liệu được giữ nguyên
+    data.tienSuBenh = data.tienSuBenh || '';
+    data.diUng = data.diUng || '';
+    data.diaChi = data.diaChi || '';
+    data.ngaySinh = data.ngaySinh || '';
+    data.gioiTinh = data.gioiTinh || '';
   }
   return data;
 };

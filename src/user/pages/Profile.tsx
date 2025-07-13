@@ -3,6 +3,8 @@ import { getUserProfile, updateUserProfile, getPatientAppointments, cancelAppoin
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useSpring } from '@react-spring/web';
+import { Modal, Form, Input, Button, Space, Typography, Divider, Card, Row, Col, Tag } from 'antd';
+import { ExclamationCircleOutlined, CalendarOutlined, ClockCircleOutlined, UserOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import ProfileSidebar from '../components/profile/ProfileSidebar';
 import ProfileInfoCard from '../components/profile/ProfileInfoCard';
 import ProfileAppointments from '../components/profile/ProfileAppointments';
@@ -64,6 +66,15 @@ const UserProfile = () => {
   const location = useLocation();
   const { showNotification } = useNotification();
   const hasShownNotification = useRef(false);
+
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedAppointmentForCancel, setSelectedAppointmentForCancel] = useState<Appointment | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelForm] = Form.useForm();
+  
+  const [showUpdateProfileModal, setShowUpdateProfileModal] = useState(false);
+  const [updateProfileLoading, setUpdateProfileLoading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -214,46 +225,75 @@ const UserProfile = () => {
   }, [editFormData.maBacSi, editFormData.ngayHen, isEditing]);
 
   const handleUpdateProfile = async () => {
-    if (window.confirm('Bạn có chắc chắn muốn lưu thay đổi thông tin cá nhân không?')) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token || !userInfo) return;
+    setShowUpdateProfileModal(true);
+  };
 
-        await updateUserProfile(token, userInfo);
-        setIsEditingProfile(false);
-        showNotification('Thành công', 'Cập nhật thông tin cá nhân thành công!', 'success');
-      } catch (err) {
-        if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
-          showNotification('Lỗi', `Lỗi cập nhật thông tin: ${err.response.data.message}`, 'error');
-        } else {
-          setError(err instanceof Error ? err.message : 'Failed to update profile');
-        }
+  const handleUpdateProfileConfirm = async () => {
+    try {
+      setUpdateProfileLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token || !userInfo) return;
+
+      await updateUserProfile(token, userInfo);
+      setIsEditingProfile(false);
+      setShowUpdateProfileModal(false);
+      showNotification('Thành công', 'Cập nhật thông tin cá nhân thành công!', 'success');
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
+        showNotification('Lỗi', `Lỗi cập nhật thông tin: ${err.response.data.message}`, 'error');
+      } else {
+        showNotification('Lỗi', 'Có lỗi xảy ra khi cập nhật thông tin. Vui lòng thử lại.', 'error');
       }
+    } finally {
+      setUpdateProfileLoading(false);
     }
   };
 
-  const handleCancelAppointment = async (appointment: Appointment) => {
-    const reason = window.prompt('Vui lòng nhập lý do hủy lịch hẹn:');
-    if (reason === null) return;
-    
-    if (window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này không?')) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token || !userInfo) return;
+  const handleUpdateProfileModalClose = () => {
+    setShowUpdateProfileModal(false);
+  };
 
-        await cancelAppointment(token, { ...appointment, lydo: reason });
-        if (userInfo.maBenhNhan) {
-          fetchAppointments(userInfo.maBenhNhan);
-        }
-        showNotification('Thành công', 'Lịch hẹn đã được hủy thành công.', 'success');
-      } catch (err) {
-        if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
-          showNotification('Lỗi', `Lỗi hủy lịch hẹn: ${err.response.data.message}`, 'error');
-        } else {
-          setError(err instanceof Error ? err.message : 'Failed to cancel appointment');
-        }
+  const handleCancelAppointment = async (appointment: Appointment) => {
+    setSelectedAppointmentForCancel(appointment);
+    setCancelReason('');
+    setShowCancelModal(true);
+    cancelForm.resetFields();
+  };
+
+  const handleCancelConfirm = async () => {
+    try {
+      const values = await cancelForm.validateFields();
+      setCancelLoading(true);
+      
+      const token = localStorage.getItem('token');
+      if (!token || !userInfo || !selectedAppointmentForCancel) return;
+
+      await cancelAppointment(token, { ...selectedAppointmentForCancel, lydo: values.reason });
+      
+      if (userInfo.maBenhNhan) {
+        fetchAppointments(userInfo.maBenhNhan);
       }
+      
+      showNotification('Thành công', 'Lịch hẹn đã được hủy thành công.', 'success');
+      setShowCancelModal(false);
+      setSelectedAppointmentForCancel(null);
+      setCancelReason('');
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
+        showNotification('Lỗi', `Lỗi hủy lịch hẹn: ${err.response.data.message}`, 'error');
+      } else {
+        showNotification('Lỗi', 'Có lỗi xảy ra khi hủy lịch hẹn. Vui lòng thử lại.', 'error');
+      }
+    } finally {
+      setCancelLoading(false);
     }
+  };
+
+  const handleCancelModalClose = () => {
+    setShowCancelModal(false);
+    setSelectedAppointmentForCancel(null);
+    setCancelReason('');
+    cancelForm.resetFields();
   };
 
   // Function to handle edit button click
@@ -516,6 +556,229 @@ const UserProfile = () => {
           </div>
         </div>
       </div>
+
+             <Modal
+         title={
+           <div style={{ textAlign: 'center', padding: '16px 0' }}>
+             <ExclamationCircleOutlined style={{ color: '#ff4d4f', fontSize: '24px', marginRight: '8px' }} />
+             <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Xác nhận hủy lịch hẹn</span>
+           </div>
+         }
+         open={showCancelModal}
+         onCancel={handleCancelModalClose}
+         width={600}
+         centered
+         footer={[
+           <Button key="back" size="large" onClick={handleCancelModalClose}>
+             Không hủy
+           </Button>,
+           <Button
+             key="submit"
+             type="primary"
+             danger
+             size="large"
+             loading={cancelLoading}
+             onClick={handleCancelConfirm}
+             icon={<ExclamationCircleOutlined />}
+           >
+             Xác nhận hủy
+           </Button>,
+         ]}
+       >
+         {selectedAppointmentForCancel && (
+           <div>
+             <div style={{ 
+               background: '#fff2f0', 
+               border: '1px solid #ffccc7', 
+               borderRadius: '8px', 
+               padding: '16px', 
+               marginBottom: '20px' 
+             }}>
+               <Typography.Text strong style={{ color: '#cf1322' }}>
+                 Bạn có chắc chắn muốn hủy lịch hẹn này không? Hành động này không thể hoàn tác.
+               </Typography.Text>
+             </div>
+
+             <Card 
+               size="small" 
+               style={{ marginBottom: '20px', border: '1px solid #d9d9d9' }}
+               title={
+                 <div style={{ display: 'flex', alignItems: 'center' }}>
+                   <CalendarOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                   <span>Thông tin lịch hẹn</span>
+                 </div>
+               }
+             >
+               <Row gutter={[16, 12]}>
+                 <Col span={12}>
+                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                     <UserOutlined style={{ marginRight: '8px', color: '#52c41a' }} />
+                     <Typography.Text strong>Bác sĩ:</Typography.Text>
+                   </div>
+                   <Typography.Text>{selectedAppointmentForCancel.tenBacSi}</Typography.Text>
+                 </Col>
+                 <Col span={12}>
+                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                     <MedicineBoxOutlined style={{ marginRight: '8px', color: '#722ed1' }} />
+                     <Typography.Text strong>Dịch vụ:</Typography.Text>
+                   </div>
+                   <Typography.Text>{selectedAppointmentForCancel.tenDichVu}</Typography.Text>
+                 </Col>
+                 <Col span={12}>
+                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                     <CalendarOutlined style={{ marginRight: '8px', color: '#fa8c16' }} />
+                     <Typography.Text strong>Ngày hẹn:</Typography.Text>
+                   </div>
+                   <Typography.Text>{formatDate(selectedAppointmentForCancel.ngayHen)}</Typography.Text>
+                 </Col>
+                 <Col span={12}>
+                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                     <ClockCircleOutlined style={{ marginRight: '8px', color: '#13c2c2' }} />
+                     <Typography.Text strong>Giờ hẹn:</Typography.Text>
+                   </div>
+                   <Typography.Text>{selectedAppointmentForCancel.gioBatDau} - {selectedAppointmentForCancel.gioKetThuc}</Typography.Text>
+                 </Col>
+                 <Col span={24}>
+                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                     {/* <Tag color="blue" style={{ marginRight: '8px' }}>Trạng thái</Tag> */}
+                     <Typography.Text strong>Trạng thái:</Typography.Text>
+                   </div>
+                   <Tag color="blue">{selectedAppointmentForCancel.tenTrangThai}</Tag>
+                 </Col>
+               </Row>
+             </Card>
+
+             <Divider />
+
+             <Form
+               form={cancelForm}
+               layout="vertical"
+             >
+               <Form.Item
+                 name="reason"
+                 label={
+                   <div style={{ display: 'flex', alignItems: 'center' }}>
+                     <ExclamationCircleOutlined style={{ marginRight: '8px', color: '#ff4d4f' }} />
+                     <span>Lý do hủy lịch hẹn</span>
+                   </div>
+                 }
+                 rules={[
+                   { required: true, message: 'Vui lòng nhập lý do hủy lịch hẹn!' },
+                   { min: 10, message: 'Lý do hủy phải có ít nhất 10 ký tự!' },
+                   { max: 500, message: 'Lý do hủy không được quá 500 ký tự!' },
+                 ]}
+               >
+                 <Input.TextArea
+                   placeholder="Vui lòng nhập lý do hủy lịch hẹn (tối thiểu 10 ký tự)..."
+                   rows={4}
+                   value={cancelReason}
+                   onChange={(e) => setCancelReason(e.target.value)}
+                   showCount
+                   maxLength={500}
+                 />
+               </Form.Item>
+             </Form>
+           </div>
+         )}
+       </Modal>
+
+       {/* Modal xác nhận cập nhật thông tin cá nhân */}
+       <Modal
+         title={
+           <div style={{ textAlign: 'center', padding: '16px 0' }}>
+             <ExclamationCircleOutlined style={{ color: '#1890ff', fontSize: '24px', marginRight: '8px' }} />
+             <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Xác nhận cập nhật thông tin</span>
+           </div>
+         }
+         open={showUpdateProfileModal}
+         onCancel={handleUpdateProfileModalClose}
+         width={500}
+         centered
+         footer={[
+           <Button key="back" size="large" onClick={handleUpdateProfileModalClose}>
+             Hủy
+           </Button>,
+           <Button
+             key="submit"
+             type="primary"
+             size="large"
+             loading={updateProfileLoading}
+             onClick={handleUpdateProfileConfirm}
+             icon={<ExclamationCircleOutlined />}
+           >
+             Xác nhận cập nhật
+           </Button>,
+         ]}
+       >
+         <div>
+           <div style={{ 
+             background: '#e6f7ff', 
+             border: '1px solid #91d5ff', 
+             borderRadius: '8px', 
+             padding: '16px', 
+             marginBottom: '20px' 
+           }}>
+             <Typography.Text strong style={{ color: '#1890ff' }}>
+               Bạn có chắc chắn muốn lưu thay đổi thông tin cá nhân không?
+             </Typography.Text>
+           </div>
+
+           <Card 
+             size="small" 
+             style={{ marginBottom: '20px', border: '1px solid #d9d9d9' }}
+             title={
+               <div style={{ display: 'flex', alignItems: 'center' }}>
+                 <UserOutlined style={{ marginRight: '8px', color: '#52c41a' }} />
+                 <span>Thông tin sẽ được cập nhật</span>
+               </div>
+             }
+           >
+             <Row gutter={[16, 12]}>
+               <Col span={12}>
+                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                   <UserOutlined style={{ marginRight: '8px', color: '#52c41a' }} />
+                   <Typography.Text strong>Họ tên:</Typography.Text>
+                 </div>
+                 <Typography.Text>{userInfo?.hoTen}</Typography.Text>
+               </Col>
+               <Col span={12}>
+                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                   <UserOutlined style={{ marginRight: '8px', color: '#52c41a' }} />
+                   <Typography.Text strong>Số điện thoại:</Typography.Text>
+                 </div>
+                 <Typography.Text>{userInfo?.soDienThoai}</Typography.Text>
+               </Col>
+               <Col span={12}>
+                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                   <UserOutlined style={{ marginRight: '8px', color: '#52c41a' }} />
+                   <Typography.Text strong>Email:</Typography.Text>
+                 </div>
+                 <Typography.Text>{userInfo?.email}</Typography.Text>
+               </Col>
+               <Col span={12}>
+                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                   <UserOutlined style={{ marginRight: '8px', color: '#52c41a' }} />
+                   <Typography.Text strong>Địa chỉ:</Typography.Text>
+                 </div>
+                 <Typography.Text>{userInfo?.diaChi}</Typography.Text>
+               </Col>
+             </Row>
+           </Card>
+
+           <div style={{ 
+             background: '#fff7e6', 
+             border: '1px solid #ffd591', 
+             borderRadius: '8px', 
+             padding: '12px', 
+             marginTop: '16px' 
+           }}>
+             <Typography.Text type="secondary" style={{ fontSize: '14px' }}>
+               <ExclamationCircleOutlined style={{ marginRight: '8px', color: '#fa8c16' }} />
+               Lưu ý: Thông tin cá nhân sẽ được cập nhật ngay lập tức sau khi xác nhận.
+             </Typography.Text>
+           </div>
+         </div>
+       </Modal>
     </>
   );
 };
