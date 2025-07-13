@@ -116,28 +116,38 @@ function Appointment() {
     return userData?.id || '1'; // Default để test
   };
 
+  // Helper to get today's date in YYYY-MM-DD
+  const getToday = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   // Load form data from localStorage on component mount
   useEffect(() => {
     const savedFormData = localStorage.getItem('appointmentFormData');
+    let loadedFormData = formData;
     if (savedFormData) {
-      setFormData(JSON.parse(savedFormData));
+      loadedFormData = JSON.parse(savedFormData);
+      setFormData(loadedFormData);
     }
-    
-    // Nếu đã chuyển hướng từ login trở lại, và đã đăng nhập thành công
-    const redirected = localStorage.getItem('redirectedFromLogin');
-    if (redirected === 'true' && isAuthenticated()) {
-      // Xóa flag chuyển hướng
-      localStorage.removeItem('redirectedFromLogin');
-      
-      // Tự động điền một số thông tin từ user data nếu có
+    // Always try to fill name/email if authenticated and missing
+    if (isAuthenticated()) {
       const userData = getUserData();
       if (userData) {
         setFormData(prevData => ({
           ...prevData,
-          hoTen: userData.hoTen || prevData.hoTen,
-          email: userData.email || prevData.email
+          hoTen: prevData.hoTen || userData.hoTen || '',
+          email: prevData.email || userData.email || ''
         }));
       }
+    }
+    // Nếu đã chuyển hướng từ login trở lại, và đã đăng nhập thành công
+    const redirected = localStorage.getItem('redirectedFromLogin');
+    if (redirected === 'true' && isAuthenticated()) {
+      localStorage.removeItem('redirectedFromLogin');
     }
   }, []);
 
@@ -411,6 +421,7 @@ function Appointment() {
                         name="ngayKham"
                         value={formData.ngayKham}
                         onChange={handleChange}
+                        min={getToday()}
                       />
                     </div>
                   </motion.div>

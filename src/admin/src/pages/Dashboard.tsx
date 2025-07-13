@@ -66,54 +66,14 @@ const Dashboard: React.FC = () => {
 
       {/* Tables and Categories Row */}
       <div className="row">
-        <div className="col-lg-8 mb-4">
+        {/* <div className="col-lg-8 mb-4"> */}
           <SalesTable />
-        </div>
+        {/* </div>
         <div className="col-lg-4 mb-4">
           <CategoriesList />
-        </div>
+        </div> */}
       </div>
 
-      {/* Footer */}
-      <footer className="mt-5 pt-4">
-        <div className="row">
-          <div className="col-lg-6">
-            <div className="text-center text-lg-start">
-              <p className="text-muted mb-0">
-                © {new Date().getFullYear()}, made with <i className="fas fa-heart text-danger"></i> by
-                <a href="https://www.creative-tim.com" className="text-decoration-none ms-1" target="_blank" rel="noopener noreferrer">
-                  Creative Tim
-                </a>
-                for a better web.
-              </p>
-            </div>
-          </div>
-          <div className="col-lg-6">
-            <ul className="nav justify-content-center justify-content-lg-end">
-              <li className="nav-item">
-                <a href="https://www.creative-tim.com" className="nav-link text-muted" target="_blank" rel="noopener noreferrer">
-                  Creative Tim
-                </a>
-              </li>
-              <li className="nav-item">
-                <a href="https://www.creative-tim.com/presentation" className="nav-link text-muted" target="_blank" rel="noopener noreferrer">
-                  About Us
-                </a>
-              </li>
-              <li className="nav-item">
-                <a href="https://creative-tim.com/blog" className="nav-link text-muted" target="_blank" rel="noopener noreferrer">
-                  Blog
-                </a>
-              </li>
-              <li className="nav-item">
-                <a href="https://www.creative-tim.com/license" className="nav-link text-muted" target="_blank" rel="noopener noreferrer">
-                  License
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

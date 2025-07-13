@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi, User, UsersResponse } from '../services/api';
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import { useNotification } from '../../components/NotificationProvider';
 
 type TabType = 'admin' | 'user' | 'doctor';
 
@@ -39,6 +40,8 @@ const Tables: React.FC = () => {
   const [form, setForm] = useState(initialFormState);
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+
+  const { showNotification, showConfirmDialog } = useNotification();
 
   // Load form from localStorage if exists
   useEffect(() => {
@@ -90,11 +93,11 @@ const Tables: React.FC = () => {
         throw new Error(err.message || 'Registration failed');
       }
       handleCloseModal();
-      setSuccess('User created successfully!');
+      showNotification('Thành công', 'Người dùng đã được tạo thành công!', 'success');
       fetchUsers();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
-      setFormError(err.message || 'Failed to create user');
+      showNotification('Lỗi', err.message || 'Không thể tạo người dùng. Vui lòng thử lại.', 'error');
     } finally {
       setFormLoading(false);
     }
@@ -109,7 +112,7 @@ const Tables: React.FC = () => {
       setUsers(response);
       // Bỏ setPagination vì không còn dữ liệu phân trang từ API
     } catch (err) {
-      setError('Failed to fetch users. Please try again.');
+      showNotification('Lỗi', 'Không thể tải danh sách người dùng. Vui lòng thử lại.', 'error');
       console.error('Error fetching users:', err);
     } finally {
       setLoading(false);
@@ -152,38 +155,40 @@ const Tables: React.FC = () => {
 
   // Handle user deactivation
   const handleDeactivateUser = async (userId: number, userName: string) => {
-    if (window.confirm(`Are you sure you want to deactivate ${userName}?`)) {
+    const confirmed = await showConfirmDialog({
+      title: 'Xác nhận vô hiệu hóa',
+      message: `Bạn có chắc chắn muốn vô hiệu hóa ${userName}?`,
+      confirmText: 'Vô hiệu hóa',
+      cancelText: 'Hủy'
+    });
+    if (confirmed) {
       try {
         const response = await adminApi.deactivateUser(userId);
-        setSuccess(response.message);
-        // Refresh the users list
+        showNotification('Thành công', response.message, 'success');
         fetchUsers();
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
         console.error('Error deactivating user:', err);
-        setError('Failed to deactivate user. Please try again.');
-        // Clear error message after 3 seconds
-        setTimeout(() => setError(null), 3000);
+        showNotification('Lỗi', 'Không thể vô hiệu hóa người dùng. Vui lòng thử lại.', 'error');
       }
     }
   };
 
   // Handle user deletion
   const handleDeleteUser = async (userId: number, userName: string) => {
-    if (window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
+    const confirmed = await showConfirmDialog({
+      title: 'Xác nhận xóa',
+      message: `Bạn có chắc chắn muốn xóa ${userName}? Hành động này không thể hoàn tác.`,
+      confirmText: 'Xóa',
+      cancelText: 'Hủy'
+    });
+    if (confirmed) {
       try {
         await adminApi.deleteUser(userId);
-        setSuccess(`User ${userName} has been deleted successfully.`);
-        // Refresh the users list
+        showNotification('Thành công', `Đã xóa người dùng ${userName}.`, 'success');
         fetchUsers();
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
         console.error('Error deleting user:', err);
-        setError('Failed to delete user. Please try again.');
-        // Clear error message after 3 seconds
-        setTimeout(() => setError(null), 3000);
+        showNotification('Lỗi', 'Không thể xóa người dùng. Vui lòng thử lại.', 'error');
       }
     }
   };
@@ -206,26 +211,26 @@ const Tables: React.FC = () => {
     switch (activeTab) {
       case 'admin':
         return {
-          title: 'Admin Management',
-          addButtonText: 'Add j Admin',
+          title: 'Quản lý Quản trị viên',
+          addButtonText: 'Thêm Quản trị viên',
           count: users.filter(u => u.tenVaiTro === 'ADMIN').length
         };
       case 'doctor':
         return {
-          title: 'Doctor Management',
-          addButtonText: 'Add New Doctor',
+          title: 'Quản lý Bác sĩ',
+          addButtonText: 'Thêm Bác sĩ',
           count: users.filter(u => u.tenVaiTro === 'BACSI').length
         };
       case 'user':
         return {
-          title: 'User Management',
-          addButtonText: 'Add New User',
+          title: 'Quản lý Người dùng',
+          addButtonText: 'Thêm Người dùng',
           count: users.filter(u => u.tenVaiTro === 'USER').length
         };
       default:
         return {
-          title: 'Users Management',
-          addButtonText: 'Add New User',
+          title: 'Quản lý Người dùng',
+          addButtonText: 'Thêm Người dùng',
           count: users.length
         };
     }
@@ -253,17 +258,11 @@ const Tables: React.FC = () => {
             </div>
             <div className="card-body">
               {error && (
-                <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                  {error}
-                  <button type="button" className="btn-close" onClick={() => setError(null)}></button>
-                </div>
+                <></>
               )}
 
               {success && (
-                <div className="alert alert-success alert-dismissible fade show" role="alert">
-                  {success}
-                  <button type="button" className="btn-close" onClick={() => setSuccess(null)}></button>
-                </div>
+                <></>
               )}
 
               {/* Tabs */}
@@ -275,7 +274,7 @@ const Tables: React.FC = () => {
                     type="button"
                   >
                     <i className="fas fa-user-shield me-2"></i>
-                    Admins ({users.filter(u => u.tenVaiTro === 'ADMIN').length})
+                    Quản trị viên ({users.filter(u => u.tenVaiTro === 'ADMIN').length})
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -285,7 +284,7 @@ const Tables: React.FC = () => {
                     type="button"
                   >
                     <i className="fas fa-user-md me-2"></i>
-                    Doctors ({users.filter(u => u.tenVaiTro === 'BACSI').length})
+                    Bác sĩ ({users.filter(u => u.tenVaiTro === 'BACSI').length})
                   </button>
                 </li>
                 <li className="nav-item" role="presentation">
@@ -295,7 +294,7 @@ const Tables: React.FC = () => {
                     type="button"
                   >
                     <i className="fas fa-users me-2"></i>
-                    Users ({users.filter(u => u.tenVaiTro === 'USER').length})
+                    Người dùng ({users.filter(u => u.tenVaiTro === 'USER').length})
                   </button>
                 </li>
               </ul>
@@ -309,7 +308,7 @@ const Tables: React.FC = () => {
                     <input
                       type="text"
                       className="form-control"
-                      placeholder={`Search ${activeTab}s by name, username, email, or phone...`}
+                      placeholder={`Tìm kiếm ${activeTab === 'admin' ? 'quản trị viên' : activeTab === 'doctor' ? 'bác sĩ' : 'người dùng'} theo tên, tài khoản, email hoặc số điện thoại...`}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -327,25 +326,25 @@ const Tables: React.FC = () => {
                 <table className="table table-striped table-hover">
                   <thead>
                     <tr>
-                      <th>ID</th>
-                      <th>Full Name</th>
-                      <th>Username</th>
+                      {/* <th>ID</th> */}
+                      <th>Họ và tên</th>
+                      <th>Tên đăng nhập</th>
                       <th>Email</th>
-                      <th>Phone</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      {activeTab === 'doctor' && <th>Specialty</th>}
-                      {activeTab === 'doctor' && <th>Experience</th>}
-                      {activeTab === 'user' && <th>Age</th>}
-                      {activeTab === 'user' && <th>Gender</th>}
-                      <th>Created Date</th>
-                      <th>Actions</th>
+                      <th>Số điện thoại</th>
+                      <th>Vai trò</th>
+                      <th>Trạng thái</th>
+                      {activeTab === 'doctor' && <th>Chuyên khoa</th>}
+                      {activeTab === 'doctor' && <th>Kinh nghiệm</th>}
+                      {activeTab === 'user' && <th>Tuổi</th>}
+                      {activeTab === 'user' && <th>Giới tính</th>}
+                      <th>Ngày tạo</th>
+                      <th>Hành động</th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentUsers.map((user) => (
                       <tr key={user.maNguoiDung}>
-                        <td>{user.maNguoiDung}</td>
+                        {/* <td>{user.maNguoiDung}</td> */}
                         <td>{user.hoTen}</td>
                         <td>{user.tenDangNhap}</td>
                         <td>{user.email}</td>
@@ -361,27 +360,27 @@ const Tables: React.FC = () => {
                         </td>
                         <td>
                           <span className={`badge ${user.trangThaiHoatDong ? 'bg-success' : 'bg-secondary'}`}>
-                            {user.trangThaiHoatDong ? 'Active' : 'Inactive'}
+                            {user.trangThaiHoatDong ? 'Đang hoạt động' : 'Ngưng hoạt động'}
                           </span>
                         </td>
                         {activeTab === 'doctor' && (
-                          <td>{user.chuyenKhoa || 'N/A'}</td>
+                          <td>{user.chuyenKhoa || 'Không có'}</td>
                         )}
                         {activeTab === 'doctor' && (
-                          <td>{user.soNamKinhNghiem ? `${user.soNamKinhNghiem} years` : 'N/A'}</td>
+                          <td>{user.soNamKinhNghiem ? `${user.soNamKinhNghiem} năm` : 'Không có'}</td>
                         )}
                         {activeTab === 'user' && (
-                          <td>{user.tuoi || 'N/A'}</td>
+                          <td>{user.tuoi || 'Không có'}</td>
                         )}
                         {activeTab === 'user' && (
-                          <td>{user.gioiTinh || 'N/A'}</td>
+                          <td>{user.gioiTinh || 'Không có'}</td>
                         )}
                         <td>{new Date(user.ngayTao).toLocaleDateString()}</td>
                         <td>
                           <div className="btn-group" role="group">
                             <button 
                               className="btn btn-sm btn-outline-primary"
-                              title="Edit"
+                              title="Chỉnh sửa"
                             >
                               <i className="fas fa-edit"></i>
                             </button>
@@ -389,7 +388,7 @@ const Tables: React.FC = () => {
                               <button 
                                 className="btn btn-sm btn-outline-warning"
                                 onClick={() => handleDeactivateUser(user.maNguoiDung, user.hoTen)}
-                                title="Deactivate User"
+                                title="Vô hiệu hóa người dùng"
                               >
                                 <i className="fas fa-user-slash"></i>
                               </button>
@@ -397,7 +396,7 @@ const Tables: React.FC = () => {
                             <button 
                               className="btn btn-sm btn-outline-danger"
                               onClick={() => handleDeleteUser(user.maNguoiDung, user.hoTen)}
-                              title="Delete"
+                              title="Xóa"
                             >
                               <i className="fas fa-trash"></i>
                             </button>
@@ -411,7 +410,7 @@ const Tables: React.FC = () => {
 
               {filteredUsers.length === 0 && !loading && (
                 <div className="text-center py-4">
-                  <p className="text-muted">No {activeTab}s found.</p>
+                  <p className="text-muted">Không tìm thấy {activeTab === 'admin' ? 'quản trị viên' : activeTab === 'doctor' ? 'bác sĩ' : 'người dùng'} nào.</p>
                 </div>
               )}
 
@@ -420,7 +419,7 @@ const Tables: React.FC = () => {
                 <div className="row">
                   <div className="col-md-6">
                     <p className="text-muted">
-                      Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} entries
+                      Đang hiển thị {startIndex + 1} - {Math.min(endIndex, filteredUsers.length)} trên tổng số {filteredUsers.length} người dùng
                     </p>
                   </div>
                   <div className="col-md-6">
@@ -432,7 +431,7 @@ const Tables: React.FC = () => {
                             onClick={() => setCurrentPage(currentPage - 1)}
                             disabled={currentPage === 1}
                           >
-                            Previous
+                            Trước
                           </button>
                         </li>
                         {Array.from({ length: totalFilteredPages }, (_, i) => i + 1).map((page) => (
@@ -451,7 +450,7 @@ const Tables: React.FC = () => {
                             onClick={() => setCurrentPage(currentPage + 1)}
                             disabled={currentPage === totalFilteredPages}
                           >
-                            Next
+                            Tiếp
                           </button>
                         </li>
                       </ul>

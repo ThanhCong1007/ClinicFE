@@ -13,9 +13,9 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ onToggleSidebar, onToggleDark
 
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === '/admin/dashboard' || path === '/admin/') return 'Dashboard';
-    if (path === '/admin/tables') return 'Tables';
-    if (path === '/admin/billing') return 'Billing';
+    if (path === '/admin/dashboard' || path === '/admin/') return 'Doanh Thu';
+    if (path === '/admin/tables') return 'Người dùng';
+    if (path === '/admin/billing') return 'Hóa đơn';
     if (path === '/admin/profile') return 'Profile';
     if (path === '/admin/sign-in') return 'Sign In';
     if (path === '/admin/sign-up') return 'Sign Up';

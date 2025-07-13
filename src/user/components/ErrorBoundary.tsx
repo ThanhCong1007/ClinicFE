@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { Alert, Button } from 'antd';
+// import { Alert, Button } from 'antd';
+import { useNotification } from '../../admin/components/NotificationProvider';
 
 interface Props {
   children: ReactNode;
@@ -10,7 +11,13 @@ interface State {
   error?: Error;
 }
 
-class ErrorBoundary extends Component<Props, State> {
+// Functional wrapper to use hook in class
+function ErrorBoundaryWrapper(props: Props) {
+  const { showNotification } = useNotification();
+  return <ErrorBoundary {...props} showNotification={showNotification} />;
+}
+
+class ErrorBoundary extends Component<Props & { showNotification: (title: string, message: string, type?: 'error') => void }, State> {
   public state: State = {
     hasError: false
   };
@@ -21,36 +28,18 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    if (this.props.showNotification) {
+      this.props.showNotification('Đã xảy ra lỗi', error.message, 'error');
+    }
   }
-
-  private handleReload = () => {
-    window.location.reload();
-  };
 
   public render() {
     if (this.state.hasError) {
-      return (
-        <div style={{ padding: 24, textAlign: 'center' }}>
-          <Alert
-            message="Đã xảy ra lỗi"
-            description={
-              <div>
-                <p>Rất tiếc, đã xảy ra lỗi không mong muốn.</p>
-                <p>Lỗi: {this.state.error?.message}</p>
-                <Button type="primary" onClick={this.handleReload} style={{ marginTop: 16 }}>
-                  Tải lại trang
-                </Button>
-              </div>
-            }
-            type="error"
-            showIcon
-          />
-        </div>
-      );
+      // Render nothing or a fallback UI if needed
+      return null;
     }
-
     return this.props.children;
   }
 }
 
-export default ErrorBoundary; 
+export default ErrorBoundaryWrapper; 

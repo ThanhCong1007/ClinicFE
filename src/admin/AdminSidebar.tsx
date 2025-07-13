@@ -12,25 +12,25 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
     {
       path: '/admin/dashboard',
       icon: 'fas fa-tv',
-      label: 'Dashboard',
+      label: 'Doanh Thu',
       color: 'text-primary'
     },
     {
       path: '/admin/tables',
       icon: 'fas fa-table',
-      label: 'Tables',
+      label: 'Người dùng',
       color: 'text-warning'
     },
     {
       path: '/admin/billing',
       icon: 'fas fa-credit-card',
-      label: 'Billing',
+      label: 'Hóa đơn',
       color: 'text-success'
     },
     {
       path: '/admin/virtual-reality',
       icon: 'fas fa-cube',
-      label: 'Virtual Reality',
+      label: 'Dịch vụ',
       color: 'text-info'
     },
     {
@@ -98,15 +98,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
           ))}
         </ul>
 
-        {!collapsed && (
+        {/* {!collapsed && (
           <div className="mt-4">
             <h6 className="text-white-50 text-uppercase small fw-bold mb-3">
               Account pages
             </h6>
           </div>
-        )}
+        )} */}
 
-        <ul className="nav flex-column">
+        {/* <ul className="nav flex-column">
           {accountItems.map((item) => (
             <li key={item.path} className="nav-item mb-2">
               <Link
@@ -121,7 +121,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               </Link>
             </li>
           ))}
-        </ul>
+        </ul> */}
       </nav>
 
       {!collapsed && (

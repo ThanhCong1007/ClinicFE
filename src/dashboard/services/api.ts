@@ -72,6 +72,7 @@ export const getAppointmentDetails = async (maLichHen: number) => {
     data.diaChi = data.diaChi || '';
     data.ngaySinh = data.ngaySinh || '';
     data.gioiTinh = data.gioiTinh || '';
+    data.email = data.email || '';
   }
   return data;
 };
@@ -127,7 +128,7 @@ export const cancelAppointment = async (maLichHen: number, appointmentData: any)
 
 // Lấy chi tiết bệnh án theo mã bệnh án (tái khám)
 export const getMedicalRecordById = async (maBenhAn: number) => {
-  const response = await axios.get(`/api/benh-an/chi-tiet/${maBenhAn}`);
+  const response = await axios.get(`http://localhost:8080/api/benh-an/chi-tiet/${maBenhAn}`);
   return response.data;
 };
 
@@ -167,5 +168,5 @@ export const getMedicalRecordsByDoctor = async (maBacSi: number, page: number, s
 // Lấy chi tiết bệnh án
 export const getMedicalRecordDetail = async (maBenhAn: number) => {
   const response = await axios.get(`http://localhost:8080/api/benh-an/chi-tiet/${maBenhAn}`);
-  return response.data.data; // chỉ trả về object chi tiết bệnh án
+  return response.data; // trả về toàn bộ dữ liệu phản hồi
 }; 

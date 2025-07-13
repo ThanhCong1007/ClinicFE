@@ -42,6 +42,7 @@ interface Appointment {
   diUng: string | null;
   diaChi: string | null;
   gioiTinh: string | null;
+  email: string | null;
 }
 
 interface Prescription {
@@ -214,7 +215,8 @@ export default function Examination() {
       tienSuBenh: data.tienSuBenh || '',
       diUng: data.diUng || '',
       diaChi: data.diaChi || '',
-      gioiTinh: data.gioiTinh || ''
+      gioiTinh: data.gioiTinh || '',
+      email: data.email || ''
     };
   }
 
@@ -251,7 +253,8 @@ export default function Examination() {
       tienSuBenh: null,
       diUng: null,
       diaChi: null,
-      gioiTinh: null
+      gioiTinh: null,
+      email: null
     };
   };
   const [appointment, setAppointment] = useState(getInitialAppointment());
@@ -485,7 +488,8 @@ export default function Examination() {
             tienSuBenh: data.tienSuBenh || '',
             diUng: data.diUng || '',
             diaChi: data.diaChi || '',
-            gioiTinh: data.gioiTinh || ''
+            gioiTinh: data.gioiTinh || '',
+            email: data.email || ''
           };
           setAppointment(reexamAppointment);
           const record = {
@@ -615,52 +619,67 @@ export default function Examination() {
       ghiChuDonThuoc: 'Bệnh nhân cần tuân thủ đúng liều lượng và thời gian dùng thuốc'
     };
 
-    try {
-      console.log('Submitting exam data:', examData);
-      console.log('Selected images:', filesToUpload.length);
-      
-      let createdRecord;
-      if (appointment?.maBenhAn) {
-        await updateMedicalRecord(appointment.maBenhAn, examData, filesToUpload);
-        notification.success({ message: 'Thành công', description: 'Cập nhật bệnh án thành công!' });
-        createdRecord = { maBenhAn: appointment.maBenhAn };
-      } else {
-        const result = await createMedicalExam(examData, filesToUpload);
-        notification.success({ message: 'Thành công', description: 'Tạo bệnh án thành công!' });
-        createdRecord = result;
+    // Hiển thị hộp thoại xác nhận với bác sĩ
+    Modal.confirm({
+      title: 'Xác nhận lưu bệnh án',
+      content: (
+        <div>
+          <p>Bác sĩ có chắc chắn muốn {appointment?.maBenhAn ? 'cập nhật' : 'lưu'} bệnh án cho bệnh nhân <strong>{values.hoTen}</strong>?</p>
+          <p>Thông tin bệnh án sẽ được lưu vào hệ thống và không thể thay đổi sau khi xác nhận.</p>
+        </div>
+      ),
+      okText: 'Xác nhận lưu',
+      cancelText: 'Hủy bỏ',
+      okType: 'primary',
+      onOk: async () => {
+        try {
+          console.log('Submitting exam data:', examData);
+          console.log('Selected images:', filesToUpload.length);
+          
+          let createdRecord;
+          if (appointment?.maBenhAn) {
+            await updateMedicalRecord(appointment.maBenhAn, examData, filesToUpload);
+            notification.success({ message: 'Thành công', description: 'Cập nhật bệnh án thành công!' });
+            createdRecord = { maBenhAn: appointment.maBenhAn };
+          } else {
+            const result = await createMedicalExam(examData, filesToUpload);
+            notification.success({ message: 'Thành công', description: 'Tạo bệnh án thành công!' });
+            createdRecord = result;
+          }
+          
+          localStorage.removeItem(imageDraftKey);
+          localStorage.removeItem(storageKey);
+          localStorage.removeItem(draftKey);
+          
+          // Fetch full details from backend after creation
+          if (createdRecord?.maBenhAn) {
+            const detail = await getMedicalRecordById(createdRecord.maBenhAn);
+            // You can use 'detail' for further logic or navigation if needed
+            // For now, just navigate away
+          }
+          navigate('/dashboard/appointments');
+        } catch (err: any) {
+          console.error('Submit error:', err);
+          
+          // Kiểm tra xem có phải lỗi token không
+          if (err.message && err.message.includes('Phiên đăng nhập đã hết hạn')) {
+            notification.error({ 
+              message: 'Phiên đăng nhập hết hạn', 
+              description: 'Vui lòng đăng nhập lại để tiếp tục' 
+            });
+            // Redirect về trang login
+            navigate('/dashboard/signin');
+            return;
+          }
+          
+          // Các lỗi khác
+          notification.error({ 
+            message: 'Lỗi', 
+            description: err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu bệnh án' 
+          });
+        }
       }
-      
-      localStorage.removeItem(imageDraftKey);
-      localStorage.removeItem(storageKey);
-      localStorage.removeItem(draftKey);
-      
-      // Fetch full details from backend after creation
-      if (createdRecord?.maBenhAn) {
-        const detail = await getMedicalRecordById(createdRecord.maBenhAn);
-        // You can use 'detail' for further logic or navigation if needed
-        // For now, just navigate away
-      }
-      navigate('/dashboard/appointments');
-    } catch (err: any) {
-      console.error('Submit error:', err);
-      
-      // Kiểm tra xem có phải lỗi token không
-      if (err.message && err.message.includes('Phiên đăng nhập đã hết hạn')) {
-        notification.error({ 
-          message: 'Phiên đăng nhập hết hạn', 
-          description: 'Vui lòng đăng nhập lại để tiếp tục' 
-        });
-        // Redirect về trang login
-        navigate('/dashboard/signin');
-        return;
-      }
-      
-      // Các lỗi khác
-      notification.error({ 
-        message: 'Lỗi', 
-        description: err instanceof Error ? err.message : 'Có lỗi xảy ra khi lưu bệnh án' 
-      });
-    }
+    });
   };
 
   const handleServicePriceChange = (maDichVu: number, newPrice: number) => {

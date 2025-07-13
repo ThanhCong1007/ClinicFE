@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Table, Modal, Form, Button, Input, Tag, Select, Row, Col, Card, message } from 'antd';
+import { Table, Modal, Form, Button, Input, Tag, Select, Row, Col, Card, message, Typography, Divider } from 'antd';
+import { ExclamationCircleOutlined, CalendarOutlined, ClockCircleOutlined, UserOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -75,6 +76,10 @@ export default function Appointments() {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [fetchingExam, setFetchingExam] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedAppointmentForCancel, setSelectedAppointmentForCancel] = useState<Appointment | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,11 +87,22 @@ export default function Appointments() {
       try {
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
         const maBacSi = userData.maBacSi;
-        if (!maBacSi) throw new Error('Không tìm thấy thông tin bác sĩ');
+        if (!maBacSi) {
+          throw new Error('Không tìm thấy thông tin bác sĩ. Vui lòng đăng nhập lại.');
+        }
+        
         const data = await getDoctorAppointments(maBacSi);
-        setAppointments(data);
+        if (Array.isArray(data)) {
+          setAppointments(data);
+        } else {
+          console.warn('Unexpected data format:', data);
+          setAppointments([]);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
+        console.error('Error fetching appointments:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu';
+        setError(errorMessage);
+        message.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -95,12 +111,22 @@ export default function Appointments() {
   }, []);
 
   const handleStartExam = async (record: Appointment) => {
+    if (!record || !record.maLichHen) {
+      message.error('Dữ liệu lịch hẹn không hợp lệ');
+      return;
+    }
+    
     setFetchingExam(true);
     try {
       const detail = await getAppointmentDetails(record.maLichHen);
-      navigate('/dashboard/examination', { state: { appointment: detail } });
+      if (detail) {
+        navigate('/dashboard/examination', { state: { appointment: detail } });
+      } else {
+        message.error('Không thể lấy chi tiết lịch hẹn');
+      }
     } catch (err) {
-      message.error('Không thể lấy chi tiết lịch hẹn');
+      console.error('Error fetching appointment details:', err);
+      message.error('Không thể lấy chi tiết lịch hẹn. Vui lòng thử lại.');
     } finally {
       setFetchingExam(false);
     }
@@ -166,76 +192,127 @@ export default function Appointments() {
   };
 
   const handleCancelAppointment = async (appointment: Appointment) => {
-    Modal.confirm({
-      title: 'Xác nhận',
-      content: 'Bạn có chắc chắn muốn hủy lịch hẹn này?',
-      okText: 'Hủy lịch',
-      okType: 'danger',
-      cancelText: 'Không',
-      onOk: async () => {
-        try {
-          const appointmentData = {
-            maBenhNhan: appointment.maBenhNhan,
-            maBacSi: appointment.maBacSi,
-            maDichVu: appointment.maDichVu,
-            ngayHen: appointment.ngayHen,
-            gioBatDau: appointment.gioBatDau,
-            gioKetThuc: appointment.gioKetThuc,
-            maTrangThai: 5,
-            ghiChu: appointment.ghiChuLichHen
-          };
-          await cancelAppointment(appointment.maLichHen, appointmentData);
-          const userData = JSON.parse(localStorage.getItem('user') || '{}');
-          const data = await getDoctorAppointments(userData.maBacSi);
-          setAppointments(data);
-          message.success('Hủy lịch hẹn thành công');
-        } catch (err) {
-          message.error(err instanceof Error ? err.message : 'Có lỗi xảy ra khi hủy lịch hẹn');
-        }
+    if (!appointment || !appointment.maLichHen) {
+      message.error('Dữ liệu lịch hẹn không hợp lệ');
+      return;
+    }
+
+    setSelectedAppointmentForCancel(appointment);
+    setCancelReason('Bác sĩ có việc đột xuất');
+    setShowCancelModal(true);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!selectedAppointmentForCancel) return;
+    
+    try {
+      setCancelLoading(true);
+      
+      const appointmentData = {
+        maBenhNhan: selectedAppointmentForCancel.maBenhNhan,
+        maBacSi: selectedAppointmentForCancel.maBacSi,
+        maDichVu: selectedAppointmentForCancel.maDichVu,
+        ngayHen: selectedAppointmentForCancel.ngayHen,
+        gioBatDau: selectedAppointmentForCancel.gioBatDau,
+        gioKetThuc: selectedAppointmentForCancel.gioKetThuc,
+        maTrangThai: 5,
+        ghiChu: selectedAppointmentForCancel.ghiChuLichHen,
+        lyDo: cancelReason.trim() || 'Bác sĩ có việc đột xuất'
+      };
+      
+      await cancelAppointment(selectedAppointmentForCancel.maLichHen, appointmentData);
+      
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!userData.maBacSi) {
+        throw new Error('Không tìm thấy thông tin bác sĩ');
       }
-    });
+      
+      const data = await getDoctorAppointments(userData.maBacSi);
+      setAppointments(data);
+      message.success('Hủy lịch hẹn thành công');
+      setShowCancelModal(false);
+      setSelectedAppointmentForCancel(null);
+      setCancelReason('');
+    } catch (err) {
+      console.error('Error canceling appointment:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra khi hủy lịch hẹn';
+      message.error(errorMessage);
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  const handleCancelModalClose = () => {
+    setShowCancelModal(false);
+    setSelectedAppointmentForCancel(null);
+    setCancelReason('');
   };
 
   const filteredAppointments = appointments.filter(appointment => {
-    const appointmentDateStr = format(new Date(appointment.ngayHen), 'yyyy-MM-dd');
-    const today = new Date();
-    const todayStr = format(today, 'yyyy-MM-dd');
-    switch (filter) {
-      case 'today':
-        return appointmentDateStr === todayStr;
-      case 'upcoming':
-        return appointmentDateStr > todayStr;
-      case 'past':
-        return appointmentDateStr < todayStr;
-      default:
-        return true;
+    try {
+      if (!appointment.ngayHen) return false;
+      
+      const appointmentDateStr = format(new Date(appointment.ngayHen), 'yyyy-MM-dd');
+      const today = new Date();
+      const todayStr = format(today, 'yyyy-MM-dd');
+      
+      switch (filter) {
+        case 'today':
+          return appointmentDateStr === todayStr;
+        case 'upcoming':
+          return appointmentDateStr > todayStr;
+        case 'past':
+          return appointmentDateStr < todayStr;
+        default:
+          return true;
+      }
+    } catch (err) {
+      console.error('Error filtering appointment:', err, appointment);
+      return false;
     }
   });
 
   const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-    const statusPriority = (status: number) => {
-      switch (status) {
-        case 3: return 1;
-        case 2: return 2;
-        case 1: return 3;
-        case 4: return 4;
-        case 5: return 5;
-        default: return 6;
-      }
-    };
-    const statusA = statusPriority(a.maTrangThai);
-    const statusB = statusPriority(b.maTrangThai);
-    if (statusA !== statusB) return statusA - statusB;
-    const dateA = new Date(`${a.ngayHen}T${a.gioBatDau}`);
-    const dateB = new Date(`${b.ngayHen}T${b.gioBatDau}`);
-    return dateA.getTime() - dateB.getTime();
+    try {
+      const statusPriority = (status: number) => {
+        switch (status) {
+          case 3: return 1;
+          case 2: return 2;
+          case 1: return 3;
+          case 4: return 4;
+          case 5: return 5;
+          default: return 6;
+        }
+      };
+      
+      const statusA = statusPriority(a.maTrangThai || 0);
+      const statusB = statusPriority(b.maTrangThai || 0);
+      
+      if (statusA !== statusB) return statusA - statusB;
+      
+      // Safe date comparison
+      const dateA = a.ngayHen && a.gioBatDau ? new Date(`${a.ngayHen}T${a.gioBatDau}`) : new Date(0);
+      const dateB = b.ngayHen && b.gioBatDau ? new Date(`${b.ngayHen}T${b.gioBatDau}`) : new Date(0);
+      
+      return dateA.getTime() - dateB.getTime();
+    } catch (err) {
+      console.error('Error sorting appointments:', err, { a, b });
+      return 0;
+    }
   });
 
-  const displayedAppointments = sortedAppointments.filter(appointment =>
-    appointment.tenBenhNhan.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    appointment.soDienThoaiBenhNhan.includes(searchTerm) ||
-    appointment.tenDichVu.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const displayedAppointments = sortedAppointments.filter(appointment => {
+    if (!searchTerm.trim()) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const tenBenhNhan = appointment.tenBenhNhan?.toLowerCase() || '';
+    const soDienThoai = appointment.soDienThoaiBenhNhan || '';
+    const tenDichVu = appointment.tenDichVu?.toLowerCase() || '';
+    
+    return tenBenhNhan.includes(searchLower) ||
+           soDienThoai.includes(searchTerm) ||
+           tenDichVu.includes(searchLower);
+  });
 
   const columns = [
     {
@@ -486,6 +563,118 @@ export default function Appointments() {
             </Card>
           </Col>
         </Row>
+      </Modal>
+
+      {/* Modal hủy lịch hẹn */}
+      <Modal
+        title={
+          <div style={{ textAlign: 'center', padding: '16px 0' }}>
+            <ExclamationCircleOutlined style={{ color: '#ff4d4f', fontSize: '24px', marginRight: '8px' }} />
+            <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Xác nhận hủy lịch hẹn</span>
+          </div>
+        }
+        open={showCancelModal}
+        onCancel={handleCancelModalClose}
+        width={600}
+        centered
+        footer={[
+          <Button key="back" size="large" onClick={handleCancelModalClose}>
+            Không hủy
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            danger
+            size="large"
+            loading={cancelLoading}
+            onClick={handleCancelConfirm}
+            icon={<ExclamationCircleOutlined />}
+          >
+            Xác nhận hủy
+          </Button>,
+        ]}
+      >
+        {selectedAppointmentForCancel && (
+          <div>
+            <div style={{ 
+              background: '#fff2f0', 
+              border: '1px solid #ffccc7', 
+              borderRadius: '8px', 
+              padding: '16px', 
+              marginBottom: '20px' 
+            }}>
+              <Typography.Text strong style={{ color: '#cf1322' }}>
+                Bạn có chắc chắn muốn hủy lịch hẹn này không? Hành động này không thể hoàn tác.
+              </Typography.Text>
+            </div>
+
+            <Card 
+              size="small" 
+              style={{ marginBottom: '20px', border: '1px solid #d9d9d9' }}
+              title={
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <CalendarOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                  <span>Thông tin lịch hẹn</span>
+                </div>
+              }
+            >
+              <Row gutter={[16, 12]}>
+                <Col span={12}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                    <UserOutlined style={{ marginRight: '8px', color: '#52c41a' }} />
+                    <Typography.Text strong>Bệnh nhân:</Typography.Text>
+                  </div>
+                  <Typography.Text>{selectedAppointmentForCancel.tenBenhNhan}</Typography.Text>
+                </Col>
+                <Col span={12}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                    <MedicineBoxOutlined style={{ marginRight: '8px', color: '#722ed1' }} />
+                    <Typography.Text strong>Dịch vụ:</Typography.Text>
+                  </div>
+                  <Typography.Text>{selectedAppointmentForCancel.tenDichVu}</Typography.Text>
+                </Col>
+                <Col span={12}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                    <CalendarOutlined style={{ marginRight: '8px', color: '#fa8c16' }} />
+                    <Typography.Text strong>Ngày hẹn:</Typography.Text>
+                  </div>
+                  <Typography.Text>{selectedAppointmentForCancel.ngayHen}</Typography.Text>
+                </Col>
+                <Col span={12}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                    <ClockCircleOutlined style={{ marginRight: '8px', color: '#13c2c2' }} />
+                    <Typography.Text strong>Giờ hẹn:</Typography.Text>
+                  </div>
+                  <Typography.Text>{selectedAppointmentForCancel.gioBatDau} - {selectedAppointmentForCancel.gioKetThuc}</Typography.Text>
+                </Col>
+                <Col span={24}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                    {/* <Tag color="blue" style={{ marginRight: '8px' }}>Trạng thái</Tag> */}
+                    <Typography.Text strong>Trạng thái:</Typography.Text>
+                  </div>
+                  <Tag color="blue">{selectedAppointmentForCancel.tenTrangThai}</Tag>
+                </Col>
+              </Row>
+            </Card>
+
+            <Divider />
+
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                <ExclamationCircleOutlined style={{ marginRight: '8px', color: '#ff4d4f' }} />
+                <Typography.Text strong>Lý do hủy lịch hẹn</Typography.Text>
+              </div>
+              <Input.TextArea
+                placeholder="Nhập lý do hủy lịch hẹn..."
+                rows={4}
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                showCount
+                maxLength={500}
+              />
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
