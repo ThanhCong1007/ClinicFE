@@ -160,7 +160,7 @@ const SalesTable: React.FC = () => {
     <Card className="admin-table-responsive" bordered={false} style={{ marginBottom: 24 }}>
       <Row align="middle" justify="space-between" style={{ marginBottom: 16 }} gutter={[16, 16]}>
         <Col>
-          <Title level={5} style={{ margin: 0 }}>Top 5 bệnh nhân thanh toán nhiều hóa đơn</Title>
+          <Title level={5} style={{ margin: 0 }}>Top 5 bệnh nhân có tổng chi tiêu cao nhất</Title>
         </Col>
         <Col>
           <Space>
@@ -186,6 +186,7 @@ const SalesTable: React.FC = () => {
           bordered={false}
           size="middle"
           scroll={{ x: 'max-content' }}
+          locale={{ emptyText: 'Không có dữ liệu' }}
         />
       )}
     </Card>

@@ -119,17 +119,17 @@ const Billing: React.FC = () => {
         <div className="modal-dialog modal-lg">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">Invoices for {modalUser.tenBenhNhan}</h5>
+              <h5 className="modal-title">Hóa đơn của {modalUser.tenBenhNhan}</h5>
               <button type="button" className="btn-close" onClick={() => setModalUser(null)}></button>
             </div>
             <div className="modal-body">
               <table className="table table-hover">
                 <thead>
                   <tr>
-                    <th>Invoice ID</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Status</th>
+                    <th>Mã hóa đơn</th>
+                    <th>Ngày lập</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -147,7 +147,7 @@ const Billing: React.FC = () => {
               </table>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setModalUser(null)}>Close</button>
+              <button className="btn btn-secondary" onClick={() => setModalUser(null)}>Đóng</button>
             </div>
           </div>
         </div>
@@ -165,12 +165,12 @@ const Billing: React.FC = () => {
           <table className="table table-hover">
             <thead>
               <tr>
-                <th>Patient Name</th>
-                <th>Phone</th>
+                <th>Tên bệnh nhân</th>
+                <th>Số điện thoại</th>
                 <th>Email</th>
-                <th>Number of Invoices</th>
-                <th>Total Amount</th>
-                <th>Actions</th>
+                <th>Số hóa đơn</th>
+                <th>Tổng tiền</th>
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -183,13 +183,13 @@ const Billing: React.FC = () => {
                     <td>{user.invoices.length}</td>
                     <td>{user.invoices.reduce((sum, inv) => sum + inv.tongTien, 0).toLocaleString('vi-VN')} VND</td>
                     <td>
-                      <button className="btn btn-sm btn-outline-primary" onClick={() => setModalUser(user)}>View Details</button>
+                      <button className="btn btn-sm btn-outline-primary" onClick={() => setModalUser(user)}>Xem chi tiết</button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="text-center">No users found.</td>
+                  <td colSpan={6} className="text-center">Không tìm thấy người dùng nào.</td>
                 </tr>
               )}
             </tbody>
@@ -210,30 +210,30 @@ const Billing: React.FC = () => {
     </div>
   );
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>Đang tải dữ liệu...</div>;
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
     <div>
       <div className="row mb-4">
         <div className="col-12">
-          <h4 className="mb-3">Invoices by User</h4>
+          <h4 className="mb-3">Danh sách hóa đơn theo người dùng</h4>
         </div>
       </div>
       <ul className="nav nav-tabs mb-3">
         <li className="nav-item">
           <button className={`nav-link ${activeTab === 'unpaid' ? 'active' : ''}`} onClick={() => setActiveTab('unpaid')}>
-            Unpaid
+            Chưa thanh toán
           </button>
         </li>
         <li className="nav-item">
           <button className={`nav-link ${activeTab === 'paid' ? 'active' : ''}`} onClick={() => setActiveTab('paid')}>
-            Paid
+            Đã thanh toán
           </button>
         </li>
       </ul>
-      {activeTab === 'unpaid' && renderUserTable(unpaidUsersPage, 'Unpaid Users', unpaidCurrentPage, unpaidTotalPages, (page) => handlePageChange(page, 'unpaid'))}
-      {activeTab === 'paid' && renderUserTable(paidUsersPage, 'Paid Users', paidCurrentPage, paidTotalPages, (page) => handlePageChange(page, 'paid'))}
+      {activeTab === 'unpaid' && renderUserTable(unpaidUsersPage, 'Người dùng chưa thanh toán', unpaidCurrentPage, unpaidTotalPages, (page) => handlePageChange(page, 'unpaid'))}
+      {activeTab === 'paid' && renderUserTable(paidUsersPage, 'Người dùng đã thanh toán', paidCurrentPage, paidTotalPages, (page) => handlePageChange(page, 'paid'))}
       {renderUserModal()}
     </div>
   );
