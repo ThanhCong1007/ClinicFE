@@ -26,32 +26,30 @@ export default function AdminLayout() {
   };
 
   return (
-    <NotificationProvider>
-      <div className={`flex-grow-1 ${darkMode ? 'admin-dark-mode' : ''}`}>
-        <ErrorBoundary>
-          <AdminSidebar collapsed={sidebarCollapsed} />
-          <div className={`admin-main-content ${sidebarCollapsed ? 'expanded' : ''}`}>
-            <AdminNavbar 
-              onToggleSidebar={toggleSidebar} 
-              onToggleDarkMode={toggleDarkMode}
-              darkMode={darkMode}
-            />
-            <div className="container-fluid p-4">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/tables" element={<Tables />} />
-                <Route path="/billing" element={<Billing />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/sign-in" element={<SignIn />} />
-                <Route path="/sign-up" element={<SignUp />} />
-                <Route path="/virtual-reality" element={<VirtualReality />} />
-                <Route path="/rtl" element={<RTL />} />
-              </Routes>
-            </div>
+    <div className={`flex-grow-1 ${darkMode ? 'admin-dark-mode' : ''}`}>
+      <ErrorBoundary>
+        <AdminSidebar collapsed={sidebarCollapsed} />
+        <div className={`admin-main-content ${sidebarCollapsed ? 'expanded' : ''}`}>
+          <AdminNavbar 
+            onToggleSidebar={toggleSidebar} 
+            onToggleDarkMode={toggleDarkMode}
+            darkMode={darkMode}
+          />
+          <div className="container-fluid p-4">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/tables" element={<Tables />} />
+              <Route path="/billing" element={<Billing />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/sign-in" element={<SignIn />} />
+              <Route path="/sign-up" element={<SignUp />} />
+              <Route path="/virtual-reality" element={<VirtualReality />} />
+              <Route path="/rtl" element={<RTL />} />
+            </Routes>
           </div>
-        </ErrorBoundary>
-      </div>
-    </NotificationProvider>
+        </div>
+      </ErrorBoundary>
+    </div>
   );
 } 

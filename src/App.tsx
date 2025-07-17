@@ -99,9 +99,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
           showNotification(
             'Không có quyền truy cập',
             'Bạn không có quyền truy cập vào trang này!',
-            'error',
-            () => navigate('/')
+            'error'
           );
+          navigate('/');
           return;
         }
         setIsAuthorized(true);
@@ -330,12 +330,12 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <NotificationProvider>
+    <NotificationProvider>
+      <Router>
         <AppContent />
-      </NotificationProvider>
+      </Router>
       {/* <ChatWidget /> */}
-    </Router>
+    </NotificationProvider>
   );
 }
 

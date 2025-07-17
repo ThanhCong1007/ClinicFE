@@ -1,6 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 // import { Alert, Button } from 'antd';
-import { useNotification } from '../../admin/components/NotificationProvider';
+import { useNotification } from '../contexts/NotificationContext';
 
 interface Props {
   children: ReactNode;
@@ -14,7 +14,11 @@ interface State {
 // Functional wrapper to use hook in class
 function ErrorBoundaryWrapper(props: Props) {
   const { showNotification } = useNotification();
-  return <ErrorBoundary {...props} showNotification={showNotification} />;
+  // Wrap showNotification to only accept 'error' or undefined as type
+  const showErrorNotification = (title: string, message: string, type?: 'error') => {
+    showNotification(title, message, 'error');
+  };
+  return <ErrorBoundary {...props} showNotification={showErrorNotification} />;
 }
 
 class ErrorBoundary extends Component<Props & { showNotification: (title: string, message: string, type?: 'error') => void }, State> {
