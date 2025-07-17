@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminApi, User, UsersResponse } from '../services/api';
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
-import { useNotification } from '../../components/NotificationProvider';
+import { useNotification } from '../../../user/contexts/NotificationContext';
 
 type TabType = 'admin' | 'user' | 'doctor';
 
