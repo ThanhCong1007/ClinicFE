@@ -422,6 +422,7 @@ function Appointment() {
                         value={formData.ngayKham}
                         onChange={handleChange}
                         min={getToday()}
+                        max={getMaxDay()}
                       />
                     </div>
                   </motion.div>
@@ -495,3 +496,9 @@ function Appointment() {
 }
 
 export default Appointment;
+
+function getMaxDay() {
+  const today = new Date();
+  today.setDate(today.getDate() + 14);
+  return today.toISOString().split('T')[0];
+}

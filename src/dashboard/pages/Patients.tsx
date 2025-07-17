@@ -3,7 +3,7 @@ import { getMedicalRecordsByDoctor } from '../services/api';
 import debounce from 'lodash/debounce';
 import { Row, Col, Input, List, Spin, Alert, Card, Empty, Pagination, Descriptions, Table, Button, Tag } from 'antd';
 import { format } from 'date-fns';
-import NotificationModal from '../components/NotificationModal';
+import NotificationModal from '../../user/components/widgets/NotificationModal';
 import { useNavigate } from 'react-router-dom';
 
 interface MedicalRecord {
@@ -306,7 +306,7 @@ export default function Patients() {
       </Row>
 
       <NotificationModal
-        show={notification.show}
+        isOpen={notification.show}
         onClose={() => setNotification({...notification, show: false})}
         title={notification.title}
         message={notification.message}

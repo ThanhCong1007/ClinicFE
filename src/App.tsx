@@ -334,7 +334,6 @@ function App() {
       <Router>
         <AppContent />
       </Router>
-      {/* <ChatWidget /> */}
     </NotificationProvider>
   );
 }

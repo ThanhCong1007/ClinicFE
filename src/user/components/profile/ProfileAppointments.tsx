@@ -123,7 +123,7 @@ const ProfileAppointments: React.FC<ProfileAppointmentsProps> = ({
     >
       <Table
         columns={columns}
-        dataSource={appointments}
+        dataSource={paginatedPastAppointments}
         rowKey="maLichHen"
         pagination={false}
         style={{ marginBottom: 16 }}

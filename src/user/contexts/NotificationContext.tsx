@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import NotificationToast from '../../dashboard/components/NotificationModal';
+import NotificationToast from '../components/widgets/NotificationModal';
 
 interface ConfirmDialogOptions {
   title: string;
@@ -103,7 +103,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     <NotificationContext.Provider value={{ showNotification, hideNotification, showConfirmDialog }}>
       {children}
       <NotificationToast
-        show={notification.isOpen}
+        isOpen={notification.isOpen}
         onClose={hideNotification}
         title={notification.title}
         message={notification.message}
