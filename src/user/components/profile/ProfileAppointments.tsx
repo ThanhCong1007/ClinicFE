@@ -40,11 +40,16 @@ const ProfileAppointments: React.FC<ProfileAppointmentsProps> = ({
 }) => {
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
-  const pastAppointments = appointments.filter(apt => apt.maTrangThai !== 1);
-  const paginatedPastAppointments = pastAppointments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-  const totalPages = Math.ceil(pastAppointments.length / ITEMS_PER_PAGE);
+  // Sắp xếp: "Đã đặt" lên đầu, sau đó các trạng thái khác
+  const sortedAppointments = [...appointments].sort((a, b) => {
+    if (a.maTrangThai === 1 && b.maTrangThai !== 1) return -1;
+    if (a.maTrangThai !== 1 && b.maTrangThai === 1) return 1;
+    return 0;
+  });
+  const paginatedAppointments = sortedAppointments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(sortedAppointments.length / ITEMS_PER_PAGE);
 
-  useEffect(() => { setPage(1); }, [pastAppointments.length]);
+  useEffect(() => { setPage(1); }, [sortedAppointments.length]);
 
   // Table columns
   const columns = [
@@ -123,7 +128,7 @@ const ProfileAppointments: React.FC<ProfileAppointmentsProps> = ({
     >
       <Table
         columns={columns}
-        dataSource={paginatedPastAppointments}
+        dataSource={paginatedAppointments}
         rowKey="maLichHen"
         pagination={false}
         style={{ marginBottom: 16 }}
@@ -131,7 +136,7 @@ const ProfileAppointments: React.FC<ProfileAppointmentsProps> = ({
       <Pagination
         current={page}
         pageSize={ITEMS_PER_PAGE}
-        total={pastAppointments.length}
+        total={sortedAppointments.length}
         onChange={setPage}
         style={{ textAlign: 'right', marginTop: 16 }}
       />
