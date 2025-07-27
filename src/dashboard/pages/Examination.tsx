@@ -99,8 +99,10 @@ export default function Examination() {
   const searchParams = new URLSearchParams(location.search);
   const reexamId = searchParams.get('reexam');
   const maBenhAnFromState = location.state?.maBenhAn;
+  const editableFromState = location.state?.editable;
   const effectiveMaBenhAn = maBenhAnFromState || reexamId;
   const [isReexam, setIsReexam] = useState(!!reexamId);
+  const [isEditable, setIsEditable] = useState(editableFromState !== false);
   const [reexamLoading, setReexamLoading] = useState(false);
   const storageKey = `exam_${maLichHen || 'walk-in'}`;
   const [loading, setLoading] = useState(true);
@@ -799,26 +801,29 @@ export default function Examination() {
       >
         <Row gutter={24}>
           <Col span={16}>
-            <Card title={appointment?.maLichHen ? 'Khám bệnh theo lịch hẹn' : 'Khám bệnh vãng lai'} style={{ marginBottom: 24 }}>
+            <Card title={
+              !isEditable ? 'Xem bệnh án' : 
+              (appointment?.maLichHen ? 'Khám bệnh theo lịch hẹn' : 'Khám bệnh vãng lai')
+            } style={{ marginBottom: 24 }}>
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item name="hoTen" label="Họ và tên" rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}>
-                    <Input />
+                    <Input disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item name="soDienThoaiBenhNhan" label="Số điện thoại" rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}>
-                    <Input />
+                    <Input disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item name="ngaySinh" label="Ngày sinh">
-                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item name="gioiTinh" label="Giới tính">
-                    <Select placeholder="Chọn giới tính" allowClear>
+                    <Select placeholder="Chọn giới tính" allowClear disabled={!isEditable}>
                       <Option value="Nam">Nam</Option>
                       <Option value="Nữ">Nữ</Option>
                     </Select>
@@ -826,17 +831,17 @@ export default function Examination() {
                 </Col>
                 <Col span={12}>
                   <Form.Item name="email" label="Email">
-                    <Input type="email" placeholder="example@email.com" />
+                    <Input type="email" placeholder="example@email.com" disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item name="diaChi" label="Địa chỉ">
-                    <Input.TextArea rows={2} placeholder="Nhập địa chỉ" />
+                  <Input.TextArea rows={2} placeholder="Nhập địa chỉ" disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item name="ngayHen" label="Ngày hẹn">
-                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />
+                    <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -863,27 +868,27 @@ export default function Examination() {
               <Row gutter={16}>
                 <Col span={24}>
                   <Form.Item name="lyDoKham" label="Lý do khám" rules={[{ required: true, message: 'Vui lòng nhập lý do khám' }]}>
-                    <Input />
+                    <Input disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item name="tienSuBenh" label="Tiền sử bệnh">
-                    <Input.TextArea rows={3} />
+                    <Input.TextArea rows={3} disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item name="diUng" label="Dị ứng">
-                    <Input.TextArea rows={3} />
+                    <Input.TextArea rows={3} disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={24}>
                   <Form.Item name="chanDoan" label="Chẩn đoán" rules={[{ required: true, message: 'Vui lòng nhập chẩn đoán' }]}>
-                    <Input />
+                    <Input disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={24}>
                   <Form.Item name="ghiChuDieuTri" label="Ghi chú điều trị" rules={[{ required: true, message: 'Vui lòng nhập ghi chú' }]}>
-                    <Input.TextArea rows={4} />
+                    <Input.TextArea rows={4} disabled={!isEditable} />
                   </Form.Item>
                 </Col>
                 <Col span={24}>
@@ -1037,6 +1042,7 @@ export default function Examination() {
                     <DatePicker
                       style={{ width: '100%' }}
                       format="DD/MM/YYYY"
+                      disabled={!isEditable}
                       onChange={(date) => {
                         if (date && dayjs(date).isValid()) setSelectedReexamDate(dayjs(date).format('YYYY-MM-DD'));
                         else setSelectedReexamDate(null);
@@ -1057,7 +1063,7 @@ export default function Examination() {
                         setSelectedSlot(value);
                         form.setFieldsValue({ gioTaiKham: value });
                       }}
-                      disabled={loadingSlots || availableSlots.length === 0}
+                      disabled={!isEditable || loadingSlots || availableSlots.length === 0}
                       allowClear
                     >
                       {availableSlots.map((slot: any) => (
@@ -1084,6 +1090,7 @@ export default function Examination() {
                   placeholder="Chọn dịch vụ"
                   value={selectedServices.map(s => s.maDichVu)}
                   showSearch
+                  disabled={!isEditable}
                   filterOption={(input, option) => {
                     const label = option?.children || '';
                     // Loại bỏ dấu và so sánh không phân biệt hoa thường
@@ -1115,6 +1122,7 @@ export default function Examination() {
                         min={0}
                         value={s.gia}
                         style={{ width: 120, marginLeft: 8, marginRight: 8 }}
+                        disabled={!isEditable}
                         onChange={val => {
                           handleServicePriceChange(s.maDichVu, val || 0);
                           // Lưu lại draft ngay khi đổi giá
@@ -1144,8 +1152,14 @@ export default function Examination() {
 
             <Row gutter={16}>
               <Col span={12}>
-                <Button type="primary" htmlType="submit" block loading={loading}>
-                  {appointment?.maBenhAn ? 'Cập nhật bệnh án' : 'Lưu bệnh án'}
+                <Button 
+                  type="primary" 
+                  htmlType="submit" 
+                  block 
+                  loading={loading}
+                  disabled={!isEditable}
+                >
+                  {!isEditable ? 'Chỉ xem' : (appointment?.maBenhAn ? 'Cập nhật bệnh án' : 'Lưu bệnh án')}
                 </Button>
               </Col>
               <Col span={12}>

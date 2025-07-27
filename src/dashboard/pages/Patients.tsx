@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { getMedicalRecordsByDoctor } from '../services/api';
+import { getMedicalRecords } from '../services/api';
 import debounce from 'lodash/debounce';
 import { Row, Col, Input, List, Spin, Alert, Card, Empty, Pagination, Descriptions, Table, Button, Tag } from 'antd';
 import { format } from 'date-fns';
@@ -7,21 +7,27 @@ import NotificationModal from '../../user/components/widgets/NotificationModal';
 import { useNavigate } from 'react-router-dom';
 
 interface MedicalRecord {
-  maBenhAn: string;
+  nguoiDung: number;
+  maBenhAn: number;
   ngayTao: string;
-  maLichHen: string;
-  maBacSi: string;
+  maLichHen: number | null;
+  maBacSi: number;
   tenBacSi: string;
-  maBenhNhan: string;
+  maBenhNhan: number;
   tenBenhNhan: string;
   soDienThoai: string;
+  hoTen: string;
+  ngaySinh: string;
+  gioiTinh: string;
+  email: string;
+  diaChi: string;
+  tienSuBenh: string;
+  diUng: string;
   lyDoKham: string;
   chanDoan: string;
   ghiChuDieuTri: string;
   ngayTaiKham: string | null;
-  diaChi?: string;
-  ngaySinh?: string;
-  diUng?: string;
+  editable: boolean;
 }
 
 interface PatientData {
@@ -79,35 +85,22 @@ export default function Patients() {
       setSelectedPatient(null);
       setCurrentPage(1);
 
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const maBacSi = userData.maBacSi;
-      if (!maBacSi) {
-        throw new Error('Không tìm thấy thông tin bác sĩ');
-      }
-
-      const initialResponse = await getMedicalRecordsByDoctor(maBacSi, 0, 100, keyword);
-      if (!initialResponse || !initialResponse.data) {
+      const allRecords = await getMedicalRecords();
+      if (!allRecords || !Array.isArray(allRecords)) {
         setAllPatients({});
         return;
       }
-      
-      let allRecords = initialResponse.data;
-      const totalPagesFromApi = initialResponse.totalPages;
 
-      if (totalPagesFromApi > 1) {
-        const pageRequests = [];
-        for (let page = 1; page < totalPagesFromApi; page++) {
-          pageRequests.push(getMedicalRecordsByDoctor(maBacSi, page, 100, keyword));
-        }
-        const subsequentResponses = await Promise.all(pageRequests);
-        subsequentResponses.forEach(response => {
-          if (response && response.data) {
-            allRecords = [...allRecords, ...response.data];
-          }
-        });
+      // Filter records by keyword if provided
+      let filteredRecords = allRecords;
+      if (keyword.trim()) {
+        filteredRecords = allRecords.filter(record => 
+          record.tenBenhNhan.toLowerCase().includes(keyword.toLowerCase()) ||
+          record.soDienThoai.includes(keyword)
+        );
       }
 
-      const patientsMap = processRecordsToPatients(allRecords);
+      const patientsMap = processRecordsToPatients(filteredRecords);
       setAllPatients(patientsMap);
 
     } catch (err) {
@@ -196,11 +189,11 @@ export default function Patients() {
       key: 'action',
       render: (_: any, record: MedicalRecord) => (
         <Button
-          type="primary"
+          type={record.editable ? "primary" : "default"}
           size="small"
-          onClick={() => navigate('/dashboard/examination', { state: { maBenhAn: record.maBenhAn } })}
+          onClick={() => navigate('/dashboard/examination', { state: { maBenhAn: record.maBenhAn, editable: record.editable } })}
         >
-          Xem chi tiết
+          {record.editable ? 'Chỉnh sửa' : 'Xem chi tiết'}
         </Button>
       ),
     },
@@ -279,6 +272,9 @@ export default function Patients() {
                         <Descriptions.Item label="Địa chỉ">{latestRecord.diaChi || 'Không rõ'}</Descriptions.Item>
                         <Descriptions.Item label="Năm sinh">{latestRecord.ngaySinh ? new Date(latestRecord.ngaySinh).toLocaleDateString('vi-VN') : 'Không rõ'}</Descriptions.Item>
                         <Descriptions.Item label="Tuổi">{calculateAge(latestRecord.ngaySinh)}</Descriptions.Item>
+                        <Descriptions.Item label="Giới tính">{latestRecord.gioiTinh || 'Không rõ'}</Descriptions.Item>
+                        <Descriptions.Item label="Email">{latestRecord.email || 'Không có'}</Descriptions.Item>
+                        <Descriptions.Item label="Tiền sử bệnh">{latestRecord.tienSuBenh || 'Không có'}</Descriptions.Item>
                         <Descriptions.Item label="Dị ứng">{latestRecord.diUng || 'Không có'}</Descriptions.Item>
                         <Descriptions.Item label="Chẩn đoán gần nhất" span={2}>{latestRecord.chanDoan || 'Chưa có'}</Descriptions.Item>
                       </>

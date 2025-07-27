@@ -159,10 +159,10 @@ export const updateMedicalRecord = async (maBenhAn: number, data: any, images: F
   }
 };
 
-// Lấy danh sách bệnh án của bác sĩ
-export const getMedicalRecordsByDoctor = async (maBacSi: number, page: number, size: number, keyword: string = '') => {
-  const response = await axios.get(`http://localhost:8080/api/benh-an/bac-si/${maBacSi}?page=${page}&size=${size}&keyword=${keyword}`);
-  return response.data; // Trả về toàn bộ dữ liệu phản hồi (bao gồm phân trang)
+// Lấy danh sách bệnh án
+export const getMedicalRecords = async () => {
+  const response = await axios.get('http://localhost:8080/api/benh-an/benhan');
+  return response.data; // Trả về toàn bộ dữ liệu bệnh án
 };
 
 // Lấy chi tiết bệnh án
