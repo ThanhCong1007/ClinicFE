@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { getMedicalRecords } from '../services/api';
 import debounce from 'lodash/debounce';
-import { Row, Col, Input, List, Spin, Alert, Card, Empty, Pagination, Descriptions, Table, Button, Tag } from 'antd';
+import { Row, Col, Input, List, Spin, Alert, Card, Empty, Pagination, Descriptions, Table, Button, Tag, Modal } from 'antd';
 import { format } from 'date-fns';
 import NotificationModal from '../../user/components/widgets/NotificationModal';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface MedicalRecord {
   nguoiDung: number;
@@ -30,6 +31,21 @@ interface MedicalRecord {
   editable: boolean;
 }
 
+interface MedicalRecordDetail {
+  maBenhAn: number;
+  ngayTao: string;
+  tenBacSi: string;
+  lyDoKham: string;
+  chanDoan: string;
+  ghiChuDieuTri: string;
+  ngayTaiKham: string | null;
+  moTaChanDoan: string;
+  danhSachDichVu?: any[];
+  danhSachAnhBenhAn?: any[];
+  danhSachThuoc?: any[];
+  ghiChuDonThuoc?: string;
+}
+
 interface PatientData {
   info: {
     maBenhNhan: string;
@@ -52,11 +68,51 @@ export default function Patients() {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ show: boolean, title: string, message: string, type: 'success' | 'error' | 'info' }>({ show: false, title: '', message: '', type: 'info' });
   
+  // Modal states for medical record detail
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecordDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  
   // Client-side pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const PATIENTS_PER_PAGE = 10;
 
   const navigate = useNavigate();
+
+  const handleSelectRecord = (maBenhAn: number) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('Yêu cầu xác thực.');
+      return;
+    }
+    setDetailLoading(true);
+    setSelectedRecord(null);
+    axios.get(`/api/benh-an/chi-tiet/${maBenhAn}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => {
+        console.log('API trả về:', res.data);
+        setSelectedRecord(res.data);
+      })
+      .catch((err) => {
+        setError('Không thể tải chi tiết bệnh án');
+        console.error('Lỗi fetch chi tiết bệnh án:', err);
+      })
+      .finally(() => setDetailLoading(false));
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '---';
+    return new Date(dateStr).toLocaleString('vi-VN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   const processRecordsToPatients = (records: MedicalRecord[]) => {
     const patientsMap: Patients = {};
@@ -188,13 +244,24 @@ export default function Patients() {
       title: 'Thao tác',
       key: 'action',
       render: (_: any, record: MedicalRecord) => (
-        <Button
-          type={record.editable ? "primary" : "default"}
-          size="small"
-          onClick={() => navigate('/dashboard/examination', { state: { maBenhAn: record.maBenhAn, editable: record.editable } })}
-        >
-          {record.editable ? 'Chỉnh sửa' : 'Xem chi tiết'}
-        </Button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button
+            type="default"
+            size="small"
+            onClick={() => handleSelectRecord(record.maBenhAn)}
+          >
+            Xem chi tiết
+          </Button>
+          {record.editable && (
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => navigate('/dashboard/examination', { state: { maBenhAn: record.maBenhAn, editable: record.editable } })}
+            >
+              Chỉnh sửa
+            </Button>
+          )}
+        </div>
       ),
     },
   ];
@@ -308,6 +375,115 @@ export default function Patients() {
         message={notification.message}
         type={notification.type}
       />
+
+      {/* Modal for medical record detail */}
+      <Modal
+        open={!!selectedRecord}
+        onCancel={() => setSelectedRecord(null)}
+        title={selectedRecord ? `Chi tiết bệnh án #${selectedRecord.maBenhAn}` : ''}
+        footer={null}
+        width={900}
+      >
+        {detailLoading || !selectedRecord ? (
+          <Spin />
+        ) : (
+          <Card bordered={false}>
+            <Descriptions column={2} bordered size="middle">
+              <Descriptions.Item label="Ngày tạo">{formatDate(selectedRecord.ngayTao)}</Descriptions.Item>
+              <Descriptions.Item label="Bác sĩ">{selectedRecord.tenBacSi}</Descriptions.Item>
+              <Descriptions.Item label="Lý do khám">{selectedRecord.lyDoKham}</Descriptions.Item>
+              <Descriptions.Item label="Chẩn đoán">{selectedRecord.chanDoan}</Descriptions.Item>
+              <Descriptions.Item label="Ghi chú điều trị">{selectedRecord.ghiChuDieuTri || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Ngày tái khám">{selectedRecord.ngayTaiKham ? formatDate(selectedRecord.ngayTaiKham) : '-'}</Descriptions.Item>
+              <Descriptions.Item label="Mô tả chẩn đoán" span={2}>{selectedRecord.moTaChanDoan || '-'}</Descriptions.Item>
+            </Descriptions>
+            {/* Dịch vụ đã sử dụng */}
+            {selectedRecord.danhSachDichVu && selectedRecord.danhSachDichVu.length > 0 && (
+              <Card title="Dịch vụ đã sử dụng" size="small" style={{ marginTop: 16 }}>
+                <Table
+                  dataSource={selectedRecord.danhSachDichVu}
+                  rowKey="maDichVu"
+                  pagination={false}
+                  columns={[
+                    { title: 'Tên dịch vụ', dataIndex: 'tenDichVu', key: 'tenDichVu' },
+                    { title: 'Mô tả', dataIndex: 'moTa', key: 'moTa' },
+                    { title: 'Giá', dataIndex: 'gia', key: 'gia', render: (gia: number) => gia.toLocaleString('vi-VN') + 'đ' },
+                  ]}
+                />
+              </Card>
+            )}
+            {/* Ảnh bệnh án */}
+            {selectedRecord.danhSachAnhBenhAn && selectedRecord.danhSachAnhBenhAn.length > 0 && (
+              <>
+                <Card title="Ảnh bệnh án" size="small" style={{ marginTop: 16 }}>
+                  {selectedRecord.danhSachAnhBenhAn.map((img: any, idx: number) => (
+                    <div key={img.url + idx} style={{ display: 'inline-block', marginRight: 16, cursor: 'pointer' }} onClick={() => { setPreviewIndex(idx); setPreviewVisible(true); }}>
+                      <img
+                        src={img.url}
+                        alt={img.moTa}
+                        style={{ width: 320, height: 240, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                      />
+                      <div style={{ textAlign: 'center', fontSize: 12 }}>{img.moTa}</div>
+                    </div>
+                  ))}
+                </Card>
+                {/* Preview Modal for images */}
+                <Modal
+                  open={previewVisible}
+                  onCancel={() => setPreviewVisible(false)}
+                  footer={null}
+                  centered
+                  width={800}
+                  bodyStyle={{ textAlign: 'center', background: '#111' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button
+                      style={{ fontSize: 32, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', marginRight: 24 }}
+                      onClick={() => setPreviewIndex((previewIndex - 1 + (selectedRecord.danhSachAnhBenhAn?.length || 0)) % (selectedRecord.danhSachAnhBenhAn?.length || 1))}
+                      disabled={!selectedRecord.danhSachAnhBenhAn || selectedRecord.danhSachAnhBenhAn.length <= 1}
+                    >&lt;</button>
+                    <div>
+                      <img
+                        src={selectedRecord.danhSachAnhBenhAn?.[previewIndex]?.url}
+                        alt={selectedRecord.danhSachAnhBenhAn?.[previewIndex]?.moTa}
+                        style={{ maxWidth: 700, maxHeight: 500, borderRadius: 12, border: '2px solid #fff', background: '#222' }}
+                      />
+                      <div style={{ color: '#fff', marginTop: 8 }}>{selectedRecord.danhSachAnhBenhAn?.[previewIndex]?.moTa}</div>
+                    </div>
+                    <button
+                      style={{ fontSize: 32, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', marginLeft: 24 }}
+                      onClick={() => setPreviewIndex((previewIndex + 1) % (selectedRecord.danhSachAnhBenhAn?.length || 1))}
+                      disabled={!selectedRecord.danhSachAnhBenhAn || selectedRecord.danhSachAnhBenhAn.length <= 1}
+                    >&gt;</button>
+                  </div>
+                </Modal>
+              </>
+            )}
+            {/* Đơn thuốc */}
+            {selectedRecord.danhSachThuoc && selectedRecord.danhSachThuoc.length > 0 && (
+              <Card title="Đơn thuốc" size="small" style={{ marginTop: 16 }}>
+                <Table
+                  dataSource={selectedRecord.danhSachThuoc}
+                  rowKey="maChiTiet"
+                  pagination={false}
+                  columns={[
+                    { title: 'Tên thuốc', dataIndex: 'tenThuoc', key: 'tenThuoc' },
+                    { title: 'Hoạt chất', dataIndex: 'hoatChat', key: 'hoatChat' },
+                    { title: 'Hàm lượng', dataIndex: 'hamLuong', key: 'hamLuong' },
+                    { title: 'Liều dùng', dataIndex: 'lieudung', key: 'lieudung' },
+                    { title: 'Tần suất', dataIndex: 'tanSuat', key: 'tanSuat' },
+                    { title: 'Thời gian', dataIndex: 'thoiGianDieuTri', key: 'thoiGianDieuTri', render: (v: number) => v + ' ngày' },
+                    { title: 'Số lượng', dataIndex: 'soLuong', key: 'soLuong' },
+                    { title: 'Đơn giá', dataIndex: 'donGia', key: 'donGia', render: (v: number) => v.toLocaleString('vi-VN') + 'đ' },
+                    { title: 'Thành tiền', dataIndex: 'thanhTien', key: 'thanhTien', render: (v: number) => v.toLocaleString('vi-VN') + 'đ' },
+                  ]}
+                />
+                {selectedRecord.ghiChuDonThuoc && <div style={{ marginTop: 8 }}><Tag color="blue">Ghi chú: {selectedRecord.ghiChuDonThuoc}</Tag></div>}
+              </Card>
+            )}
+          </Card>
+        )}
+      </Modal>
     </div>
   );
 } 
